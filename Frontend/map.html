@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map - Smart Trip Planner</title>
+    <link rel="stylesheet" href="../Frontend/Css/map.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">
+                <i class="fas fa-map-marked-alt"></i>
+                ✈️ Smart Trip Planner
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#plan-trip">Plan Trip</a></li>
+                <li><a href="#my-trips">My Trips</a></li>
+                <li><a href="#map" class="active">Interactive Map</a></li>
+            </ul>
+            <div class="user-profile">
+                <div class="profile-avatar">JD</div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Map Container -->
+    <div class="map-container">
+        <!-- Sidebar -->
+        <div class="map-sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Explore Places</h2>
+                <div class="location-search">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Search location...">
+                </div>
+            </div>
+
+            <!-- Category Filters -->
+            <div class="category-filters">
+                <h3 class="filter-title">Categories</h3>
+                <div class="filter-grid">
+                    <button class="filter-btn active" data-category="all">
+                        <i class="fas fa-globe"></i>
+                        All
+                    </button>
+                    <button class="filter-btn" data-category="hotel">
+                        <i class="fas fa-bed"></i>
+                        Hotels
+                    </button>
+                    <button class="filter-btn" data-category="restaurant">
+                        <i class="fas fa-utensils"></i>
+                        Dining
+                    </button>
+                    <button class="filter-btn" data-category="attraction">
+                        <i class="fas fa-camera"></i>
+                        Attractions
+                    </button>
+                </div>
+            </div>
+
+            <!-- Weather Toggle -->
+            <div class="weather-section">
+                <div class="weather-toggle">
+                    <label class="weather-label">
+                        <i class="fas fa-cloud-sun"></i>
+                        Weather Overlay
+                    </label>
+                    <div class="toggle-switch" id="weatherToggle">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Points of Interest List -->
+            <div class="poi-list" id="poiList">
+                <div class="poi-item" data-poi="0" data-category="attraction">
+                    <div class="poi-header">
+                        <div class="poi-icon attraction">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <div class="poi-details">
+                            <div class="poi-name">Central Park</div>
+                            <div class="poi-type">Tourist Attraction</div>
+                            <div class="poi-rating">
+                                <span class="stars">★★★★★</span>
+                                <span>4.8 (2,450 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="poi-item" data-poi="1" data-category="hotel">
+                    <div class="poi-header">
+                        <div class="poi-icon hotel">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <div class="poi-details">
+                            <div class="poi-name">Grand Hotel Plaza</div>
+                            <div class="poi-type">Luxury Hotel</div>
+                            <div class="poi-rating">
+                                <span class="stars">★★★★★</span>
+                                <span>4.6 (1,230 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="poi-item" data-poi="2" data-category="restaurant">
+                    <div class="poi-header">
+                        <div class="poi-icon restaurant">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div class="poi-details">
+                            <div class="poi-name">Bella Vista Restaurant</div>
+                            <div class="poi-type">Italian Cuisine</div>
+                            <div class="poi-rating">
+                                <span class="stars">★★★★☆</span>
+                                <span>4.3 (856 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="poi-item" data-poi="3" data-category="attraction">
+                    <div class="poi-header">
+                        <div class="poi-icon attraction">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <div class="poi-details">
+                            <div class="poi-name">Art Museum</div>
+                            <div class="poi-type">Museum</div>
+                            <div class="poi-rating">
+                                <span class="stars">★★★★☆</span>
+                                <span>4.4 (967 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="poi-item" data-poi="4" data-category="hotel">
+                    <div class="poi-header">
+                        <div class="poi-icon hotel">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <div class="poi-details">
+                            <div class="poi-name">Boutique Inn</div>
+                            <div class="poi-type">Boutique Hotel</div>
+                            <div class="poi-rating">
+                                <span class="stars">★★★★☆</span>
+                                <span>4.2 (543 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="poi-item" data-poi="5" data-category="restaurant">
+                    <div class="poi-header">
+                        <div class="poi-icon restaurant">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div class="poi-details">
+                            <div class="poi-name">Ocean Breeze Cafe</div>
+                            <div class="poi-type">Seafood Restaurant</div>
+                            <div class="poi-rating">
+                                <span class="stars">★★★★★</span>
+                                <span>4.7 (1,124 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Area -->
+        <div class="map-area">
+            <div class="map-header">
+                <h2 class="map-title">Interactive Map</h2>
+                <div class="map-controls">
+                    <button class="map-btn" id="satelliteBtn">Satellite</button>
+                    <button class="map-btn" id="terrainBtn">Terrain</button>
+                    <button class="map-btn" id="trafficBtn">Traffic</button>
+                </div>
+            </div>
+
+            <div class="mock-map" id="mapArea">
+                <!-- Map Markers -->
+                <div class="map-marker attraction" data-poi="0" style="top: 20%; left: 30%;"></div>
+                <div class="map-marker hotel" data-poi="1" style="top: 35%; left: 60%;"></div>
+                <div class="map-marker restaurant" data-poi="2" style="top: 50%; left: 25%;"></div>
+                <div class="map-marker attraction" data-poi="3" style="top: 65%; left: 70%;"></div>
+                <div class="map-marker hotel" data-poi="4" style="top: 80%; left: 45%;"></div>
+                <div class="map-marker restaurant" data-poi="5" style="top: 25%; left: 75%;"></div>
+
+                <!-- Weather Overlay -->
+                <div class="weather-overlay" id="weatherOverlay">
+                    <div class="weather-info">
+                        <div class="weather-icon">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <div class="weather-details">
+                            <div class="weather-temp">24°C</div>
+                            <div>Sunny, Clear Sky</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="map-nav-controls">
+                    <button class="nav-btn" id="zoomIn" title="Zoom In">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="nav-btn" id="zoomOut" title="Zoom Out">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="nav-btn" id="resetView" title="Reset View">
+                        <i class="fas fa-home"></i>
+                    </button>
+                </div>
+
+                <!-- Info Popup -->
+                <div class="info-popup" id="infoPopup">
+                    <button class="close-popup" id="closePopup">×</button>
+                    <div class="popup-content">
+                        <div class="popup-title" id="popupTitle">Point of Interest</div>
+                        <div class="popup-type" id="popupType">Category</div>
+                        <div class="popup-rating" id="popupRating">
+                            <span class="stars">★★★★★</span>
+                            <span>4.8 (2,450 reviews)</span>
+                        </div>
+                        <div class="popup-contact" id="popupContact">📍 Address information</div>
+                        <div class="popup-contact" id="popupPhone">📞 Contact information</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample POI data
+        // Sample POI data (already provided)
+        const poisData = [
+            {
+                id: 0,
+                name: "Central Park",
+                type: "Tourist Attraction",
+                category: "attraction",
+                rating: 4.8,
+                reviews: 2450,
+                address: "New York, NY 10028, USA",
+                phone: "+1 (212) 310-6600"
+            },
+            {
+                id: 1,
+                name: "Grand Hotel Plaza",
+                type: "Luxury Hotel",
+                category: "hotel",
+                rating: 4.6,
+                reviews: 1230,
+                address: "768 5th Ave, New York, NY 10019",
+                phone: "+1 (212) 759-3000"
+            },
+            {
+                id: 2,
+                name: "Bella Vista Restaurant",
+                type: "Italian Cuisine",
+                category: "restaurant",
+                rating: 4.3,
+                reviews: 856,
+                address: "247 E 81st St, New York, NY 10028",
+                phone: "+1 (212) 717-2233"
+            },
+            {
+                id: 3,
+                name: "Art Museum",
+                type: "Museum",
+                category: "attraction",
+                rating: 4.4,
+                reviews: 967,
+                address: "1000 5th Ave, New York, NY 10028",
+                phone: "+1 (212) 535-7710"
+            },
+            {
+                id: 4,
+                name: "Boutique Inn",
+                type: "Boutique Hotel",
+                category: "hotel",
+                rating: 4.2,
+                reviews: 543,
+                address: "125 E 50th St, New York, NY 10022",
+                phone: "+1 (212) 753-5800"
+            },
+            {
+                id: 5,
+                name: "Ocean Breeze Cafe",
+                type: "Seafood Restaurant",
+                category: "restaurant",
+                rating: 4.7,
+                reviews: 1124,
+                address: "89 E 42nd St, New York, NY 10017",
+                phone: "+1 (212) 986-5300"
+            }
+        ];
+
+        // DOM Elements
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const poiItems = document.querySelectorAll('.poi-item');
+        const mapMarkers = document.querySelectorAll('.map-marker');
+        const weatherToggle = document.getElementById('weatherToggle');
+        const weatherOverlay = document.getElementById('weatherOverlay');
+        const infoPopup = document.getElementById('infoPopup');
+        const closePopup = document.getElementById('closePopup');
+        const searchInput = document.querySelector('.search-input');
+        const popupTitle = document.getElementById('popupTitle');
+        const popupType = document.getElementById('popupType');
+        const popupRating = document.getElementById('popupRating');
+        const popupContact = document.getElementById('popupContact');
+        const popupPhone = document.getElementById('popupPhone');
+        const mapArea = document.getElementById('mapArea'); // For handling map marker positioning relative to parent
+
+        // --- Category Filter Functionality ---
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const category = btn.getAttribute('data-category');
+
+                // Update active filter button
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Filter POI items and markers based on category and current search input
+                filterAndSearchPOIs(category, searchInput.value.toLowerCase());
+            });
+        });
+
+        // --- Search Functionality ---
+        searchInput.addEventListener('input', (event) => {
+            const searchTerm = event.target.value.toLowerCase();
+            const activeCategory = document.querySelector('.filter-btn.active').getAttribute('data-category');
+            filterAndSearchPOIs(activeCategory, searchTerm);
+        });
+
+        // Combines filtering by category and search term
+        function filterAndSearchPOIs(category, searchTerm) {
+            poiItems.forEach(item => {
+                const itemCategory = item.getAttribute('data-category');
+                const poiName = item.querySelector('.poi-name').textContent.toLowerCase();
+                const poiType = item.querySelector('.poi-type').textContent.toLowerCase();
+                const poiId = item.getAttribute('data-poi');
+                const marker = document.querySelector(`.map-marker[data-poi="${poiId}"]`);
+
+                const matchesCategory = (category === 'all' || itemCategory === category);
+                const matchesSearch = (poiName.includes(searchTerm) || poiType.includes(searchTerm));
+
+                if (matchesCategory && matchesSearch) {
+                    item.style.display = 'block';
+                    if (marker) {
+                        marker.style.display = 'block';
+                    }
+                } else {
+                    item.style.display = 'none';
+                    if (marker) {
+                        marker.style.display = 'none';
+                    }
+                }
+            });
+            // Close popup if the currently selected POI is hidden
+            if (infoPopup.classList.contains('show')) {
+                const selectedPoiId = infoPopup.getAttribute('data-poi-id');
+                const selectedPoiItem = document.querySelector(`.poi-item[data-poi="${selectedPoiId}"]`);
+                if (selectedPoiItem && selectedPoiItem.style.display === 'none') {
+                    hideInfoPopup();
+                }
+            }
+        }
+
+        // --- Weather Toggle Functionality ---
+        weatherToggle.addEventListener('click', () => {
+            weatherToggle.classList.toggle('active');
+            weatherOverlay.classList.toggle('show', weatherToggle.classList.contains('active'));
+        });
+
+        // --- POI Item Click Functionality (Sidebar List) ---
+        poiItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // Remove 'selected' class from previously selected item
+                document.querySelectorAll('.poi-item').forEach(el => el.classList.remove('selected'));
+                // Add 'selected' class to the clicked item
+                item.classList.add('selected');
+
+                const poiId = item.getAttribute('data-poi');
+                showInfoForPOI(poiId);
+            });
+        });
+
+        // --- Map Marker Click Functionality ---
+        mapMarkers.forEach(marker => {
+            marker.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevent map area click from immediately closing popup
+                const poiId = marker.getAttribute('data-poi');
+                showInfoForPOI(poiId, marker);
+
+                // Also highlight the corresponding item in the sidebar
+                document.querySelectorAll('.poi-item').forEach(el => el.classList.remove('selected'));
+                const correspondingPoiItem = document.querySelector(`.poi-item[data-poi="${poiId}"]`);
+                if (correspondingPoiItem) {
+                    correspondingPoiItem.classList.add('selected');
+                    // Scroll to the selected item if it's out of view
+                    correspondingPoiItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        });
+
+        // --- Info Popup Display Function ---
+        function showInfoForPOI(poiId, markerElement = null) {
+            const poi = poisData.find(p => p.id == poiId); // Use == for comparison as data-poi is string
+
+            if (poi) {
+                popupTitle.textContent = poi.name;
+                popupType.textContent = poi.type;
+                popupRating.innerHTML = `<span class="stars">${'★'.repeat(Math.floor(poi.rating))}</span> <span>${poi.rating} (${poi.reviews} reviews)</span>`;
+                popupContact.textContent = `📍 ${poi.address}`;
+                popupPhone.textContent = `📞 ${poi.phone}`;
+                infoPopup.setAttribute('data-poi-id', poi.id); // Store current POI ID
+
+                if (markerElement) {
+                    // Position popup near the clicked marker
+                    const markerRect = markerElement.getBoundingClientRect();
+                    const mapAreaRect = mapArea.getBoundingClientRect();
+
+                    // Calculate position relative to mapArea
+                    let topPos = markerRect.top - mapAreaRect.top - infoPopup.offsetHeight - 15; // 15px above marker
+                    let leftPos = markerRect.left - mapAreaRect.left - (infoPopup.offsetWidth / 2) + (markerRect.width / 2);
+
+                    // Ensure popup doesn't go off screen (simple bounds check)
+                    if (topPos < 0) topPos = markerRect.bottom - mapAreaRect.top + 15; // Below marker if not enough space above
+                    if (leftPos < 0) leftPos = 0;
+                    if (leftPos + infoPopup.offsetWidth > mapAreaRect.width) {
+                        leftPos = mapAreaRect.width - infoPopup.offsetWidth;
+                    }
+
+                    infoPopup.style.top = `${topPos}px`;
+                    infoPopup.style.left = `${leftPos}px`;
+                    infoPopup.style.transform = 'translateY(0)'; // Reset transform for positioning
+                } else {
+                    // Default position if triggered from sidebar (e.g., center of map or a fixed spot)
+                    // For now, let's keep it hidden if not clicked from map directly, or set a default map position.
+                    // If you want it to appear in a fixed spot when clicking sidebar, define top/left here.
+                    // For this example, let's just make it visible if called from sidebar too.
+                    infoPopup.style.top = '50%';
+                    infoPopup.style.left = '50%';
+                    infoPopup.style.transform = 'translate(-50%, -50%)'; // Center it
+                }
+
+                infoPopup.classList.add('show');
+            }
+        }
+
+        // --- Close Info Popup ---
+        closePopup.addEventListener('click', hideInfoPopup);
+        mapArea.addEventListener('click', (event) => {
+            // Close popup if clicking anywhere on the map area but not on a marker or the popup itself
+            if (!event.target.closest('.map-marker') && !event.target.closest('.info-popup')) {
+                hideInfoPopup();
+            }
+        });
+
+        function hideInfoPopup() {
+            infoPopup.classList.remove('show');
+            infoPopup.removeAttribute('data-poi-id'); // Clear current POI ID
+            document.querySelectorAll('.poi-item').forEach(el => el.classList.remove('selected')); // Deselect sidebar item
+        }
+
+        // --- Map Navigation Controls (Zoom/Reset - Placeholder) ---
+        // For a real map, these would interact with a map API (e.g., Leaflet, Google Maps).
+        // For this mock map, we can simulate some visual changes or simply have them as placeholders.
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            alert('Zoom In clicked! (In a real app, this would zoom the map)');
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            alert('Zoom Out clicked! (In a real app, this would zoom the map)');
+        });
+
+        document.getElementById('resetView').addEventListener('click', () => {
+            alert('Reset View clicked! (In a real app, this would reset the map view)');
+        });
+
+        // Initial filter to show all POIs when the page loads
+        filterAndSearchPOIs('all', '');
+
+    </script>
+</body>
+
+</html>

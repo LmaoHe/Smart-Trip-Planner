@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Itineraries - Admin Panel</title>
+    <link rel="stylesheet" href="../Frontend/Css/manageItineraries.css">
+    <style>
+        
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">
+                <i class="fas fa-route"></i>
+                ✈️ Smart Trip Planner
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#users">Users</a></li>
+                <li><a href="#itineraries" class="active">Itineraries</a></li>
+                <li><a href="#reports">Reports</a></li>
+            </ul>
+            <div class="admin-profile">
+                <div class="profile-avatar">AD</div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Manage Itineraries</h1>
+            <p class="page-subtitle">Upload, manage, and monitor pre-generated itineraries for users</p>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="search-section">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Search itineraries by title, destination, or keyword..." id="searchInput">
+                </div>
+                <select class="filter-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="draft">Draft</option>
+                    <option value="archived">Archived</option>
+                </select>
+                <select class="filter-select" id="destinationFilter">
+                    <option value="">All Destinations</option>
+                    <option value="paris">Paris</option>
+                    <option value="tokyo">Tokyo</option>
+                    <option value="london">London</option>
+                    <option value="newyork">New York</option>
+                </select>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="uploadBtn">
+                    <i class="fas fa-upload"></i>
+                    Upload New
+                </button>
+                <button class="btn btn-secondary" id="bulkActionsBtn">
+                    <i class="fas fa-tasks"></i>
+                    Bulk Actions
+                </button>
+            </div>
+        </div>
+
+        <!-- Upload Form (Hidden by default) -->
+        <div class="upload-form" id="uploadForm" style="display: none;">
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="upload-text">
+                <strong>Upload New Itinerary</strong><br>
+                Drag and drop your JSON file here or click to browse
+            </div>
+            <input type="file" class="file-input" id="fileInput" accept=".json">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                Choose File
+            </button>
+        </div>
+
+        <!-- Itineraries Section -->
+        <div class="itineraries-section">
+            <div class="section-header">
+                <h2 class="section-title">Pre-Generated Itineraries</h2>
+                <div class="stats-badge">
+                    <span id="totalCount">12</span> Total Itineraries
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="itineraries-table" id="itinerariesTable">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll">
+                            </th>
+                            <th>Itinerary Details</th>
+                            <th>Destination</th>
+                            <th>Duration</th>
+                            <th>Budget Range</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itinerariesTableBody">
+                        <!-- Sample Data -->
+                        <tr data-id="1">
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>
+                                <div class="itinerary-title">Romantic Paris Getaway</div>
+                                <div class="itinerary-description">A perfect 5-day romantic escape featuring iconic landmarks, intimate dining, and cultural experiences.</div>
+                            </td>
+                            <td>
+                                <span class="destination-tag">Paris, France</span>
+                            </td>
+                            <td>
+                                <span class="duration-badge">5 Days</span>
+                            </td>
+                            <td>$2,500 - $3,500</td>
+                            <td>
+                                <span class="status-badge status-active">Active</span>
+                            </td>
+                            <td>Jan 15, 2025</td>
+                            <td>
+                                <div class="action-buttons-cell">
+                                    <button class="btn btn-secondary btn-icon view-btn" data-id="4" title="View Details">
+                                        <i class="fas fa-eye">👁️</i>
+                                    </button>
+                                    <button class="btn btn-primary btn-icon edit-btn" data-id="4" title="Edit">
+                                        <i class="fas fa-edit">✏️</i>
+                                    </button>
+                                    <button class="btn btn-danger btn-icon delete-btn" data-id="4" title="Delete">
+                                        <i class="fas fa-trash">🗑️</i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-id="2">
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>
+                                <div class="itinerary-title">Tokyo Adventure Explorer</div>
+                                <div class="itinerary-description">Immerse yourself in modern and traditional Japan with this comprehensive 7-day Tokyo experience.</div>
+                            </td>
+                            <td>
+                                <span class="destination-tag">Tokyo, Japan</span>
+                            </td>
+                            <td>
+                                <span class="duration-badge">7 Days</span>
+                            </td>
+                            <td>$3,000 - $4,200</td>
+                            <td>
+                                <span class="status-badge status-active">Active</span>
+                            </td>
+                            <td>Jan 12, 2025</td>
+                            <td>
+                                <div class="action-buttons-cell">
+                                    <button class="btn btn-secondary btn-icon view-btn" data-id="4" title="View Details">
+                                        <i class="fas fa-eye">👁️</i>
+                                    </button>
+                                    <button class="btn btn-primary btn-icon edit-btn" data-id="4" title="Edit">
+                                        <i class="fas fa-edit">✏️</i>
+                                    </button>
+                                    <button class="btn btn-danger btn-icon delete-btn" data-id="4" title="Delete">
+                                        <i class="fas fa-trash">🗑️</i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-id="3">
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>
+                                <div class="itinerary-title">London Historical Tour</div>
+                                <div class="itinerary-description">Discover centuries of history with visits to royal palaces, museums, and historic landmarks.</div>
+                            </td>
+                            <td>
+                                <span class="destination-tag">London, UK</span>
+                            </td>
+                            <td>
+                                <span class="duration-badge">4 Days</span>
+                            </td>
+                            <td>$1,800 - $2,800</td>
+                            <td>
+                                <span class="status-badge status-draft">Draft</span>
+                            </td>
+                            <td>Jan 10, 2025</td>
+                            <td>
+                                <div class="action-buttons-cell">
+                                    <button class="btn btn-secondary btn-icon view-btn" data-id="4" title="View Details">
+                                        <i class="fas fa-eye">👁️</i>
+                                    </button>
+                                    <button class="btn btn-primary btn-icon edit-btn" data-id="4" title="Edit">
+                                        <i class="fas fa-edit">✏️</i>
+                                    </button>
+                                    <button class="btn btn-danger btn-icon delete-btn" data-id="4" title="Delete">
+                                        <i class="fas fa-trash">🗑️</i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-id="4">
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>
+                                <div class="itinerary-title">New York City Highlights</div>
+                                <div class="itinerary-description">Experience the best of NYC with Broadway shows, world-class museums, and iconic attractions.</div>
+                            </td>
+                            <td>
+                                <span class="destination-tag">New York, USA</span>
+                            </td>
+                            <td>
+                                <span class="duration-badge">6 Days</span>
+                            </td>
+                            <td>$2,200 - $3,800</td>
+                            <td>
+                                <span class="status-badge status-active">Active</span>
+                            </td>
+                            <td>Jan 8, 2025</td>
+                            <td>
+                                <div class="action-buttons-cell">
+                                    <button class="btn btn-secondary btn-icon view-btn" data-id="4" title="View Details">
+                                        <i class="fas fa-eye">👁️</i>
+                                    </button>
+                                    <button class="btn btn-primary btn-icon edit-btn" data-id="4" title="Edit">
+                                        <i class="fas fa-edit">✏️</i>
+                                    </button>
+                                    <button class="btn btn-danger btn-icon delete-btn" data-id="4" title="Delete">
+                                        <i class="fas fa-trash">🗑️</i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Itinerary Details</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="detail-grid">
+                    <div class="detail-card">
+                        <div class="detail-label">Title</div>
+                        <div class="detail-value" id="detailTitle">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-label">Destination</div>
+                        <div class="detail-value" id="detailDestination">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-label">Duration</div>
+                        <div class="detail-value" id="detailDuration">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-label">Budget Range</div>
+                        <div class="detail-value" id="detailBudget">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value" id="detailStatus">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-label">Created Date</div>
+                        <div class="detail-value" id="detailCreated">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-label">Description</div>
+                        <div class="detail-value" id="detailDescription">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-label">Target Audience</div>
+                        <div class="detail-value" id="detailAudience">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-label">Interests</div>
+                        <div class="detail-value" id="detailInterests">-</div>
+                    </div>
+                </div>
+
+                <!-- Itinerary Days -->
+                <div class="itinerary-days">
+                    <h3 class="days-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Daily Itinerary
+                    </h3>
+                    <div id="itineraryDays">
+                        <!-- Days will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample itinerary data
+        const itinerariesData = {
+            1: {
+                title: "Romantic Paris Getaway",
+                destination: "Paris, France",
+                duration: "5 Days",
+                budget: "$2,500 - $3,500",
+                status: "Active",
+                created: "Jan 15, 2025",
+                description: "A perfect 5-day romantic escape featuring iconic landmarks, intimate dining, and cultural experiences.",
+                audience: "Couples, Honeymooners",
+                interests: "Romance, Culture, Fine Dining, History",
+                days: [
+                    {
+                        day: 1,
+                        title: "Arrival & City Introduction",
+                        activities: [
+                            { time: "09:00", name: "Airport Transfer", description: "Private transfer from Charles de Gaulle Airport to hotel" },
+                            { time: "12:00", name: "Hotel Check-in", description: "Check into luxury hotel in the heart of Paris" },
+                            { time: "14:00", name: "Seine River Cruise", description: "Romantic afternoon cruise with champagne" },
+                            { time: "19:00", name: "Dinner at Le Jules Verne", description: "Fine dining at the Eiffel Tower restaurant" }
+                        ]
+                    },
+                    {
+                        day: 2,
+                        title: "Art & Culture",
+                        activities: [
+                            { time: "09:00", name: "Louvre Museum", description: "Private guided tour including Mona Lisa and Venus de Milo" },
+                            { time: "12:30", name: "Lunch at Café Marly", description: "Elegant lunch overlooking the Louvre courtyard" },
+                            { time: "15:00", name: "Tuileries Garden Walk", description: "Romantic stroll through the historic gardens" },
+                            { time: "17:00", name: "Place Vendôme Shopping", description: "Luxury shopping at prestigious boutiques" },
+                            { time: "20:00", name: "Opera Garnier Show", description: "Evening performance at the historic opera house" }
+                        ]
+                    },
+                    {
+                        day: 3,
+                        title: "Montmartre & Sacré-Cœur",
+                        activities: [
+                            { time: "10:00", name: "Montmartre Walking Tour", description: "Explore the artistic quarter with local guide" },
+                            { time: "11:30", name: "Sacré-Cœur Basilica", description: "Visit the stunning hilltop basilica with panoramic views" },
+                            { time: "13:00", name: "Artist Square Experience", description: "Watch local artists and get portrait sketched" },
+                            { time: "15:00", name: "Wine Tasting", description: "Private wine tasting at historic Montmartre vineyard" },
+                            { time: "19:30", name: "Moulin Rouge Show", description: "Iconic cabaret show with dinner" }
+                        ]
+                    }
+                ]
+            },
+            2: {
+                title: "Tokyo Adventure Explorer",
+                destination: "Tokyo, Japan",
+                duration: "7 Days",
+                budget: "$3,000 - $4,200",
+                status: "Active",
+                created: "Jan 12, 2025",
+                description: "Immerse yourself in modern and traditional Japan with this comprehensive 7-day Tokyo experience.",
+                audience: "Adventure Seekers, Culture Enthusiasts",
+                interests: "Technology, Tradition, Food, Architecture",
+                days: [
+                    {
+                        day: 1,
+                        title: "Modern Tokyo Introduction",
+                        activities: [
+                            { time: "08:00", name: "Arrival at Narita", description: "Airport pickup and transfer to Shibuya hotel" },
+                            { time: "12:00", name: "Shibuya Crossing", description: "Experience the world's busiest pedestrian crossing" },
+                            { time: "14:00", name: "Harajuku District", description: "Explore youth culture and unique fashion" },
+                            { time: "16:00", name: "Meiji Shrine", description: "Peaceful shrine visit in the heart of the city" },
+                            { time: "19:00", name: "Robot Restaurant", description: "Unique dining and entertainment experience" }
+                        ]
+                    },
+                    {
+                        day: 2,
+                        title: "Traditional Culture Day",
+                        activities: [
+                            { time: "09:00", name: "Senso-ji Temple", description: "Visit Tokyo's oldest Buddhist temple in Asakusa" },
+                            { time: "11:00", name: "Traditional Craft Workshop", description: "Learn traditional Japanese pottery or calligraphy" },
+                            { time: "13:00", name: "Authentic Sushi Experience", description: "Omakase lunch at renowned sushi restaurant" },
+                            { time: "15:30", name: "Imperial Palace Gardens", description: "Stroll through the beautiful East Gardens" },
+                            { time: "18:00", name: "Kabuki Performance", description: "Traditional theater show with English subtitles" }
+                        ]
+                    }
+                ]
+            },
+            3: {
+                title: "London Historical Tour",
+                destination: "London, UK",
+                duration: "4 Days",
+                budget: "$1,800 - $2,800",
+                status: "Draft",
+                created: "Jan 10, 2025",
+                description: "Discover centuries of history with visits to royal palaces, museums, and historic landmarks.",
+                audience: "History Buffs, Royal Enthusiasts",
+                interests: "History, Royalty, Museums, Architecture",
+                days: [
+                    {
+                        day: 1,
+                        title: "Royal London",
+                        activities: [
+                            { time: "09:00", name: "Tower of London", description: "Explore the historic fortress and see the Crown Jewels" },
+                            { time: "12:00", name: "Tower Bridge", description: "Walk across the iconic Victorian bridge" },
+                            { time: "14:00", name: "Borough Market Lunch", description: "Sample traditional British cuisine at historic market" },
+                            { time: "16:00", name: "London Bridge Area", description: "Explore Shakespeare's Globe and Southwark Cathedral" }
+                        ]
+                    }
+                ]
+            },
+            4: {
+                title: "New York City Highlights",
+                destination: "New York, USA",
+                duration: "6 Days",
+                budget: "$2,200 - $3,800",
+                status: "Active",
+                created: "Jan 8, 2025",
+                description: "Experience the best of NYC with Broadway shows, world-class museums, and iconic attractions.",
+                audience: "Urban Explorers, Culture Lovers",
+                interests: "Theater, Museums, Architecture, Shopping",
+                days: [
+                    {
+                        day: 1,
+                        title: "Manhattan Icons",
+                        activities: [
+                            { time: "09:00", name: "Statue of Liberty", description: "Ferry ride and guided tour of Liberty Island" },
+                            { time: "13:00", name: "Wall Street", description: "Financial district walking tour" },
+                            { time: "15:00", name: "9/11 Memorial", description: "Moving tribute at the World Trade Center site" },
+                            { time: "18:00", name: "Broadway Show", description: "Evening performance of popular musical" }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // DOM Elements
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const destinationFilter = document.getElementById('destinationFilter');
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const detailModal = document.getElementById('detailModal');
+        const closeModal = document.getElementById('closeModal');
+
+        // Upload functionality
+        uploadBtn.addEventListener('click', () => {
+            uploadForm.style.display = uploadForm.style.display === 'none' ? 'block' : 'none';
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // Simulate file upload
+                setTimeout(() => {
+                    alert(`Successfully uploaded: ${file.name}`);
+                    uploadForm.style.display = 'none';
+                    // Here you would typically send the file to your server
+                }, 1000);
+            }
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', filterTable);
+        statusFilter.addEventListener('change', filterTable);
+        destinationFilter.addEventListener('change', filterTable);
+
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value.toLowerCase();
+            const destinationValue = destinationFilter.value.toLowerCase();
+            const rows = document.querySelectorAll('#itinerariesTableBody tr');
+
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const title = row.querySelector('.itinerary-title').textContent.toLowerCase();
+                const description = row.querySelector('.itinerary-description').textContent.toLowerCase();
+                const destination = row.querySelector('.destination-tag').textContent.toLowerCase();
+                const status = row.querySelector('.status-badge').textContent.toLowerCase();
+
+                const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm) || destination.includes(searchTerm);
+                const matchesStatus = !statusValue || status.includes(statusValue);
+                const matchesDestination = !destinationValue || destination.includes(destinationValue);
+
+                if (matchesSearch && matchesStatus && matchesDestination) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            document.getElementById('totalCount').textContent = visibleCount;
+        }
+
+        // Select all functionality
+        selectAllCheckbox.addEventListener('change', () => {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+
+        // Individual checkbox functionality
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('row-checkbox')) {
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+                selectAllCheckbox.checked = checkboxes.length === checkedBoxes.length;
+                selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length;
+            }
+        });
+
+        // View details functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.view-btn')) {
+                const id = e.target.closest('.view-btn').getAttribute('data-id');
+                showItineraryDetails(id);
+            }
+
+            if (e.target.closest('.edit-btn')) {
+                const id = e.target.closest('.edit-btn').getAttribute('data-id');
+                editItinerary(id);
+            }
+
+            if (e.target.closest('.delete-btn')) {
+                const id = e.target.closest('.delete-btn').getAttribute('data-id');
+                deleteItinerary(id);
+            }
+        });
+
+        function showItineraryDetails(id) {
+            const itinerary = itinerariesData[id];
+            if (!itinerary) return;
+
+            // Populate modal with data
+            document.getElementById('modalTitle').textContent = itinerary.title;
+            document.getElementById('detailTitle').textContent = itinerary.title;
+            document.getElementById('detailDestination').textContent = itinerary.destination;
+            document.getElementById('detailDuration').textContent = itinerary.duration;
+            document.getElementById('detailBudget').textContent = itinerary.budget;
+            document.getElementById('detailStatus').innerHTML = `<span class="status-badge status-${itinerary.status.toLowerCase()}">${itinerary.status}</span>`;
+            document.getElementById('detailCreated').textContent = itinerary.created;
+            document.getElementById('detailDescription').textContent = itinerary.description;
+            document.getElementById('detailAudience').textContent = itinerary.audience;
+            document.getElementById('detailInterests').textContent = itinerary.interests;
+
+            // Populate days
+            const daysContainer = document.getElementById('itineraryDays');
+            daysContainer.innerHTML = '';
+
+            itinerary.days.forEach(day => {
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card';
+                dayCard.innerHTML = `
+                    <div class="day-header">
+                        Day ${day.day}: ${day.title}
+                    </div>
+                    <div class="day-activities">
+                        ${day.activities.map(activity => `
+                            <div class="activity-item">
+                                <div class="activity-time">${activity.time}</div>
+                                <div class="activity-details">
+                                    <div class="activity-name">${activity.name}</div>
+                                    <div class="activity-description">${activity.description}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                daysContainer.appendChild(dayCard);
+            });
+
+            // Show modal
+            detailModal.classList.add('show');
+        }
+
+        function editItinerary(id) {
+            // Simulate edit functionality
+            alert(`Edit functionality for itinerary ID: ${id} would be implemented here.\nThis would open an edit form with the current itinerary data.`);
+        }
+
+        function deleteItinerary(id) {
+            if (confirm('Are you sure you want to delete this itinerary? This action cannot be undone.')) {
+                // Remove from table
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                if (row) {
+                    row.remove();
+                    alert('Itinerary deleted successfully!');
+                    
+                    // Update count
+                    const remainingRows = document.querySelectorAll('#itinerariesTableBody tr').length;
+                    document.getElementById('totalCount').textContent = remainingRows;
+                }
+            }
+        }
+
+        // Close modal functionality
+        closeModal.addEventListener('click', () => {
+            detailModal.classList.remove('show');
+        });
+
+        detailModal.addEventListener('click', (e) => {
+            if (e.target === detailModal) {
+                detailModal.classList.remove('show');
+            }
+        });
+
+        // Bulk actions functionality
+        document.getElementById('bulkActionsBtn').addEventListener('click', () => {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                alert('Please select at least one itinerary to perform bulk actions.');
+                return;
+            }
+
+            const action = prompt(`Selected ${checkedBoxes.length} itineraries.\nChoose action:\n1. Delete\n2. Change Status\n3. Export\n\nEnter number (1-3):`);
+            
+            switch(action) {
+                case '1':
+                    if (confirm(`Are you sure you want to delete ${checkedBoxes.length} selected itineraries?`)) {
+                        checkedBoxes.forEach(checkbox => {
+                            checkbox.closest('tr').remove();
+                        });
+                        alert('Selected itineraries deleted successfully!');
+                        selectAllCheckbox.checked = false;
+                        filterTable();
+                    }
+                    break;
+                case '2':
+                    const newStatus = prompt('Enter new status (Active/Draft/Archived):');
+                    if (newStatus) {
+                        checkedBoxes.forEach(checkbox => {
+                            const statusBadge = checkbox.closest('tr').querySelector('.status-badge');
+                            statusBadge.textContent = newStatus;
+                            statusBadge.className = `status-badge status-${newStatus.toLowerCase()}`;
+                        });
+                        alert(`Status updated to "${newStatus}" for ${checkedBoxes.length} itineraries.`);
+                        selectAllCheckbox.checked = false;
+                    }
+                    break;
+                case '3':
+                    alert(`Exporting ${checkedBoxes.length} selected itineraries... (This would generate a downloadable file)`);
+                    break;
+                default:
+                    alert('Invalid selection.');
+            }
+        });
+
+        // Drag and drop functionality for upload
+        const uploadFormElement = document.getElementById('uploadForm');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadFormElement.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadFormElement.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadFormElement.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            uploadFormElement.style.borderColor = '#667eea';
+            uploadFormElement.style.background = 'rgba(102, 126, 234, 0.1)';
+        }
+
+        function unhighlight(e) {
+            uploadFormElement.style.borderColor = '#e2e8f0';
+            uploadFormElement.style.background = '#f8f9fa';
+        }
+
+        uploadFormElement.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'application/json' || file.name.endsWith('.json')) {
+                    // Simulate file processing
+                    setTimeout(() => {
+                        alert(`Successfully uploaded: ${file.name}`);
+                        uploadForm.style.display = 'none';
+                    }, 1000);
+                } else {
+                    alert('Please upload a valid JSON file.');
+                }
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            filterTable(); // Initialize table display
+        });
+    </script>
+</body>
+</html>

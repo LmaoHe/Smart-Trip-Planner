@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - Travel.Co</title>
+    <link rel="stylesheet" href="../Frontend/Css/booking.css">
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <script type="module" src="./JavaScript/firebase-config.js"></script>
+    <script type="module" src="./JavaScript/booking.js"></script>
+</head>
+
+<body>
+    <!-- Header / Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo" onclick="window.location.href='home.html'">
+                    <i class="gg-airplane"></i> Travel.Co
+                </div>
+            </div>
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="destinations.html">Destinations</a></li>
+                    <li><a href="planItinerary.html">Plan Trip</a></li>
+                </ul>
+            </nav>
+            <div class="nav-right">
+                <div class="user-profile">
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-trigger">
+                            <div class="profile-avatar" id="profileAvatarInitials"></div>
+                            <span class="profile-name" id="profileName"></span>
+                            <i class="gg-chevron-down arrow"></i>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="profile.html" class="dropdown-item">
+                                <i class="gg-profile dropdown-icon"></i>
+                                Profile
+                            </a>
+                            <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                                <i class="gg-log-out dropdown-icon"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Bar Section -->
+    <section class="search-bar-section">
+        <div class="search-bar-container">
+            <!-- Tab Navigation -->
+            <div class="search-tabs">
+                <button class="search-tab active" data-type="hotel">
+                    <i class="gg-home"></i>
+                    <span>Hotels & Homes</span>
+                </button>
+                <button class="search-tab" data-type="flight">
+                    <i class="gg-airplane"></i>
+                    <span>Flights</span>
+                </button>
+            </div>
+
+            <!-- Hotel Search Form -->
+            <form class="inline-search-form" id="hotelInlineForm">
+                <div class="inline-search-fields">
+                    <div class="inline-input">
+                        <i class="gg-pin input-icon"></i>
+                        <input type="text" placeholder="Kuala Lumpur" class="inline-field" id="hotelDestSearch" required>
+                        <button type="button" class="clear-btn" onclick="this.previousElementSibling.value=''">
+                            <i class="gg-close"></i>
+                        </button>
+                    </div>
+
+                    <div class="inline-input date-group">
+                        <i class="gg-calendar input-icon"></i>
+                        <input type="date" class="inline-field date-field" id="hotelCheckInSearch" required>
+                        <span class="date-separator">-</span>
+                        <input type="date" class="inline-field date-field" id="hotelCheckOutSearch" required>
+                        <span class="night-label">1 night</span>
+                    </div>
+
+                    <div class="inline-input guests-inline">
+                        <i class="gg-user input-icon"></i>
+                        <button type="button" class="inline-field dropdown-field" id="guestsInlineTrigger">
+                            <span id="guestsInlineDisplay">1 room, 2 adults, 0 children</span>
+                            <i class="gg-chevron-down"></i>
+                        </button>
+                        <div class="inline-guests-menu" id="guestsInlineMenu">
+                            <div class="guests-control">
+                                <span>Rooms</span>
+                                <div class="counter">
+                                    <button type="button" class="counter-btn" data-action="minus" data-target="roomsInline">
+                                        <i class="gg-math-minus"></i>
+                                    </button>
+                                    <span class="counter-value" id="roomsInlineCount">1</span>
+                                    <button type="button" class="counter-btn" data-action="plus" data-target="roomsInline">
+                                        <i class="gg-math-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="guests-control">
+                                <span>Adults</span>
+                                <div class="counter">
+                                    <button type="button" class="counter-btn" data-action="minus" data-target="adultsInline">
+                                        <i class="gg-math-minus"></i>
+                                    </button>
+                                    <span class="counter-value" id="adultsInlineCount">2</span>
+                                    <button type="button" class="counter-btn" data-action="plus" data-target="adultsInline">
+                                        <i class="gg-math-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="guests-control">
+                                <span>Children</span>
+                                <div class="counter">
+                                    <button type="button" class="counter-btn" data-action="minus" data-target="childrenInline">
+                                        <i class="gg-math-minus"></i>
+                                    </button>
+                                    <span class="counter-value" id="childrenInlineCount">0</span>
+                                    <button type="button" class="counter-btn" data-action="plus" data-target="childrenInline">
+                                        <i class="gg-math-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="inline-search-btn">
+                        <i class="gg-search"></i>
+                        Search
+                    </button>
+                </div>
+            </form>
+
+            <!-- Flight Search Form -->
+            <form class="inline-search-form hidden" id="flightInlineForm">
+                <div class="inline-search-fields">
+                    <div class="inline-input">
+                        <i class="gg-airplane input-icon"></i>
+                        <input type="text" placeholder="Departure city" class="inline-field" id="flightFromSearch" required>
+                    </div>
+
+                    <div class="inline-input">
+                        <i class="gg-airplane input-icon"></i>
+                        <input type="text" placeholder="Arrival city" class="inline-field" id="flightToSearch" required>
+                    </div>
+
+                    <div class="inline-input date-group">
+                        <i class="gg-calendar input-icon"></i>
+                        <input type="date" class="inline-field date-field" id="flightDepartSearch" required>
+                        <span class="date-separator">-</span>
+                        <input type="date" class="inline-field date-field" id="flightReturnSearch">
+                    </div>
+
+                    <div class="inline-input">
+                        <i class="gg-user input-icon"></i>
+                        <input type="number" placeholder="1" min="1" class="inline-field" id="flightTravelersSearch" value="1" required>
+                    </div>
+
+                    <button type="submit" class="inline-search-btn">
+                        <i class="gg-search"></i>
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="booking-content">
+        <div class="booking-container">
+            
+            <!-- Sidebar Filters -->
+            <aside class="filters-sidebar">
+                <div class="filters-header">
+                    <h3>Filters</h3>
+                    <button class="clear-filters-btn" id="clearFilters">Clear</button>
+                </div>
+
+                <!-- Selected Filters -->
+                <div class="selected-filters" id="selectedFilters" style="display: none;">
+                    <h4>Selected Filters:</h4>
+                    <div class="filter-tags" id="filterTags"></div>
+                </div>
+
+                <!-- Rating Filter -->
+                <div class="filter-section">
+                    <h4 class="filter-title">Rating</h4>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="4" data-filter="rating">
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-label">
+                            <i class="gg-star"></i> 4+
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Popular Filters -->
+                <div class="filter-section">
+                    <h4 class="filter-title">Popular Filters</h4>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="hotel" data-filter="type">
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-label">Hotel</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="breakfast" data-filter="amenity">
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-label">Breakfast included</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="pool" data-filter="amenity">
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-label">Pool</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="wifi" data-filter="amenity">
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-label">Free WiFi</span>
+                    </label>
+                </div>
+
+                <!-- Price Range Filter -->
+                <div class="filter-section">
+                    <h4 class="filter-title">Budget <span class="price-range-label">(RM 0 - RM 750+)</span></h4>
+                    <div class="price-range-container">
+                        <input type="range" min="0" max="750" value="750" class="price-slider" id="priceSlider">
+                        <div class="price-labels">
+                            <span>RM 0</span>
+                            <span>RM 750+</span>
+                        </div>
+                    </div>
+                    <div class="price-buttons">
+                        <button class="price-btn" data-price="0-150">RM 0 - RM 150</button>
+                        <button class="price-btn" data-price="150-300">RM 150 - RM 300</button>
+                        <button class="price-btn" data-price="300-450">RM 300 - RM 450</button>
+                        <button class="price-btn" data-price="450+">RM 450+</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Results Section -->
+            <section class="results-section">
+                <div class="results-header">
+                    <h2 class="results-count" id="resultsCount">Loading...</h2>
+                    <div class="sort-dropdown">
+                        <label for="sortSelect">Sort by:</label>
+                        <select id="sortSelect" class="sort-select">
+                            <option value="recommended">Trip.com recommended</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="rating">Rating: High to Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-state" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Searching for the best options...</p>
+                </div>
+
+                <!-- Results Grid -->
+                <div class="results-grid" id="resultsGrid">
+                    <!-- Results will be dynamically loaded here -->
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination" style="display: none;">
+                    <button class="pagination-btn" id="prevBtn" disabled>
+                        <i class="gg-chevron-left"></i>
+                        Previous
+                    </button>
+                    <div class="pagination-numbers" id="paginationNumbers"></div>
+                    <button class="pagination-btn" id="nextBtn">
+                        Next
+                        <i class="gg-chevron-right"></i>
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-title">Travel.Co</h3>
+                <p class="footer-desc">Making travel planning simple and enjoyable for everyone.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#careers">Careers</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#help">Help Center</a></li>
+                    <li><a href="#faq">FAQs</a></li>
+                    <li><a href="#terms">Terms of Service</a></li>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Travel.Co. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../Frontend/JavaScript/booking.js"></script>
+</body>
+
+</html>

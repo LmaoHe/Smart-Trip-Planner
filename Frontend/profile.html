@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Travel.Co</title>
+    <link rel="stylesheet" href="../Frontend/Css/profile.css">
+    <script type="module" src="./JavaScript/firebase-config.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                ✈️ Travel.Co
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="home.html" class="active">Home</a></li>
+                    <li><a href="destinations.html">Destinations</a></li>
+                    <li><a href="planItinerary.html">Plan Trip</a></li>
+                </ul>
+            </nav>
+            <div class="user-profile">
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <section class="profile-header">
+            <div class="profile-header-content">
+                <div class="profile-image-section">
+                    <div class="profile-image" id="profilePageAvatar"></div>
+                    <button class="upload-btn" id="changePhotoButton">Change Photo</button>
+                    <input type="file" id="photoUploadInput" accept="image/*" style="display: none;">
+                </div>
+                <div class="profile-info">
+                    <h1 class="profile-name" id="profilePageName">Loading...</h1>
+                    <p class="profile-title"></p>
+                    <p class="profile-location">
+                        ✈️ Member since <span id="memberSince"></span>
+                    </p>
+                    <div class="profile-stats"> </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card-section">
+            <h2 class="section-title">👤 Personal Information</h2>
+            <form class="profile-form" id="profileForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" class="form-input" value="">
+                        <div class="error-message" id="firstNameError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" class="form-input" value="">
+                        <div class="error-message" id="lastNameError"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="birthDate">Date of Birth</label>
+                        <input type="date" id="birthDate" class="form-input" value="">
+                        <div class="error-message" id="birthDateError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" class="form-input">
+                            <option value="">Select...</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                            <option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                        <div class="error-message" id="genderError"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" class="form-input" value="">
+                        <div class="error-message" id="phoneError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" class="form-input" value="" readonly
+                            style="background-color: #eee; cursor: not-allowed;">
+                        <small>Email cannot be changed here.</small>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" id="saveChangesBtn">Save Changes</button>
+                    <button type="button" class="btn-secondary" id="cancelChangesBtn">Cancel</button>
+                </div>
+                <div id="saveStatus" class="status-message" style="display: none;"></div>
+            </form>
+        </section>
+
+        <section class="card-section">
+            <h2 class="section-title">🧳 My Itineraries</h2>
+            <p>Your saved itineraries will appear here.</p>
+        </section>
+    </main>
+
+    <script type="module" src="./JavaScript/profile.js"></script>
+</body>
+
+</html>

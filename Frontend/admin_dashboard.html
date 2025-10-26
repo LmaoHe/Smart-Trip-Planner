@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Travel.Co</title>
+    <link rel="stylesheet" href="../Frontend/Css/admin_dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="./JavaScript/firebase-config.js"></script>
+    <script type="module" src="./JavaScript/auth.js"></script>
+    <script type="module" src="./JavaScript/admin_dashboard.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+    <header class="header">
+        <!-- ... (Your existing header HTML) ... -->
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo">✈️ Travel.Co</div>
+            </div>
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="admin_dashboard.html" class="active">Home</a></li>
+                    <li><a href="user_management.html">Member</a></li>
+                    <li><a href="admin_register.html">Register Admin</a></li>
+            </nav>
+            <div class="nav-right">
+                <div class="user-profile">
+                    <div class="profile-dropdown" id="profileDropdown" style="display: none;">
+                        <div class="profile-trigger" id="profileTrigger">
+                            <div class="profile-avatar" id="profileAvatarInitials"></div>
+                            <span class="profile-name" id="profileName"></span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="admin_profile.html" class="dropdown-item">
+                                <span class="dropdown-icon">👤</span> Profile
+                            </a>
+                            <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                                <span class="dropdown-icon">🚪</span> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-dashboard-main">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Admin Dashboard</h1>
+            <button class="btn-primary" id="exportPdfBtn">Export as PDF</button>
+        </div>
+
+        <!-- Section 0: Time Period Filter -->
+        <section class="dashboard-section" id="time-filter">
+            <div class="filter-bar">
+                <span class="filter-label">Select Time Period:</span>
+                <button class="filter-btn active" data-period="week">This Week</button>
+                <button class="filter-btn" data-period="month">This Month</button>
+                <button class="filter-btn" data-period="year">This Year</button>
+            </div>
+        </section>
+
+        <!-- Section 1: At a Glance (Number Cards) -->
+        <section class="dashboard-section" id="at-a-glance">
+            <div class="stats-grid">
+                <div class="stat-card blue-accent">
+                    <div class="stat-icon users">👥</div>
+                    <div class="stat-info">
+                        <span class="stat-title">Total Users</span>
+                        <span class="stat-value" id="totalUsersCount">...</span>
+                    </div>
+                </div>
+                <div class="stat-card green-accent">
+                    <div class="stat-icon itineraries">📈</div> <!-- Changed icon -->
+                    <div class="stat-info">
+                        <!-- Changed title -->
+                        <span class="stat-title">New Registrations</span>
+                        <!-- ID now reflects what it shows -->
+                        <span class="stat-value" id="newRegistrationsCount">...</span>
+                    </div>
+                </div>
+                <div class="stat-card red-accent">
+                    <div class="stat-icon">🔥</div> <!-- Changed icon -->
+                    <div class="stat-info">
+                        <span class="stat-title">Active Logins (Last 2 Weeks)</span>
+                        <!-- ID now reflects what it shows -->
+                        <span class="stat-value" id="activeLoginsCount">...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Key Insights (Charts) -->
+        <section class="dashboard-section" id="key-insights">
+            <h2 class="section-title">Key Insights</h2>
+            <!-- Grid for two charts -->
+            <div class="charts-grid">
+                <!-- New Chart: User Registrations Over Time -->
+                <div class="chart-container">
+                    <h3 class="chart-title">User Registrations Over Time</h3>
+                    <canvas id="registrationsChart"></canvas>
+                </div>
+
+                <!-- Existing Chart: Popular Destinations -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Most Popular Destinations (SEA)</h3>
+                    <canvas id="destinationsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</body>
+
+</html>

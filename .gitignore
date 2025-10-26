@@ -1,0 +1,10 @@
+# Ignore Python virtual environments
+venv/
+*.pyc
+
+# Ignore sensitive keys
+backend/.env
+backend/serviceAccountKey.json
+
+# Ignore OS-specific files
+.DS_Store

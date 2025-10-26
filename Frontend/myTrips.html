@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Trips - Smart Trip Planner</title>
+    <link rel="stylesheet" href="../Frontend/Css/myTrips.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                ✈️ Smart Trip Planner
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="home.html">Dashboard</a></li>
+                    <li><a href="#" class="active">My Trips</a></li>
+                    <li><a href="explore.html">Explore</a></li>
+                </ul>
+            </nav>
+            <div class="user-profile">
+                <div class="notification-bell">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </div>
+                <div class="profile-dropdown">
+                    <div class="profile-trigger">
+                        <div class="profile-avatar">JD</div>
+                        <span class="profile-name">John Doe</span>
+                        <span>▼</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div class="page-title-section">
+                <h1 class="page-title">🧳 My Trips</h1>
+                <p class="page-subtitle">Manage and explore your travel adventures</p>
+            </div>
+            <a href="plan-itinerary.html" class="plan-new-trip-btn">
+                ✨ Plan New Trip
+            </a>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filters-header">
+                <h3 class="filters-title">🔍 Find Your Trips</h3>
+                <div class="trip-count" id="tripCount">8 trips found</div>
+            </div>
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label class="filter-label">Search destinations</label>
+                    <input type="text" class="filter-input" id="searchInput"
+                        placeholder="Search by destination, title...">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="ongoing">Ongoing</option>
+                        <option value="completed">Completed</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Year</label>
+                    <select class="filter-select" id="yearFilter">
+                        <option value="">All Years</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Sort by</label>
+                    <select class="filter-select" id="sortFilter">
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="name-asc">Name A-Z</option>
+                        <option value="name-desc">Name Z-A</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trips Grid -->
+        <div class="trips-container" id="tripsContainer">
+            <!-- Sample trips will be generated here -->
+        </div>
+    </div>
+
+    <!-- Trip Details Modal -->
+    <div class="modal" id="tripModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Trip Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <!-- Modal content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample trip data
+        let sampleTrips = [{
+            id: 1,
+            title: "Tokyo Adventure",
+            destination: "Tokyo, Japan",
+            startDate: "2025-08-15",
+            endDate: "2025-08-22",
+            status: "upcoming",
+            travelers: 2,
+            budget: "mid-range",
+            activities: 18,
+            rating: 0,
+            image: "🗾"
+        }, {
+            id: 2,
+            title: "Paris Romance",
+            destination: "Paris, France",
+            startDate: "2024-02-14",
+            endDate: "2024-02-18",
+            status: "completed",
+            travelers: 2,
+            budget: "luxury",
+            activities: 12,
+            rating: 5,
+            image: "🇫🇷"
+        }, {
+            id: 3,
+            title: "Bali Retreat",
+            destination: "Bali, Indonesia",
+            startDate: "2025-09-01",
+            endDate: "2025-09-10",
+            status: "upcoming",
+            travelers: 4,
+            budget: "mid-range",
+            activities: 25,
+            rating: 0,
+            image: "🏝️"
+        }, {
+            id: 4,
+            title: "New York City Break",
+            destination: "New York, USA",
+            startDate: "2023-12-20",
+            endDate: "2023-12-25",
+            status: "completed",
+            travelers: 1,
+            budget: "luxury",
+            activities: 15,
+            rating: 4,
+            image: "🏙️"
+        }, {
+            id: 5,
+            title: "Thailand Explorer",
+            destination: "Bangkok, Thailand",
+            startDate: "2025-10-15",
+            endDate: "2025-10-25",
+            status: "draft",
+            travelers: 3,
+            budget: "budget",
+            activities: 20,
+            rating: 0,
+            image: "🇹🇭"
+        }, {
+            id: 6,
+            title: "Swiss Alps Adventure",
+            destination: "Interlaken, Switzerland",
+            startDate: "2025-07-10",
+            endDate: "2025-07-17",
+            status: "ongoing",
+            travelers: 2,
+            budget: "luxury",
+            activities: 14,
+            rating: 0,
+            image: "🏔️"
+        }, {
+            id: 7,
+            title: "Rome History Tour",
+            destination: "Rome, Italy",
+            startDate: "2023-09-05",
+            endDate: "2023-09-12",
+            status: "completed",
+            travelers: 2,
+            budget: "mid-range",
+            activities: 16,
+            rating: 5,
+            image: "🏛️"
+        }, {
+            id: 8,
+            title: "Dubai Luxury Getaway",
+            destination: "Dubai, UAE",
+            startDate: "2025-11-20",
+            endDate: "2025-11-27",
+            status: "upcoming",
+            travelers: 4,
+            budget: "luxury",
+            activities: 22,
+            rating: 0,
+            image: "🕌"
+        }];
+
+        let filteredTrips = [...sampleTrips];
+
+        // --- UTILITY FUNCTIONS ---
+        const capitalizeFirst = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+        const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+        });
+        const formatDateRange = (start, end) => `${formatDate(start)} - ${formatDate(end)}, ${new Date(start).getFullYear()}`;
+
+        // --- MODAL FUNCTIONS ---
+        const modal = document.getElementById('tripModal');
+        const openModal = () => modal.classList.add('active');
+        const closeModal = () => modal.classList.remove('active');
+
+        // --- CORE DISPLAY & FILTER LOGIC ---
+        function displayTrips(trips) {
+            const container = document.getElementById('tripsContainer');
+            if (trips.length === 0) {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🧳</div>
+                    <h3>No trips found</h3>
+                    <p>Try adjusting your filters or start planning a new adventure!</p>
+                    <a href="plan-itinerary.html" class="empty-state-cta">
+                        ✨ Plan a New Trip
+                    </a>
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = trips.map(trip => `
+            <div class="trip-card" data-trip-id="${trip.id}">
+                <div class="trip-image">
+                    ${trip.image}
+                    <div class="trip-status-badge ${trip.status}">${capitalizeFirst(trip.status)}</div>
+                </div>
+                <div class="trip-content">
+                    <div class="trip-header">
+                        <h3 class="trip-title">${trip.title}</h3>
+                        <div class="trip-dates">${formatDateRange(trip.startDate, trip.endDate)}</div>
+                    </div>
+                    <div class="trip-details">
+                        <div class="trip-detail-item"><span class="trip-detail-icon">📍</span><span>${trip.destination}</span></div>
+                        <div class="trip-detail-item"><span class="trip-detail-icon">👥</span><span>${trip.travelers} ${trip.travelers === 1 ? 'traveler' : 'travelers'}</span></div>
+                        <div class="trip-detail-item"><span class="trip-detail-icon">💰</span><span>${capitalizeFirst(trip.budget)} budget</span></div>
+                        <div class="trip-detail-item"><span class="trip-detail-icon">📋</span><span>${trip.activities} activities</span></div>
+                        ${trip.rating > 0 ? `<div class="trip-detail-item"><span class="trip-detail-icon">⭐</span><span>${'★'.repeat(trip.rating)}${'☆'.repeat(5 - trip.rating)}</span></div>` : ''}
+                    </div>
+                    <div class="trip-actions">
+                        <button class="trip-btn primary" onclick="viewTripDetails(${trip.id})">👁️ View</button>
+                        ${trip.status === 'upcoming' || trip.status === 'ongoing' ? `<button class="trip-btn primary" onclick="startJourney(${trip.id})">🚀 Start</button>` : ''}
+                        ${trip.status === 'draft' ? `<a href="plan-itinerary.html?edit=${trip.id}" class="trip-btn secondary">✏️ Edit</a>` : ''}
+                        <button class="trip-btn secondary" onclick="exportToPDF(${trip.id})">📄 Export</button>
+                        ${trip.status === 'completed' && trip.rating === 0 ? `<button class="trip-btn secondary" onclick="rateTripModal(${trip.id})">⭐ Rate</button>` : ''}
+                        <button class="trip-btn danger" onclick="deleteTrip(${trip.id})">🗑️ Delete</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        }
+
+        function setupFilters() {
+            const elements = ['searchInput', 'statusFilter', 'yearFilter', 'sortFilter'];
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                el.addEventListener('change', applyFilters);
+                if (id === 'searchInput') el.addEventListener('input', applyFilters);
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+
+            filteredTrips = sampleTrips.filter(trip => {
+                const matchesSearch = trip.title.toLowerCase().includes(searchTerm) || trip.destination.toLowerCase().includes(searchTerm);
+                const matchesStatus = !status || trip.status === status;
+                const matchesYear = !year || new Date(trip.startDate).getFullYear().toString() === year;
+                return matchesSearch && matchesStatus && matchesYear;
+            });
+
+            filteredTrips.sort((a, b) => {
+                switch (sort) {
+                    case 'date-asc': return new Date(a.startDate) - new Date(b.startDate);
+                    case 'name-asc': return a.title.localeCompare(b.title);
+                    case 'name-desc': return b.title.localeCompare(a.title);
+                    default: return new Date(b.startDate) - new Date(a.startDate);
+                }
+            });
+
+            displayTrips(filteredTrips);
+            updateTripCount();
+        }
+
+        function updateTripCount() {
+            const count = filteredTrips.length;
+            document.getElementById('tripCount').textContent = `${count} trip${count !== 1 ? 's' : ''} found`;
+        }
+
+        // --- ACTION HANDLERS ---
+        function viewTripDetails(tripId) {
+            const trip = sampleTrips.find(t => t.id === tripId);
+            if (!trip) return;
+
+            document.getElementById('modalTitle').textContent = trip.title;
+            document.getElementById('modalBody').innerHTML = `
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 4rem; margin-bottom: 10px;">${trip.image}</div>
+                <h3>${trip.destination}</h3>
+                <p style="color: #667eea; font-weight: 600;">${formatDateRange(trip.startDate, trip.endDate)}</p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${trip.travelers}</div>
+                    <div style="font-size: 0.9rem; color: #666;">Travelers</div>
+                </div>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${trip.activities}</div>
+                    <div style="font-size: 0.9rem; color: #666;">Activities</div>
+                </div>
+            </div>
+             <h4 style="margin-bottom: 10px; color: #333;">Itinerary Highlights</h4>
+             <ul style="list-style: none; padding-left: 0; margin-bottom: 20px;">
+                <li style="padding: 8px; border-bottom: 1px solid #eee;">Visit Shibuya Crossing</li>
+                <li style="padding: 8px; border-bottom: 1px solid #eee;">Explore Senso-ji Temple</li>
+                <li style="padding: 8px;">Day trip to Mount Fuji</li>
+             </ul>
+        `;
+            openModal();
+        }
+
+        function rateTripModal(tripId) {
+            const trip = sampleTrips.find(t => t.id === tripId);
+            if (!trip) return;
+
+            document.getElementById('modalTitle').textContent = `Rate your trip to ${trip.destination}`;
+            document.getElementById('modalBody').innerHTML = `
+            <p style="text-align:center; margin-bottom: 20px;">How was your experience?</p>
+            <div style="font-size: 2rem; text-align: center; cursor: pointer; margin-bottom: 20px;">
+                ${'★'.repeat(0)}${'☆'.repeat(5)}
+            </div>
+            <textarea placeholder="Share your feedback..." style="width: 100%; height: 100px; padding: 10px; border-radius: 10px; border: 1px solid #ddd;"></textarea>
+            <button class="trip-btn primary" style="width: 100%; margin-top: 20px; padding: 12px;">Submit Feedback</button>
+        `;
+            openModal();
+        }
+
+        function startJourney(tripId) {
+            alert(`Starting journey for trip ID: ${tripId}! Opening navigation...`);
+            console.log(`Start Journey for trip ID: ${tripId}`);
+        }
+
+        function exportToPDF(tripId) {
+            alert(`Exporting trip ID: ${tripId} to PDF...`);
+            console.log(`Export to PDF for trip ID: ${tripId}`);
+        }
+
+        function deleteTrip(tripId) {
+            if (confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {
+                sampleTrips = sampleTrips.filter(t => t.id !== tripId);
+                applyFilters(); // Re-render the list
+                console.log(`Deleted trip ID: ${tripId}`);
+            }
+        }
+
+        // --- INITIALIZE PAGE ---
+        document.addEventListener('DOMContentLoaded', () => {
+            displayTrips(sampleTrips);
+            setupFilters();
+            updateTripCount();
+        });
+    </script>
+</body>
