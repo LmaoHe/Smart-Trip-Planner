@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Details - Travel.Co</title>
+    <link rel="stylesheet" href="../Frontend/Css/hotelDetails.css">
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="module" src="./JavaScript/firebase-config.js"></script>
+    <script type="module" src="./JavaScript/auth.js"></script>
+    <script type="module" src="./JavaScript/hotelDetails.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="gg-airplane"></i> Travel.Co
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html" class="active">Booking</a></li>
+                    <li><a href="planItinerary.html">Trip Planner</a></li>
+                </ul>
+            </nav>
+            <div class="profile-dropdown" id="profileDropdown" style="display: none;">
+                <div class="profile-trigger">
+                    <div class="profile-avatar" id="profileAvatarInitials">U</div>
+                    <span class="profile-name" id="profileName">User</span>
+                </div>
+                <div class="dropdown-menu">
+                    <a href="profile.html" class="dropdown-item">
+                        <i class="gg-profile dropdown-icon"></i>
+                        Profile
+                    </a>
+                    <a href="#" class="dropdown-item logout" id="logoutButton">
+                        <i class="gg-enter dropdown-icon"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Back Button -->
+        <div class="back-nav">
+            <button class="back-btn" id="backToSearchBtn">
+                <i class="gg-chevron-left"></i> Back to Search
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading hotel details...</p>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero-section" id="heroSection" style="display: none;">
+            <div class="hero-image-container">
+                <img id="hotelImage" src="" alt="Hotel" class="hero-image">
+                <button class="favorite-btn-large" id="favoriteBtnLarge">
+                    <i class="fa fa-heart"></i>
+                </button>
+            </div>
+            <div class="hero-info">
+                <h1 class="hotel-name" id="hotelName">Hotel Name</h1>
+                <div class="rating-section" id="ratingSection"></div>
+                <div class="location-section">
+                    <i class="gg-pin"></i>
+                    <span id="hotelLocation">Location</span>
+                </div>
+                <div class="mentions-section" id="mentionsSection"></div>
+            </div>
+        </section>
+
+        <!-- ✅ AVAILABLE ROOMS SECTION -->
+        <section class="available-rooms-section" id="availableRoomsSection" style="display: none;">
+            <h2><i class="fa fa-home"></i> Available Rooms</h2>
+            <p class="subtitle">Select your preferred room type</p>
+
+            <div id="roomsGrid" class="rooms-grid">
+                <!-- Room cards will be inserted here by JavaScript -->
+            </div>
+        </section>
+
+    </main>
+
+</body>
+
+</html>

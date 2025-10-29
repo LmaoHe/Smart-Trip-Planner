@@ -1,17 +1,14 @@
-# Backend/config.py (PYTHON format)
+# Backend/config.py
+import os
+from dotenv import load_dotenv
+
+# Load variables from .env file (e.g., backend/.env)
+load_dotenv()
 
 class Config:
-    # Get these from https://developers.amadeus.com/
-    AMADEUS_API_KEY = 'J0FDvAuZaT6oHPGL0g21ZiQFMHmJdEbZ'
-    AMADEUS_API_SECRET = 'kbyT45Gl7FFGTKAq'
+    # 1. Read API keys from environment variables
+    AMADEUS_API_KEY = os.getenv('AMADEUS_API_KEY')
+    AMADEUS_API_SECRET = os.getenv('AMADEUS_API_SECRET')
     
-    # Test vs Production
-    ENVIRONMENT = 'test'  # Use 'test' for development, 'production' for live
-    
-    # API Endpoints
-    AMADEUS_BASE_URL = 'https://test.api.amadeus.com'  # or https://api.amadeus.com for production
-    
-    @staticmethod
-    def validate():
-        if Config.AMADEUS_API_KEY == 'YOUR_AMADEUS_API_KEY_HERE':
-            raise ValueError("⚠️ Please add your Amadeus API key in config.py!")
+    # 2. Set the Base URL directly to the Amadeus test environment
+    AMADEUS_BASE_URL = 'https://test.api.amadeus.com'

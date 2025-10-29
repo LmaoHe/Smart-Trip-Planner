@@ -70,9 +70,9 @@ function renderUserTable(page = 1) {
 
         let matchesAdminFilter = true;
         if (selectedAdminFilter === 'admins') {
-            matchesAdminFilter = (role === 'Admin' || role === 'Superadmin');
+            matchesAdminFilter = (role === 'admin' || role === 'superadmin');
         } else if (selectedAdminFilter === 'non-admins') {
-            matchesAdminFilter = !(role === 'Admin' || role === 'Superadmin');
+            matchesAdminFilter = !(role === 'admin' || role === 'superadmin');
         }
 
         return matchesSearch && matchesStatus && matchesAdminFilter;
@@ -90,7 +90,7 @@ function renderUserTable(page = 1) {
         userTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: #777;">No users found.</td></tr>`;
     } else {
         paginatedUsers.forEach(user => {
-            const isAdmin = (user.role === 'Admin' || user.role === 'Superadmin');
+            const isAdmin = (user.role === 'admin' || user.role === 'superadmin');
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>
@@ -191,8 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     updateHeaderUI(userData);
 
-                    if (currentUserRole === 'Admin' || currentUserRole === 'Superadmin') {
-                        if (currentUserRole === 'Admin') {
+                    if (currentUserRole === 'admin' || currentUserRole === 'superadmin') {
+                        if (currentUserRole === 'admin') {
                             if (adminFilter) {
                                 adminFilter.style.display = 'none';
                             }

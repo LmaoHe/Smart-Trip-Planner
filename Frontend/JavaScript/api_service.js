@@ -1,54 +1,75 @@
-// Frontend/JavaScript/apiService.js
-// This calls YOUR Flask backend (NOT Amadeus directly)
-
+// api_service.js
 class APIService {
     constructor() {
-        // Your Flask backend URL
-        this.backendURL = 'http://localhost:5000/api';
+        this.baseURL = 'http://localhost:5000';
     }
 
-    // Search Hotels
-    async searchHotels(cityName, checkInDate, checkOutDate, adults = 2, rooms = 1) {
+    async searchHotels(cityName, checkInDate, checkOutDate, adults, rooms) {
         try {
-            const response = await fetch(`${this.backendURL}/hotels/search`, {
+            // FIXED: Add /api/ prefix
+            const url = `${this.baseURL}/api/hotels/search`;
+            
+            console.log('Sending request to:', url);
+            console.log('Data:', { cityName, checkInDate, checkOutDate, adults, rooms });
+
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    cityName,
-                    checkInDate,
-                    checkOutDate,
-                    adults,
-                    rooms
+                    cityName: cityName,
+                    checkInDate: checkInDate,
+                    checkOutDate: checkOutDate,
+                    adults: adults,
+                    roomQuantity: rooms
                 })
             });
 
+            console.log('Response status:', response.status);
+
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Search failed');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Search failed');
             }
 
             return await response.json();
-
         } catch (error) {
             console.error('Hotel search error:', error);
             throw error;
         }
     }
 
-    // Health Check
-    async checkHealth() {
+    async searchFlights(origin, destination, departureDate, returnDate, travelers) {
         try {
-            const response = await fetch(`${this.backendURL}/health`);
+            // FIXED: Add /api/ prefix
+            const url = `${this.baseURL}/api/flights/search`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    origin,
+                    destination,
+                    departureDate,
+                    returnDate,
+                    adults: travelers
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Flight search failed');
+            }
+
             return await response.json();
         } catch (error) {
-            console.error('Backend health check failed:', error);
-            return { status: 'ERROR' };
+            console.error('Flight search error:', error);
+            throw error;
         }
     }
 }
 
-// Export single instance
-const apiService = new APIService();
-export default apiService;
+export default new APIService();

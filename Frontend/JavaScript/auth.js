@@ -429,9 +429,9 @@ async function handleLogin(event) {
 
         const role = userDoc.data().role;
 
-        if (role === 'Admin' || role === 'Superadmin') {
+        if (role === 'admin' || role === 'superadmin') {
             window.location.href = 'admin_dashboard.html';
-        } else if (role === 'Traveler') {
+        } else if (role === 'traveler') {
             window.location.href = 'home.html';
         } else {
             console.warn("Unknown user role:", role);

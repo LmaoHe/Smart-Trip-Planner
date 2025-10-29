@@ -6,34 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results - Travel.Co</title>
     <link rel="stylesheet" href="../Frontend/Css/booking.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
     <script type="module" src="./JavaScript/firebase-config.js"></script>
     <script type="module" src="./JavaScript/booking.js"></script>
 </head>
 
 <body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+
     <!-- Header / Navigation -->
     <header class="header">
         <div class="nav-container">
             <div class="nav-left">
-                <div class="logo" onclick="window.location.href='home.html'">
-                    <i class="gg-airplane"></i> Travel.Co
-                </div>
+                <div class="logo"><i class="gg-airplane"></i> Travel.Co</div>
             </div>
             <nav class="nav-center">
                 <ul class="nav-menu">
                     <li><a href="home.html">Home</a></li>
-                    <li><a href="destinations.html">Destinations</a></li>
-                    <li><a href="planItinerary.html">Plan Trip</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html" class="active">Booking</a></li>
+                    <li><a href="planItinerary.html">Trip Planner</a></li>
                 </ul>
             </nav>
             <div class="nav-right">
                 <div class="user-profile">
-                    <div class="profile-dropdown" id="profileDropdown">
-                        <div class="profile-trigger">
+                    <div class="profile-dropdown" id="profileDropdown" style="display: none;">
+                        <div class="profile-trigger" id="profileTrigger">
                             <div class="profile-avatar" id="profileAvatarInitials"></div>
                             <span class="profile-name" id="profileName"></span>
-                            <i class="gg-chevron-down arrow"></i>
                         </div>
                         <div class="dropdown-menu">
                             <a href="profile.html" class="dropdown-item">
@@ -41,7 +42,7 @@
                                 Profile
                             </a>
                             <a href="#logout" class="dropdown-item logout" id="logoutButton">
-                                <i class="gg-log-out dropdown-icon"></i>
+                                <i class="gg-enter dropdown-icon"></i>
                                 Logout
                             </a>
                         </div>
@@ -57,7 +58,7 @@
             <!-- Tab Navigation -->
             <div class="search-tabs">
                 <button class="search-tab active" data-type="hotel">
-                    <i class="gg-home"></i>
+                    <i class="gg-home-alt"></i>
                     <span>Hotels & Homes</span>
                 </button>
                 <button class="search-tab" data-type="flight">
@@ -67,14 +68,44 @@
             </div>
 
             <!-- Hotel Search Form -->
-            <form class="inline-search-form" id="hotelInlineForm">
+            <form class="inline-search-form" id="hotelInlineForm" novalidate>
                 <div class="inline-search-fields">
                     <div class="inline-input">
                         <i class="gg-pin input-icon"></i>
-                        <input type="text" placeholder="Kuala Lumpur" class="inline-field" id="hotelDestSearch" required>
-                        <button type="button" class="clear-btn" onclick="this.previousElementSibling.value=''">
-                            <i class="gg-close"></i>
-                        </button>
+                        <select class="inline-field" id="hotelDestSearch" required>
+                            <option value="" disabled selected>Enter city name</option>
+                            <optgroup label="🇲🇾 Malaysia (Asia)">
+                                <option value="Kuala Lumpur">Kuala Lumpur (KUL)</option>
+                                <option value="Penang">Penang (PEN)</option>
+                                <option value="Johor Bahru">Johor Bahru (JHB)</option>
+                                <option value="Kota Kinabalu">Kota Kinabalu (BKI)</option>
+                            </optgroup>
+                            <optgroup label="🇫🇷 France (Europe)">
+                                <option value="Paris">Paris (CDG)</option>
+                                <option value="Lyon">Lyon (LYS)</option>
+                                <option value="Nice">Nice (NCE)</option>
+                                <option value="Marseille">Marseille (MRS)</option>
+                            </optgroup>
+                            <optgroup label="🇺🇸 United States (North America)">
+                                <option value="New York">New York (JFK)</option>
+                                <option value="Los Angeles">Los Angeles (LAX)</option>
+                                <option value="San Francisco">San Francisco (SFO)</option>
+                                <option value="Miami">Miami (MIA)</option>
+                                <option value="Las Vegas">Las Vegas (LAS)</option>
+                            </optgroup>
+                            <optgroup label="🇧🇷 Brazil (South America)">
+                                <option value="Sao Paulo">São Paulo (GRU)</option>
+                                <option value="Rio de Janeiro">Rio de Janeiro (GIG)</option>
+                                <option value="Brasilia">Brasília (BSB)</option>
+                                <option value="Salvador">Salvador (SSA)</option>
+                            </optgroup>
+                            <optgroup label="🇲🇽 Mexico (Central America)">
+                                <option value="Mexico City">Mexico City (MEX)</option>
+                                <option value="Cancun">Cancun (CUN)</option>
+                                <option value="Guadalajara">Guadalajara (GDL)</option>
+                                <option value="Cabo">Cabo (SJD)</option>
+                            </optgroup>
+                        </select>
                     </div>
 
                     <div class="inline-input date-group">
@@ -95,11 +126,13 @@
                             <div class="guests-control">
                                 <span>Rooms</span>
                                 <div class="counter">
-                                    <button type="button" class="counter-btn" data-action="minus" data-target="roomsInline">
+                                    <button type="button" class="counter-btn" data-action="minus"
+                                        data-target="roomsInline">
                                         <i class="gg-math-minus"></i>
                                     </button>
                                     <span class="counter-value" id="roomsInlineCount">1</span>
-                                    <button type="button" class="counter-btn" data-action="plus" data-target="roomsInline">
+                                    <button type="button" class="counter-btn" data-action="plus"
+                                        data-target="roomsInline">
                                         <i class="gg-math-plus"></i>
                                     </button>
                                 </div>
@@ -107,11 +140,13 @@
                             <div class="guests-control">
                                 <span>Adults</span>
                                 <div class="counter">
-                                    <button type="button" class="counter-btn" data-action="minus" data-target="adultsInline">
+                                    <button type="button" class="counter-btn" data-action="minus"
+                                        data-target="adultsInline">
                                         <i class="gg-math-minus"></i>
                                     </button>
                                     <span class="counter-value" id="adultsInlineCount">2</span>
-                                    <button type="button" class="counter-btn" data-action="plus" data-target="adultsInline">
+                                    <button type="button" class="counter-btn" data-action="plus"
+                                        data-target="adultsInline">
                                         <i class="gg-math-plus"></i>
                                     </button>
                                 </div>
@@ -119,11 +154,13 @@
                             <div class="guests-control">
                                 <span>Children</span>
                                 <div class="counter">
-                                    <button type="button" class="counter-btn" data-action="minus" data-target="childrenInline">
+                                    <button type="button" class="counter-btn" data-action="minus"
+                                        data-target="childrenInline">
                                         <i class="gg-math-minus"></i>
                                     </button>
                                     <span class="counter-value" id="childrenInlineCount">0</span>
-                                    <button type="button" class="counter-btn" data-action="plus" data-target="childrenInline">
+                                    <button type="button" class="counter-btn" data-action="plus"
+                                        data-target="childrenInline">
                                         <i class="gg-math-plus"></i>
                                     </button>
                                 </div>
@@ -139,33 +176,125 @@
             </form>
 
             <!-- Flight Search Form -->
-            <form class="inline-search-form hidden" id="flightInlineForm">
+            <form class="inline-search-form hidden" id="flightInlineForm" novalidate>
                 <div class="inline-search-fields">
+                    <!-- Trip Type Select -->
                     <div class="inline-input">
-                        <i class="gg-airplane input-icon"></i>
-                        <input type="text" placeholder="Departure city" class="inline-field" id="flightFromSearch" required>
+                        <i class="gg-sync input-icon"></i>
+                        <select class="inline-field" id="tripTypeSelect" required>
+                            <option value="round-trip">Round-trip</option>
+                            <option value="one-way">One-way</option>
+                        </select>
                     </div>
 
+                    <!-- From (Origin) -->
                     <div class="inline-input">
                         <i class="gg-airplane input-icon"></i>
-                        <input type="text" placeholder="Arrival city" class="inline-field" id="flightToSearch" required>
+                        <select class="inline-field" id="flightFromSearch" required>
+                            <option value="" disabled selected>From (City)</option>
+                            <optgroup label="🇲🇾 Malaysia (Asia)">
+                                <option value="KUL">Kuala Lumpur (KUL)</option>
+                                <option value="PEN">Penang (PEN)</option>
+                                <option value="JHB">Johor Bahru (JHB)</option>
+                                <option value="BKI">Kota Kinabalu (BKI)</option>
+                            </optgroup>
+                            <optgroup label="🇫🇷 France (Europe)">
+                                <option value="CDG">Paris (CDG)</option>
+                                <option value="LYS">Lyon (LYS)</option>
+                                <option value="NCE">Nice (NCE)</option>
+                                <option value="MRS">Marseille (MRS)</option>
+                            </optgroup>
+                            <optgroup label="🇺🇸 United States (North America)">
+                                <option value="JFK">New York (JFK)</option>
+                                <option value="LAX">Los Angeles (LAX)</option>
+                                <option value="SFO">San Francisco (SFO)</option>
+                                <option value="MIA">Miami (MIA)</option>
+                                <option value="LAS">Las Vegas (LAS)</option>
+                            </optgroup>
+                            <optgroup label="🇧🇷 Brazil (South America)">
+                                <option value="GRU">São Paulo (GRU)</option>
+                                <option value="GIG">Rio de Janeiro (GIG)</option>
+                                <option value="BSB">Brasília (BSB)</option>
+                                <option value="SSA">Salvador (SSA)</option>
+                            </optgroup>
+                            <optgroup label="🇲🇽 Mexico (Central America)">
+                                <option value="MEX">Mexico City (MEX)</option>
+                                <option value="CUN">Cancun (CUN)</option>
+                                <option value="GDL">Guadalajara (GDL)</option>
+                                <option value="SJD">Cabo (SJD)</option>
+                            </optgroup>
+                        </select>
                     </div>
 
+                    <!-- To (Destination) -->
+                    <div class="inline-input">
+                        <i class="gg-airplane input-icon"></i>
+                        <select class="inline-field" id="flightToSearch" required>
+                            <option value="" disabled selected>To (City)</option>
+                            <optgroup label="🇲🇾 Malaysia (Asia)">
+                                <option value="KUL">Kuala Lumpur (KUL)</option>
+                                <option value="PEN">Penang (PEN)</option>
+                                <option value="JHB">Johor Bahru (JHB)</option>
+                                <option value="BKI">Kota Kinabalu (BKI)</option>
+                            </optgroup>
+                            <optgroup label="🇫🇷 France (Europe)">
+                                <option value="CDG">Paris (CDG)</option>
+                                <option value="LYS">Lyon (LYS)</option>
+                                <option value="NCE">Nice (NCE)</option>
+                                <option value="MRS">Marseille (MRS)</option>
+                            </optgroup>
+                            <optgroup label="🇺🇸 United States (North America)">
+                                <option value="JFK">New York (JFK)</option>
+                                <option value="LAX">Los Angeles (LAX)</option>
+                                <option value="SFO">San Francisco (SFO)</option>
+                                <option value="MIA">Miami (MIA)</option>
+                                <option value="LAS">Las Vegas (LAS)</option>
+                            </optgroup>
+                            <optgroup label="🇧🇷 Brazil (South America)">
+                                <option value="GRU">São Paulo (GRU)</option>
+                                <option value="GIG">Rio de Janeiro (GIG)</option>
+                                <option value="BSB">Brasília (BSB)</option>
+                                <option value="SSA">Salvador (SSA)</option>
+                            </optgroup>
+                            <optgroup label="🇲🇽 Mexico (Central America)">
+                                <option value="MEX">Mexico City (MEX)</option>
+                                <option value="CUN">Cancun (CUN)</option>
+                                <option value="GDL">Guadalajara (GDL)</option>
+                                <option value="SJD">Cabo (SJD)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Dates -->
                     <div class="inline-input date-group">
                         <i class="gg-calendar input-icon"></i>
                         <input type="date" class="inline-field date-field" id="flightDepartSearch" required>
-                        <span class="date-separator">-</span>
+                        <span class="date-separator" id="returnDateSeparator">-</span>
                         <input type="date" class="inline-field date-field" id="flightReturnSearch">
                     </div>
 
+                    <!-- Passengers -->
                     <div class="inline-input">
                         <i class="gg-user input-icon"></i>
-                        <input type="number" placeholder="1" min="1" class="inline-field" id="flightTravelersSearch" value="1" required>
+                        <input type="number" placeholder="1 passenger" min="1" max="9" class="inline-field"
+                            id="flightTravelersSearch" value="1" required>
                     </div>
 
+                    <!-- Class -->
+                    <div class="inline-input">
+                        <i class="gg-briefcase input-icon"></i>
+                        <select class="inline-field" id="flightClassSearch">
+                            <option value="ECONOMY">Economy</option>
+                            <option value="PREMIUM_ECONOMY">Premium Economy</option>
+                            <option value="BUSINESS">Business</option>
+                            <option value="FIRST">First Class</option>
+                        </select>
+                    </div>
+
+                    <!-- Search Button -->
                     <button type="submit" class="inline-search-btn">
                         <i class="gg-search"></i>
-                        Search
+                        Search Flights
                     </button>
                 </div>
             </form>
@@ -175,151 +304,197 @@
     <!-- Main Content -->
     <main class="booking-content">
         <div class="booking-container">
-            
-            <!-- Sidebar Filters -->
+
+            <!-- Sidebar Filters (Dynamic: Shows hotel or flight filters) -->
             <aside class="filters-sidebar">
                 <div class="filters-header">
                     <h3>Filters</h3>
                     <button class="clear-filters-btn" id="clearFilters">Clear</button>
                 </div>
 
-                <!-- Selected Filters -->
-                <div class="selected-filters" id="selectedFilters" style="display: none;">
-                    <h4>Selected Filters:</h4>
-                    <div class="filter-tags" id="filterTags"></div>
+                <!-- HOTEL FILTERS -->
+                <div id="hotelFilters">
+                    <div class="filter-section">
+                        <h4 class="filter-title">Rating</h4>
+
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="1" data-filter="rating">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">
+                                <div class="rating-circles-filter">
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter"></div>
+                                    <div class="circle-filter"></div>
+                                    <div class="circle-filter"></div>
+                                    <div class="circle-filter"></div>
+                                </div>
+                                <span class="rating-plus">+</span>
+                            </span>
+                        </label>
+
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="2" data-filter="rating">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">
+                                <div class="rating-circles-filter">
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter"></div>
+                                    <div class="circle-filter"></div>
+                                    <div class="circle-filter"></div>
+                                </div>
+                                <span class="rating-plus">+</span>
+                            </span>
+                        </label>
+
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="3" data-filter="rating">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">
+                                <div class="rating-circles-filter">
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter"></div>
+                                    <div class="circle-filter"></div>
+                                </div>
+                                <span class="rating-plus">+</span>
+                            </span>
+                        </label>
+
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="4" data-filter="rating">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">
+                                <div class="rating-circles-filter">
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter filled"></div>
+                                    <div class="circle-filter"></div>
+                                </div>
+                                <span class="rating-plus">+</span>
+                            </span>
+                        </label>
+                    </div>
                 </div>
 
-                <!-- Rating Filter -->
-                <div class="filter-section">
-                    <h4 class="filter-title">Rating</h4>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" value="4" data-filter="rating">
-                        <span class="checkbox-custom"></span>
-                        <span class="checkbox-label">
-                            <i class="gg-star"></i> 4+
-                        </span>
-                    </label>
-                </div>
+                <!-- FLIGHT FILTERS -->
+                <div id="flightFilters" style="display: none;">
+                    <!-- Stops Filter -->
+                    <div class="filter-section">
+                        <h4 class="filter-title">Stops</h4>
 
-                <!-- Popular Filters -->
-                <div class="filter-section">
-                    <h4 class="filter-title">Popular Filters</h4>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" value="hotel" data-filter="type">
-                        <span class="checkbox-custom"></span>
-                        <span class="checkbox-label">Hotel</span>
-                    </label>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" value="breakfast" data-filter="amenity">
-                        <span class="checkbox-custom"></span>
-                        <span class="checkbox-label">Breakfast included</span>
-                    </label>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" value="pool" data-filter="amenity">
-                        <span class="checkbox-custom"></span>
-                        <span class="checkbox-label">Pool</span>
-                    </label>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" value="wifi" data-filter="amenity">
-                        <span class="checkbox-custom"></span>
-                        <span class="checkbox-label">Free WiFi</span>
-                    </label>
-                </div>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="0" data-filter="stops">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">Direct</span>
+                        </label>
 
-                <!-- Price Range Filter -->
-                <div class="filter-section">
-                    <h4 class="filter-title">Budget <span class="price-range-label">(RM 0 - RM 750+)</span></h4>
-                    <div class="price-range-container">
-                        <input type="range" min="0" max="750" value="750" class="price-slider" id="priceSlider">
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="1" data-filter="stops">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">1 Stop</span>
+                        </label>
+
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="2" data-filter="stops">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">2+ Stops</span>
+                        </label>
+                    </div>
+
+                    <!-- Price Range Filter -->
+                    <div class="filter-section">
+                        <h4 class="filter-title">Price Range</h4>
+                        <input type="range" id="flightPriceSlider" class="price-slider" min="0" max="5000" value="5000"
+                            step="100">
                         <div class="price-labels">
                             <span>RM 0</span>
-                            <span>RM 750+</span>
+                            <span id="flightPriceMax">RM 5000+</span>
                         </div>
                     </div>
-                    <div class="price-buttons">
-                        <button class="price-btn" data-price="0-150">RM 0 - RM 150</button>
-                        <button class="price-btn" data-price="150-300">RM 150 - RM 300</button>
-                        <button class="price-btn" data-price="300-450">RM 300 - RM 450</button>
-                        <button class="price-btn" data-price="450+">RM 450+</button>
+
+                    <!-- Airlines Filter -->
+                    <div class="filter-section">
+                        <h4 class="filter-title">Airlines</h4>
+                        <div id="airlinesFilterList">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+
+                    <!-- Departure Time Filter -->
+                    <div class="filter-section">
+                        <h4 class="filter-title">Departure Time</h4>
+
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="morning" data-filter="departTime">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">Morning (6AM - 12PM)</span>
+                        </label>
+
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="afternoon" data-filter="departTime">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">Afternoon (12PM - 6PM)</span>
+                        </label>
+
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="evening" data-filter="departTime">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">Evening (6PM - 12AM)</span>
+                        </label>
+
+                        <label class="filter-checkbox">
+                            <input type="checkbox" value="night" data-filter="departTime">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-label">Night (12AM - 6AM)</span>
+                        </label>
                     </div>
                 </div>
             </aside>
 
-            <!-- Results Section -->
+            <!-- Results Section (UNIFIED FOR BOTH HOTEL & FLIGHT) -->
             <section class="results-section">
+                <!-- Results Header (shared) -->
                 <div class="results-header">
-                    <h2 class="results-count" id="resultsCount">Loading...</h2>
+                    <h2 class="results-count" id="resultsCount"></h2>
                     <div class="sort-dropdown">
                         <label for="sortSelect">Sort by:</label>
                         <select id="sortSelect" class="sort-select">
-                            <option value="recommended">Trip.com recommended</option>
+                            <!-- Hotel sort options -->
+                            <option value="recommended">Recommended</option>
                             <option value="price-low">Price: Low to High</option>
                             <option value="price-high">Price: High to Low</option>
-                            <option value="rating">Rating: High to Low</option>
+                            <option value="rating-high">Rating: High to Low</option>
+                            <option value="rating-low">Rating: Low to High</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Loading State -->
-                <div class="loading-state" id="loadingState">
+                <!-- Loading State (shared) -->
+                <div class="loading-state" id="loadingState" style="display: none;">
                     <div class="spinner"></div>
-                    <p>Searching for the best options...</p>
+                    <p id="loadingText">Searching for the best options...</p>
                 </div>
 
-                <!-- Results Grid -->
+                <!-- Results Grid (shared - content changes based on tab) -->
                 <div class="results-grid" id="resultsGrid">
-                    <!-- Results will be dynamically loaded here -->
-                </div>
-
-                <!-- Pagination -->
-                <div class="pagination" id="pagination" style="display: none;">
-                    <button class="pagination-btn" id="prevBtn" disabled>
-                        <i class="gg-chevron-left"></i>
-                        Previous
-                    </button>
-                    <div class="pagination-numbers" id="paginationNumbers"></div>
-                    <button class="pagination-btn" id="nextBtn">
-                        Next
-                        <i class="gg-chevron-right"></i>
-                    </button>
+                    <!-- Default prompt -->
+                    <div class="search-prompt" id="searchPrompt">
+                        <i class="gg-search" id="promptIcon"
+                            style="font-size: 64px; color: var(--primary-blue); margin-bottom: 20px;"></i>
+                        <h3 id="promptTitle" style="font-size: 24px; margin-bottom: 12px; color: var(--text-dark);">
+                            Ready to find your perfect stay?</h3>
+                        <p id="promptText" style="color: var(--text-gray); font-size: 16px;">Enter your destination,
+                            dates, and number of guests above to search for hotels.</p>
+                    </div>
                 </div>
             </section>
 
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3 class="footer-title">Travel.Co</h3>
-                <p class="footer-desc">Making travel planning simple and enjoyable for everyone.</p>
-            </div>
-            <div class="footer-section">
-                <h4>Quick Links</h4>
-                <ul class="footer-links">
-                    <li><a href="#about">About Us</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                    <li><a href="#careers">Careers</a></li>
-                    <li><a href="#blog">Blog</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Support</h4>
-                <ul class="footer-links">
-                    <li><a href="#help">Help Center</a></li>
-                    <li><a href="#faq">FAQs</a></li>
-                    <li><a href="#terms">Terms of Service</a></li>
-                    <li><a href="#privacy">Privacy Policy</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2025 Travel.Co. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <script src="../Frontend/JavaScript/booking.js"></script>
 </body>
 
 </html>

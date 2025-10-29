@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan Itinerary - Travel.Co</title>
     <link rel="stylesheet" href="../Frontend/Css/planItinerary.css">
-
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
     <script type="module" src="./JavaScript/firebase-config.js"></script>
     <script type="module" src="./JavaScript/plan_itinerary.js"></script>
 </head>
@@ -17,13 +17,14 @@
     <header class="header">
         <div class="nav-container">
             <div class="nav-left">
-                <div class="logo">✈️ Travel.Co</div>
+                <div class="logo"><i class="gg-airplane"></i> Travel.Co</div>
             </div>
             <nav class="nav-center">
                 <ul class="nav-menu">
                     <li><a href="home.html">Home</a></li>
-                    <li><a href="destinations.html">Destinations</a></li>
-                    <li><a href="planItinerary.html" class="active">Plan Trip</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html">Booking</a></li>
+                    <li><a href="planItinerary.html" class="active">Trip Planner</a></li>
                 </ul>
             </nav>
             <div class="nav-right">
@@ -32,14 +33,15 @@
                         <div class="profile-trigger" id="profileTrigger">
                             <div class="profile-avatar" id="profileAvatarInitials"></div>
                             <span class="profile-name" id="profileName"></span>
-                            <span class="arrow">▼</span>
                         </div>
                         <div class="dropdown-menu">
                             <a href="profile.html" class="dropdown-item">
-                                <span class="dropdown-icon">👤</span> Profile
+                                <i class="gg-profile dropdown-icon"></i>
+                                Profile
                             </a>
                             <a href="#logout" class="dropdown-item logout" id="logoutButton">
-                                <span class="dropdown-icon">🚪</span> Logout
+                                <i class="gg-enter dropdown-icon"></i>
+                                Logout
                             </a>
                         </div>
                     </div>
@@ -57,7 +59,7 @@
 
         <div class="planning-container">
             <div class="trip-input-section">
-                <h2 class="section-title">🎯 Trip Details</h2>
+                <h2 class="section-title"><i class="gg-pin"></i> Trip Details</h2>
 
                 <form id="tripForm" novalidate>
 
@@ -79,6 +81,7 @@
                         </select>
                         <div class="error-message" id="cityError"></div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label" for="startDate">Start Date</label>
@@ -119,22 +122,34 @@
                     <div class="form-group">
                         <label class="form-label">Interests & Preferences (Select at least one)</label>
                         <div class="interest-tags">
-                            <span class="interest-tag" data-interest="History">📚 History</span>
-                            <span class="interest-tag" data-interest="Culture">🏛️ Culture & Arts</span>
-                            <span class="interest-tag" data-interest="Nature">🌲 Nature & Parks</span>
-                            <span class="interest-tag" data-interest="Adventure">🎢 Adventure</span>
-                            <span class="interest-tag" data-interest="Food">🍜 Food</span>
-                            <span class="interest-tag" data-interest="Shopping">🛍️ Shopping</span>
+                            <span class="interest-tag" data-interest="History">
+                                <i class="gg-format-text"></i> History
+                            </span>
+                            <span class="interest-tag" data-interest="Culture">
+                                <i class="gg-home"></i> Culture & Arts
+                            </span>
+                            <span class="interest-tag" data-interest="Nature">
+                                <i class="gg-tree"></i> Nature & Parks
+                            </span>
+                            <span class="interest-tag" data-interest="Adventure">
+                                <i class="gg-dice"></i> Adventure
+                            </span>
+                            <span class="interest-tag" data-interest="Food">
+                                <i class="gg-coffee"></i> Food
+                            </span>
+                            <span class="interest-tag" data-interest="Shopping">
+                                <i class="gg-shopping-bag"></i> Shopping
+                            </span>
                         </div>
                         <div class="error-message" id="interestsError"></div>
                     </div>
 
                     <div class="action-buttons">
                         <button type="submit" class="btn btn-primary" id="generateBtn">
-                            ✨ Generate Itinerary
+                            <i class="gg-check"></i> Generate Itinerary
                         </button>
                         <button type="button" class="btn btn-secondary" id="clearFormBtn">
-                            🔄 Clear Form
+                            <i class="gg-undo"></i> Clear Form
                         </button>
                     </div>
                 </form>

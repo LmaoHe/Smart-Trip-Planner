@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Booking - Travel.Co</title>
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="CSS/bookingCheckout.css">
+    <script type="module" src="JavaScript/bookingCheckout.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <i class="gg-airplane"></i>
+                <span>Travel.Co</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="checkout-container">
+
+        <!-- Progress Bar -->
+        <div class="progress-bar-container">
+            <div class="progress-steps">
+                <div class="progress-step active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Personal Info</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Payment</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Confirmation</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="checkout-content">
+
+            <!-- Left Side - Form Steps -->
+            <div class="checkout-form">
+
+                <!-- Step 1: Personal Information -->
+                <div class="form-step active" id="step-1">
+                    <h2 class="form-title">Personal Information</h2>
+
+                    <!-- Lead Guest Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Who's the lead guest?</h3>
+                        <p class="section-subtitle">*Required field</p>
+
+                        <!-- Step 1: Personal Information -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First name *</label>
+                                <input type="text" id="firstName" class="form-input" required>
+                                <span id="firstNameError" class="error-message" style="display: none;"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last name *</label>
+                                <input type="text" id="lastName" class="form-input" required>
+                                <span id="lastNameError" class="error-message" style="display: none;"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" class="form-input" required>
+                            <small class="form-hint">We'll use this to send your booking confirmation</small>
+                            <span id="emailError" class="error-message" style="display: none;"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone number (optional)</label>
+                            <input type="tel" id="phone" class="form-input">
+                        </div>
+                    </div>
+
+                    <!-- Special Requests Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Special Requests</h3>
+                        <p class="section-subtitle">Select your preferences (optional)</p>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Room Type Preference</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="smoking" value="non-smoking" checked>
+                                        <span>Non-smoking</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="smoking" value="smoking">
+                                        <span>Smoking</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Bed Setup Preference</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="bed" value="large" checked>
+                                        <span>1 Large Bed</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="bed" value="twin">
+                                        <span>2 Twin Beds</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="requests">Additional Requests</label>
+                            <textarea id="requests" class="form-input" rows="4"
+                                placeholder="Any special requests or requirements?"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Step 1 Button -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-primary" id="nextToPayment">
+                            Next: Payment Details
+                            <i class="gg-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Payment -->
+                <div class="form-step" id="step-2">
+                    <h2 class="form-title">Payment Details</h2>
+
+                    <div class="form-section">
+                        <div class="security-badge">
+                            <i class="gg-lock"></i>
+                            <span>Secure Payment - All card information is encrypted</span>
+                        </div>
+
+                        <h3 class="section-title">Select Payment Method *</h3>
+
+                        <!-- Credit/Debit Card -->
+                        <div class="payment-option">
+                            <label class="payment-option-header">
+                                <input type="radio" name="paymentMethod" value="card" checked>
+                                <div class="payment-option-title">
+                                    <span>Credit/Debit Card</span>
+                                    <div class="card-logos">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
+                                            alt="Visa" height="20">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                                            alt="Mastercard" height="20">
+                                    </div>
+                                </div>
+                            </label>
+
+                            <div class="payment-option-content" id="cardPaymentContent">
+                                <!-- Payment Step -->
+                                <div class="form-group">
+                                    <label for="cardName">Card holder name *</label>
+                                    <input type="text" id="cardName" class="form-input" placeholder="Name on card"
+                                        autocomplete="off">
+                                    <span id="cardNameError" class="error-message" style="display: none;"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="cardNumber">Card number *</label>
+                                    <input type="text" id="cardNumber" class="form-input"
+                                        placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="off">
+                                    <span id="cardNumberError" class="error-message" style="display: none;"></span>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="cardExpiry">Expiry date *</label>
+                                        <input type="text" id="cardExpiry" class="form-input" placeholder="MM/YY"
+                                            maxlength="5" autocomplete="off">
+                                        <span id="cardExpiryError" class="error-message" style="display: none;"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cardCVV">CVV *</label>
+                                        <input type="text" id="cardCVV" class="form-input" placeholder="123"
+                                            maxlength="3" autocomplete="off">
+                                        <span id="cardCVVError" class="error-message" style="display: none;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Digital Payment -->
+                        <div class="payment-option">
+                            <label class="payment-option-header">
+                                <input type="radio" name="paymentMethod" value="digital">
+                                <div class="payment-option-title">
+                                    <span>Digital Payment</span>
+                                    <div class="digital-logos">
+                                        <span class="digital-logo">PayPal</span>
+                                        <span class="digital-logo">Touch 'n Go</span>
+                                        <span class="digital-logo">GrabPay</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <div class="payment-option-content" id="digitalPaymentContent" style="display: none;">
+                                <p class="info-text">You will be redirected to complete your payment securely.</p>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="agreeTerms" required>
+                                <span>I agree to the <a href="#" class="link">Terms and Conditions</a> and <a href="#"
+                                        class="link">Privacy Policy</a></span>
+                            </label>
+                            <span id="agreeTermsError" class="error-message" style="display: none;"></span>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 Buttons -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="backToPersonal">
+                            <i class="gg-arrow-left"></i>
+                            Back
+                        </button>
+                        <button type="button" class="btn-primary" id="confirmBooking">
+                            Confirm Booking
+                            <i class="gg-check"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Confirmation -->
+                <div class="form-step" id="step-3">
+                    <div class="confirmation-container">
+                        <div class="confirmation-icon">
+                            <i class="gg-check-o"></i>
+                        </div>
+                        <h2 class="confirmation-title">Booking Confirmed!</h2>
+                        <p class="confirmation-subtitle">Your reservation has been successfully completed</p>
+
+                        <div class="booking-id">
+                            <span class="booking-id-label">Booking Reference:</span>
+                            <span class="booking-id-value" id="bookingId">#TRV123456</span>
+                        </div>
+
+                        <div class="confirmation-details">
+                            <div class="confirmation-section">
+                                <i class="gg-mail"></i>
+                                <div>
+                                    <p class="confirmation-label">Confirmation Email Sent To:</p>
+                                    <p class="confirmation-value" id="confirmEmail">email@example.com</p>
+                                </div>
+                            </div>
+
+                            <div class="booking-summary-final">
+                                <h3>Booking Summary</h3>
+                                <div class="summary-item">
+                                    <span class="summary-label">Hotel:</span>
+                                    <span class="summary-value" id="finalHotelName">MOV Hotel</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Check-in:</span>
+                                    <span class="summary-value" id="finalCheckIn">Oct 30, 2025</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Check-out:</span>
+                                    <span class="summary-value" id="finalCheckOut">Nov 1, 2025</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Duration:</span>
+                                    <span class="summary-value" id="finalNights">2 nights</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Room:</span>
+                                    <span class="summary-value" id="finalRoomName">Enclave (No Window)</span>
+                                </div>
+                                <div class="summary-item total">
+                                    <span class="summary-label">Total Paid:</span>
+                                    <span class="summary-value" id="finalTotal">MYR 1,260</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="confirmation-actions">
+                            <button type="button" class="btn-primary" onclick="window.location.href='profile.html'">
+                                <i class="gg-list"></i>
+                                View My Bookings
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="window.location.href='index.html'">
+                                <i class="fa fa-home"></i>
+                                Back to Home
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side - Booking Summary (Sticky) -->
+            <div class="booking-summary">
+                <div class="summary-card">
+                    <h3 class="summary-title">Booking Summary</h3>
+
+                    <!-- Hotel Info -->
+                    <div class="summary-hotel">
+                        <img src="" alt="Hotel" class="summary-hotel-image" id="summaryHotelImage">
+                        <div class="summary-hotel-info">
+                            <h4 class="summary-hotel-name" id="summaryHotelName">MOV Hotel</h4>
+                            <div class="summary-hotel-rating">
+                                <span class="rating-stars" id="summaryRating">⭐ 4.7</span>
+                                <span class="rating-reviews" id="summaryReviews">(1,469 reviews)</span>
+                            </div>
+                            <div class="summary-location">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <span id="summaryLocation">Kuala Lumpur</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="summary-divider">
+
+                    <!-- Room Info with Image -->
+                    <div class="summary-room">
+                        <img src="" alt="Room" class="summary-room-image" id="summaryRoomImage">
+                        <h5 class="summary-room-name" id="summaryRoomName">Standard Room</h5>
+                        <div class="summary-room-details">
+                            <span><i class="fa-solid fa-user"></i> <span id="summaryGuests">2 guests</span></span>
+                            <span><i class="fa-solid fa-bed"></i> <span id="summaryBed">1 King Bed</span></span>
+                        </div>
+                        <div class="summary-room-amenities" id="summaryAmenities">
+                            <span class="amenity-tag">Free WiFi</span>
+                            <span class="amenity-tag">Air Conditioning</span>
+                            <span class="amenity-tag">TV</span>
+                        </div>
+                    </div>
+
+                    <hr class="summary-divider">
+
+                    <!-- Dates -->
+                    <div class="summary-dates">
+                        <div class="date-item">
+                            <span class="date-label">Check-in:</span>
+                            <span class="date-value" id="summaryCheckIn">Thu, Oct 30, 2025</span>
+                        </div>
+                        <div class="date-item">
+                            <span class="date-label">Check-out:</span>
+                            <span class="date-value" id="summaryCheckOut">Sat, Nov 1, 2025</span>
+                        </div>
+                        <div class="date-item nights">
+                            <i class="fa-solid fa-moon"></i>
+                            <span id="summaryNights">2 nights</span>
+                        </div>
+                    </div>
+
+                    <hr class="summary-divider">
+
+                    <!-- Price Breakdown -->
+                    <div class="summary-price">
+                        <!-- 1. Per Night Price -->
+                        <div class="price-row">
+                            <span class="price-label">Price per night</span>
+                            <span class="price-value" id="pricePerNightAmount">RM 350</span>
+                        </div>
+
+                        <!-- 2. Calculation -->
+                        <div class="price-row">
+                            <span class="price-label price-calculation">
+                                <span id="pricePerNightCalc">RM 350</span> × <span id="priceNightCount">2 nights</span>
+                            </span>
+                            <span class="price-value" id="priceSubtotal">RM 700</span>
+                        </div>
+
+                        <!-- 3. Total -->
+                        <div class="price-row total">
+                            <span class="price-label">Total</span>
+                            <span class="price-value total-amount" id="priceTotal">RM 700</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Processing your booking...</p>
+    </div>
+
+</body>
+
+</html>

@@ -22,6 +22,7 @@
                 <ul class="nav-menu">
                     <li><a href="home.html" class="active">Home</a></li>
                     <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html">Booking</a></li>
                     <li><a href="planItinerary.html">Trip Planner</a></li>
                 </ul>
             </nav>
@@ -31,7 +32,6 @@
                         <div class="profile-trigger">
                             <div class="profile-avatar" id="profileAvatarInitials"></div>
                             <span class="profile-name" id="profileName"></span>
-                            <i class="gg-chevron-down arrow"></i>
                         </div>
                         <div class="dropdown-menu">
                             <a href="profile.html" class="dropdown-item">
@@ -39,7 +39,7 @@
                                 Profile
                             </a>
                             <a href="#logout" class="dropdown-item logout" id="logoutButton">
-                                <i class="gg-log-out dropdown-icon"></i>
+                                <i class="gg-enter dropdown-icon"></i>
                                 Logout
                             </a>
                         </div>
@@ -49,208 +49,16 @@
         </div>
     </header>
 
-    <!-- Hero Section with Booking Bar -->
-    <section class="hero-section extended">
+    <!-- Hero Section with Call to Action -->
+    <section class="hero-section">
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <h1 class="hero-title">Take a trip around the world together</h1>
             <p class="hero-subtitle">Find awesome flights, hotel, tour, car and packages</p>
-        </div>
-
-        <!-- Booking Search Bar -->
-        <div class="booking-search-container">
-            <!-- Tab Navigation -->
-            <div class="booking-tabs">
-                <button class="booking-tab active" data-type="hotel">
-                    <i class="gg-home"></i>
-                    <span class="tab-text">Hotels & Homes</span>
-                </button>
-                <button class="booking-tab" data-type="flight">
-                    <i class="gg-airplane"></i>
-                    <span class="tab-text">Flights</span>
-                </button>
-            </div>
-
-            <!-- Hotel Search Form -->
-            <form class="search-form" id="hotelSearchForm" novalidate>
-                <div class="search-fields-row">
-                    <div class="search-input destination-input">
-                        <label class="search-label">
-                            <i class="gg-pin"></i>
-                            Destination/Hotel Name
-                        </label>
-                        <input 
-                            type="text" 
-                            placeholder="City, airport, region, landmark or hotel name" 
-                            class="search-field" 
-                            id="hotelDestination" 
-                            required
-                        >
-                    </div>
-
-                    <div class="search-input date-input">
-                        <label class="search-label">
-                            <i class="gg-calendar"></i>
-                            Check-in
-                        </label>
-                        <input 
-                            type="date" 
-                            class="search-field" 
-                            id="hotelCheckin" 
-                            required
-                        >
-                        <span class="night-count">1 night</span>
-                    </div>
-
-                    <div class="search-input date-input">
-                        <label class="search-label">
-                            <i class="gg-calendar"></i>
-                            Check-out
-                        </label>
-                        <input 
-                            type="date" 
-                            class="search-field" 
-                            id="hotelCheckout" 
-                            required
-                        >
-                    </div>
-
-                    <div class="search-input guests-input">
-                        <label class="search-label">
-                            <i class="gg-user"></i>
-                            Rooms and Guests
-                        </label>
-                        <div class="guests-dropdown">
-                            <button type="button" class="guests-trigger" id="guestsTrigger">
-                                <span id="guestsDisplay">1 room, 2 adults, 0 children</span>
-                                <i class="gg-chevron-down"></i>
-                            </button>
-                            <div class="guests-menu" id="guestsMenu">
-                                <div class="guests-control">
-                                    <span>Rooms</span>
-                                    <div class="counter">
-                                        <button type="button" class="counter-btn" data-action="minus" data-target="rooms">
-                                            <i class="gg-math-minus"></i>
-                                        </button>
-                                        <span class="counter-value" id="roomsCount">1</span>
-                                        <button type="button" class="counter-btn" data-action="plus" data-target="rooms">
-                                            <i class="gg-math-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="guests-control">
-                                    <span>Adults</span>
-                                    <div class="counter">
-                                        <button type="button" class="counter-btn" data-action="minus" data-target="adults">
-                                            <i class="gg-math-minus"></i>
-                                        </button>
-                                        <span class="counter-value" id="adultsCount">2</span>
-                                        <button type="button" class="counter-btn" data-action="plus" data-target="adults">
-                                            <i class="gg-math-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="guests-control">
-                                    <span>Children</span>
-                                    <div class="counter">
-                                        <button type="button" class="counter-btn" data-action="minus" data-target="children">
-                                            <i class="gg-math-minus"></i>
-                                        </button>
-                                        <span class="counter-value" id="childrenCount">0</span>
-                                        <button type="button" class="counter-btn" data-action="plus" data-target="children">
-                                            <i class="gg-math-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="search-submit-btn">
-                        <i class="gg-search"></i>
-                        <span>Search</span>
-                    </button>
-                </div>
-            </form>
-
-            <!-- Flight Search Form -->
-            <form class="search-form hidden" id="flightSearchForm" novalidate>
-                <div class="search-fields-row">
-                    <div class="search-input destination-input">
-                        <label class="search-label">
-                            <i class="gg-airplane"></i>
-                            From
-                        </label>
-                        <input 
-                            type="text" 
-                            placeholder="Departure city or airport" 
-                            class="search-field" 
-                            id="flightOrigin" 
-                            required
-                        >
-                    </div>
-
-                    <div class="search-input destination-input">
-                        <label class="search-label">
-                            <i class="gg-airplane"></i>
-                            To
-                        </label>
-                        <input 
-                            type="text" 
-                            placeholder="Arrival city or airport" 
-                            class="search-field" 
-                            id="flightDestination" 
-                            required
-                        >
-                    </div>
-
-                    <div class="search-input date-input">
-                        <label class="search-label">
-                            <i class="gg-calendar"></i>
-                            Departure
-                        </label>
-                        <input 
-                            type="date" 
-                            class="search-field" 
-                            id="flightDeparture" 
-                            required
-                        >
-                    </div>
-
-                    <div class="search-input date-input">
-                        <label class="search-label">
-                            <i class="gg-calendar"></i>
-                            Return
-                        </label>
-                        <input 
-                            type="date" 
-                            class="search-field" 
-                            id="flightReturn"
-                        >
-                    </div>
-
-                    <div class="search-input travelers-input">
-                        <label class="search-label">
-                            <i class="gg-user"></i>
-                            Travelers
-                        </label>
-                        <input 
-                            type="number" 
-                            placeholder="1" 
-                            class="search-field" 
-                            id="flightTravelers" 
-                            min="1" 
-                            value="1"
-                            required
-                        >
-                    </div>
-
-                    <button type="submit" class="search-submit-btn">
-                        <i class="gg-search"></i>
-                        <span>Search</span>
-                    </button>
-                </div>
-            </form>
+            <button class="hero-cta-btn" onclick="window.location.href='planItinerary.html'">
+                <i class="gg-search"></i>
+                <span>Start Planning Your Trip</span>
+            </button>
         </div>
     </section>
 
@@ -278,13 +86,15 @@
                                 <i class="gg-star"></i> 4.9
                             </div>
                         </div>
-                        <p class="destination-desc">7-day cultural experience • Modern meets traditional • Cherry blossoms & tech</p>
+                        <p class="destination-desc">7-day cultural experience • Modern meets traditional • Cherry
+                            blossoms & tech</p>
                         <div class="destination-footer">
                             <div class="destination-meta">
                                 <span class="meta-item"><i class="gg-calendar-dates"></i> 7 Days</span>
                                 <span class="meta-item"><i class="gg-user"></i> 2-4 People</span>
                             </div>
-                            <button class="destination-btn" onclick="event.stopPropagation(); viewDestination('tokyo')">View Itinerary</button>
+                            <button class="destination-btn"
+                                onclick="event.stopPropagation(); viewDestination('tokyo')">View Itinerary</button>
                         </div>
                     </div>
                 </div>
@@ -308,7 +118,8 @@
                                 <span class="meta-item"><i class="gg-calendar-dates"></i> 5 Days</span>
                                 <span class="meta-item"><i class="gg-user"></i> 2 People</span>
                             </div>
-                            <button class="destination-btn" onclick="event.stopPropagation(); viewDestination('paris')">View Itinerary</button>
+                            <button class="destination-btn"
+                                onclick="event.stopPropagation(); viewDestination('paris')">View Itinerary</button>
                         </div>
                     </div>
                 </div>
@@ -326,13 +137,15 @@
                                 <i class="gg-star"></i> 4.9
                             </div>
                         </div>
-                        <p class="destination-desc">10-day tropical paradise • Beach resorts • Temples & rice terraces</p>
+                        <p class="destination-desc">10-day tropical paradise • Beach resorts • Temples & rice terraces
+                        </p>
                         <div class="destination-footer">
                             <div class="destination-meta">
                                 <span class="meta-item"><i class="gg-calendar-dates"></i> 10 Days</span>
                                 <span class="meta-item"><i class="gg-user"></i> 2-6 People</span>
                             </div>
-                            <button class="destination-btn" onclick="event.stopPropagation(); viewDestination('bali')">View Itinerary</button>
+                            <button class="destination-btn"
+                                onclick="event.stopPropagation(); viewDestination('bali')">View Itinerary</button>
                         </div>
                     </div>
                 </div>
@@ -355,7 +168,8 @@
                                 <span class="meta-item"><i class="gg-calendar-dates"></i> 6 Days</span>
                                 <span class="meta-item"><i class="gg-user"></i> 2 People</span>
                             </div>
-                            <button class="destination-btn" onclick="event.stopPropagation(); viewDestination('santorini')">View Itinerary</button>
+                            <button class="destination-btn"
+                                onclick="event.stopPropagation(); viewDestination('santorini')">View Itinerary</button>
                         </div>
                     </div>
                 </div>
@@ -378,7 +192,8 @@
                                 <span class="meta-item"><i class="gg-calendar-dates"></i> 8 Days</span>
                                 <span class="meta-item"><i class="gg-user"></i> 2-4 People</span>
                             </div>
-                            <button class="destination-btn" onclick="event.stopPropagation(); viewDestination('swiss-alps')">View Itinerary</button>
+                            <button class="destination-btn"
+                                onclick="event.stopPropagation(); viewDestination('swiss-alps')">View Itinerary</button>
                         </div>
                     </div>
                 </div>
@@ -401,14 +216,16 @@
                                 <span class="meta-item"><i class="gg-calendar-dates"></i> 5 Days</span>
                                 <span class="meta-item"><i class="gg-user"></i> 2-4 People</span>
                             </div>
-                            <button class="destination-btn" onclick="event.stopPropagation(); viewDestination('dubai')">View Itinerary</button>
+                            <button class="destination-btn"
+                                onclick="event.stopPropagation(); viewDestination('dubai')">View Itinerary</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="view-more-container">
-                <button class="view-more-btn" onclick="window.location.href='destinations.html'">View All Destinations <i class="gg-arrow-right"></i></button>
+                <button class="view-more-btn" onclick="window.location.href='destinations.html'">View All Destinations
+                    <i class="gg-arrow-right"></i></button>
             </div>
         </section>
 
@@ -478,8 +295,6 @@
             <p>&copy; 2025 Travel.Co. All rights reserved.</p>
         </div>
     </footer>
-
-    <script src="../Frontend/JavaScript/home.js"></script>
 </body>
 
 </html>

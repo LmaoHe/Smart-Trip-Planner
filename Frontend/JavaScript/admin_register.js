@@ -5,7 +5,6 @@ import { auth, db } from './firebase-config.js'; // Import auth and db
 import { onAuthStateChanged, getIdToken, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { showToast, setLoading, showError, hideError } from './utils.js';
-// We import handleLogout from auth.js (assuming it's exported)
 import { handleLogout } from './auth.js';
 
 // --- Global Variables ---
@@ -307,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     // --- END ADDED ---
 
                     // --- SECURITY CHECK ---
-                    if (userData.role !== 'Superadmin') {
+                    if (userData.role !== 'superadmin') {
                         // If not a superadmin, redirect them
                         console.warn("Access Denied: User is not a superadmin.");
                         showToast("You do not have permission to access this page.", true);

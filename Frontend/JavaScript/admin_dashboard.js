@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentUserRole = userData.role;
                     updateHeaderUI(userData);
 
-                    if (currentUserRole === 'Admin' || currentUserRole === 'Superadmin') {
+                    if (currentUserRole === 'admin' || currentUserRole === 'superadmin') {
                         // User is authorized, fetch initial stats (default 'week')
                         fetchDashboardStats(currentAuthToken, currentPeriod);
                     } else {
