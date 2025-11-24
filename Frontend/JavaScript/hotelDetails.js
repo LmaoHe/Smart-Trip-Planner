@@ -1,4 +1,3 @@
-// Frontend/JavaScript/hotelDetails.js
 import { db, auth } from './firebase-config.js';
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { observeAuthState, handleLogout } from './auth.js';
@@ -16,6 +15,11 @@ const hotelReviews = urlParams.get('reviews');
 const hotelLocation = urlParams.get('location');
 const hotelMentions = urlParams.get('mentions');
 const searchCity = urlParams.get('search_city');
+const rooms = urlParams.get('rooms');
+const adults = urlParams.get('adults');
+const childrens = urlParams.get('childrens');
+
+
 
 // ===== PROFILE UI =====
 function updateUserProfileUI(userData) {
@@ -23,15 +27,19 @@ function updateUserProfileUI(userData) {
     const profileAvatarElement = document.getElementById('profileAvatarInitials');
     const profileDropdown = document.getElementById('profileDropdown');
 
+
     if (!profileNameElement || !profileAvatarElement || !profileDropdown) return;
+
 
     if (userData) {
         const firstName = userData.firstName || '';
         const lastName = userData.lastName || '';
         profileNameElement.textContent = `${firstName} ${lastName}`.trim() || 'User';
 
+
         profileAvatarElement.innerHTML = '';
         const photoURL = userData.profilePhotoURL;
+
 
         if (photoURL) {
             const img = document.createElement('img');
@@ -50,11 +58,13 @@ function updateUserProfileUI(userData) {
     }
 }
 
+
 // ===== LOAD HOTEL DETAILS =====
 async function loadHotelDetails() {
     try {
         // Display basic info from URL params
         displayBasicInfo();
+
 
         // ✅ Try to find hotel and load rooms from Hotels.com
         if (hotelName && searchCity) {
@@ -64,11 +74,22 @@ async function loadHotelDetails() {
             console.log('⚠️ Have hotel name but no search city - trying anyway');
             await searchAndLoadRooms();
         } else {
-            console.log('❌ Missing hotel name - using mock rooms');
-            displayMockRooms();
+            console.log('❌ Missing hotel name - showing no rooms available');
+            displayNoRoomsAvailable();
         }
 
+
         hideLoading();
+
+        // ✅ LOAD MAP FOR THIS HOTEL (NEW!)
+        if (hotelLocation) {
+            console.log('🗺️ Initializing map...');
+            initializeHotelMap();
+        } else {
+            console.warn('⚠️ No hotel location - skipping map');
+        }
+
+
     } catch (error) {
         console.error('Error loading hotel details:', error);
         showToast('Failed to load hotel details', true);
@@ -85,11 +106,14 @@ async function checkAndUpdateFavoriteButton() {
         return;
     }
 
+
     try {
         const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
 
+
         const favoriteRef = doc(db, 'users', user.uid, 'favorites', hotelKey);
         const favoriteSnap = await getDoc(favoriteRef);
+
 
         const favBtn = document.getElementById('favoriteBtnLarge');
         if (favBtn) {
@@ -108,6 +132,7 @@ async function checkAndUpdateFavoriteButton() {
     }
 }
 
+
 // ===== TOGGLE FAVORITE =====
 async function toggleFavorite() {
     const user = auth.currentUser;
@@ -123,12 +148,9 @@ async function toggleFavorite() {
 
     try {
         const { doc, getDoc, setDoc, deleteDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-
         const favoriteRef = doc(db, 'users', user.uid, 'favorites', hotelKey);
         const favoriteSnap = await getDoc(favoriteRef);
-
         const favBtn = document.getElementById('favoriteBtnLarge');
-
         if (favoriteSnap.exists()) {
             // Remove from favorites
             await deleteDoc(favoriteRef);
@@ -226,7 +248,6 @@ async function searchAndLoadRooms() {
     try {
         const hotelNameDecoded = decodeURIComponent(hotelName);
         const searchCityDecoded = searchCity ? decodeURIComponent(searchCity) : '';
-
         console.log('🔍 Step 1/2: Finding hotel in Hotels.com...');
         console.log('   Hotel:', hotelNameDecoded);
         console.log('   Location:', searchCityDecoded);
@@ -256,24 +277,20 @@ async function searchAndLoadRooms() {
 
         // ✅ REQUEST 2: Get rooms with Hotels.com ID
         await fetchHotelRooms(hotelsComHotelId);
-
         console.log('✅ Successfully loaded real rooms!');
 
     } catch (error) {
         console.error('❌ Search failed:', error.message);
-        console.log('→ Falling back to mock rooms');
-        showToast('Showing example rooms', true);
-        displayMockRooms();
+        console.log('→ Showing no rooms available message');
+        displayNoRoomsAvailable();
     }
 }
-
 
 // ===== FETCH HOTEL ROOMS (HOTELS.COM) =====
 async function fetchHotelRooms(hotelId) {
     try {
         const checkin = checkIn || '2025-11-01';
         const checkout = checkOut || '2025-11-05';
-
         console.log('📡 Fetching hotel rooms from Hotels.com...');
         console.log('   Hotel ID:', hotelId);
         console.log('   Dates:', checkin, 'to', checkout);
@@ -298,21 +315,19 @@ async function fetchHotelRooms(hotelId) {
 
     } catch (error) {
         console.error('❌ Error fetching rooms:', error);
-        showToast('Showing example rooms', true);
-        displayMockRooms();
+        displayNoRoomsAvailable();
         return null;
     }
 }
+
 
 // ===== DISPLAY REAL ROOMS FROM API =====
 function displayRealRooms(roomsData) {
     const roomsGrid = document.getElementById('roomsGrid');
     const roomsSection = document.getElementById('availableRoomsSection');
-
     if (!roomsGrid) return;
 
     roomsGrid.innerHTML = '';
-
     console.log('📊 Full API response:', roomsData);
 
     // ✅ Try different possible data structures
@@ -340,12 +355,12 @@ function displayRealRooms(roomsData) {
     }
 
     if (rooms.length === 0) {
-        console.log('⚠️ No rooms in API response, using mock data');
-        displayMockRooms();
+        console.log('⚠️ No rooms available - showing empty state');
+        displayNoRoomsAvailable();
         return;
     }
 
-    console.log(`✓ Displaying ${rooms.length} room categories`);
+    console.log(`✓ Displaying ${rooms.length} rooms`);
 
     // Process each room category
     rooms.forEach((category, index) => {
@@ -353,8 +368,12 @@ function displayRealRooms(roomsData) {
 
         // Extract room data from category
         const roomCard = createRoomCardFromCategory(category);
-        if (roomCard) {
+
+        // ✅ Only display if price was successfully extracted
+        if (roomCard && roomCard.priceFound) {
             roomsGrid.appendChild(roomCard);
+        } else if (!roomCard.priceFound) {
+            console.warn(`⚠️ Skipping room ${index + 1} - price not found`);
         }
     });
 
@@ -362,15 +381,51 @@ function displayRealRooms(roomsData) {
     roomsSection.style.display = 'block';
 }
 
-// ===== CREATE ROOM CARD FROM CATEGORY (v2 OFFERS) =====
+// ===== DISPLAY NO ROOMS AVAILABLE =====
+function displayNoRoomsAvailable() {
+    const roomsGrid = document.getElementById('roomsGrid');
+    const roomsSection = document.getElementById('availableRoomsSection');
+
+    if (!roomsGrid || !roomsSection) return;
+
+    roomsGrid.innerHTML = '';
+
+    // Create empty state container
+    const emptyState = document.createElement('div');
+    emptyState.style.cssText = `
+        padding: 60px 40px;
+        text-align: center;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        border: 2px dashed #dee2e6;
+    `;
+
+    emptyState.innerHTML = `
+        <div style="margin-bottom: 20px;">
+            <i class="fa-solid fa-door-open" style="font-size: 48px; color: #adb5bd;"></i>
+        </div>
+        <h3 style="color: #495057; margin-bottom: 8px; font-size: 20px;">No Rooms Available</h3>
+        <p style="color: #6c757d; margin-bottom: 24px; font-size: 15px;">
+            Unfortunately, there are no rooms available for the selected dates.
+        </p>
+        <p style="color: #6c757d; font-size: 14px; margin: 0;">
+            Try adjusting your check-in and check-out dates or contact the hotel directly.
+        </p>
+    `;
+
+    roomsGrid.appendChild(emptyState);
+    roomsSection.style.display = 'block';
+}
+
+// ===== CREATE ROOM CARD FROM CATEGORY =====
 function createRoomCardFromCategory(category) {
     const card = document.createElement('div');
     card.className = 'room-card';
 
-    // ✅ ROOM NAME
+    // ROOM NAME
     const roomName = category.header?.text || 'Standard Room';
 
-    // ✅ FEATURES/AMENITIES - At category level!
+    // FEATURES/AMENITIES - At category level!
     let features = [];
     if (category.features && Array.isArray(category.features)) {
         features = category.features.map(f => f.text).slice(0, 6);
@@ -380,7 +435,7 @@ function createRoomCardFromCategory(category) {
         features = ['Free WiFi', 'Air Conditioning', 'TV'];
     }
 
-    // ✅ GUESTS & BED - Extract from features
+    // GUESTS & BED - Extract from features
     let maxGuests = 2;
     let bedText = 'Queen Bed';
 
@@ -394,7 +449,6 @@ function createRoomCardFromCategory(category) {
         }
     }
 
-    // ✅ IMAGE - From unitGallery
     let roomImage = 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400';
 
     const gallery = category.primarySelections?.[0]?.propertyUnit?.unitGallery?.gallery;
@@ -402,39 +456,57 @@ function createRoomCardFromCategory(category) {
         roomImage = gallery[0].image?.url || roomImage;
     }
 
-    // ✅ PRICE - Complex nested structure
-    // ✅ PRICE - Complex nested structure
+    // PRICE - Complex nested structure with better debugging
     let roomPrice = 350;
-    let currency = 'MYR';
+    let currency = 'RM';
+    let priceFound = false;
 
     const priceDetails = category.primarySelections?.[0]?.propertyUnit?.ratePlans?.[0]?.priceDetails;
+
+    console.log('🔍 Price extraction debug:');
+    console.log('   priceDetails:', priceDetails);
+
     if (priceDetails && priceDetails.length > 0) {
         const price = priceDetails[0].price;
+        console.log('   price object:', price);
 
         // Try displayMessages path (most reliable)
         if (price.displayMessages && price.displayMessages.length > 1) {
+            console.log('   ✓ Using displayMessages');
             const lineItems = price.displayMessages[1].lineItems;
             for (const item of lineItems) {
                 if (item.role === 'LEAD' && item.price) {
                     const formatted = item.price.formatted; // "$1,151 total"
-                    const usdPrice = parseFloat(formatted.replace(/[$,]/g, '').split(' ')[0]) || 350;
+                    console.log('   formatted price:', formatted);
 
-                    // ✅ CONVERT USD TO MYR (1 USD = 4.70 MYR as of Oct 2025)
+
+                    const usdPrice = parseFloat(formatted.replace(/[$,]/g, '').split(' ')[0]) || 350;
                     roomPrice = Math.round(usdPrice * 4.70);
-                    currency = 'MYR';
+                    currency = 'RM';
+                    priceFound = true;
+                    console.log('   ✓ Extracted price:', roomPrice);
                     break;
                 }
             }
         }
-        // Try options path (alternative)
-        else if (price.options && price.options.length > 0) {
-            const displayPrice = price.options[0].formattedDisplayPrice; // "$1,151"
-            const usdPrice = parseFloat(displayPrice.replace(/[$,]/g, '')) || 350;
 
-            // ✅ CONVERT USD TO MYR
+        // Try options path (alternative)
+        if (!priceFound && price.options && price.options.length > 0) {
+            console.log('   ✓ Using options path');
+            const displayPrice = price.options[0].formattedDisplayPrice; // "$1,151"
+            console.log('   displayPrice:', displayPrice);
+
+
+            const usdPrice = parseFloat(displayPrice.replace(/[$,]/g, '')) || 350;
             roomPrice = Math.round(usdPrice * 4.70);
-            currency = 'MYR';
+            currency = 'RM';
+            priceFound = true;
+            console.log('   ✓ Extracted price:', roomPrice);
         }
+    }
+
+    if (!priceFound) {
+        console.warn('   ❌ Could not extract price - using fallback 350');
     }
 
     // Description
@@ -477,6 +549,8 @@ function createRoomCardFromCategory(category) {
         </div>
     `;
 
+    card.priceFound = priceFound;
+
     return card;
 }
 
@@ -485,14 +559,16 @@ function createRoomCardFromAPI(room) {
     const card = document.createElement('div');
     card.className = 'room-card';
 
+
     const roomName = room.name || room.roomType || 'Standard Room';
     const roomDescription = room.description || 'Comfortable room with modern amenities';
     const roomPrice = room.price?.value || room.rate?.nightly || room.totalPrice || 350;
-    const currency = room.price?.currency || room.currency || 'MYR';
+    const currency = room.price?.currency || room.currency || 'RM';
     const features = room.amenities || room.features || ['Free WiFi', 'Air Conditioning', 'TV'];
     const roomImage = room.images?.[0] || room.image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400';
     const maxGuests = room.maxOccupancy || room.maxGuests || 2;
     const bedType = room.bedTypes?.[0] || room.bedType || 'Queen Bed';
+
 
     card.innerHTML = `
         <div class="room-image-container">
@@ -529,68 +605,25 @@ function createRoomCardFromAPI(room) {
     Book Now
 </button>
 
+
         </div>
     `;
+
 
     return card;
 }
 
-// ===== DISPLAY MOCK ROOMS (FALLBACK) =====
-function displayMockRooms() {
-    const roomsGrid = document.getElementById('roomsGrid');
-    const roomsSection = document.getElementById('availableRoomsSection');
-
-    if (!roomsGrid) return;
-
-    console.log('📌 Displaying mock room data');
-    roomsGrid.innerHTML = '';
-
-    const mockRooms = [
-        {
-            name: "Standard Room",
-            description: "Cozy room with city view, queen bed, and modern amenities",
-            price: { value: 350, currency: 'MYR' },
-            images: ["https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400"],
-            amenities: ["Free WiFi", "Air Conditioning", "Mini Bar", "TV", "Private Bathroom"],
-            maxOccupancy: 2,
-            bedTypes: ["Queen Bed"]
-        },
-        {
-            name: "Deluxe Room",
-            description: "Spacious room with premium furnishings and city skyline view",
-            price: { value: 480, currency: 'MYR' },
-            images: ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400"],
-            amenities: ["Free WiFi", "City View", "Balcony", "Coffee Maker", "Safe", "Bathtub"],
-            maxOccupancy: 2,
-            bedTypes: ["King Bed"]
-        },
-        {
-            name: "Executive Suite",
-            description: "Luxurious suite with separate living area and panoramic views",
-            price: { value: 720, currency: 'MYR' },
-            images: ["https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400"],
-            amenities: ["Free WiFi", "Panoramic View", "Living Room", "Jacuzzi", "King Bed", "Work Desk"],
-            maxOccupancy: 3,
-            bedTypes: ["King Bed + Sofa"]
-        }
-    ];
-
-    mockRooms.forEach(room => {
-        const roomCard = createRoomCardFromAPI(room);
-        roomsGrid.appendChild(roomCard);
-    });
-
-    roomsSection.style.display = 'block';
-}
 
 // ===== SELECT ROOM FUNCTION =====
 window.selectRoom = function (roomData) {
     console.log('Room selected:', roomData);
 
+
     // Calculate nights
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
     const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+
 
     // Store selection with all necessary data
     sessionStorage.setItem('selectedRoom', JSON.stringify({
@@ -613,17 +646,83 @@ window.selectRoom = function (roomData) {
         // Booking details
         checkIn: checkIn,
         checkOut: checkOut,
-        nights: nights
+        nights: nights,
+
+        // ✅ GUEST INFO (ADD THESE 4 LINES)
+        rooms: parseInt(rooms || '1'),
+        adults: parseInt(adults || '2'),
+        children: parseInt(childrens || '0'),  // Note: using 'childrens' from your URL param
+        totalGuests: parseInt(adults || '2') + parseInt(childrens || '0')
     }));
+
 
     // ✅ Redirect to checkout page
     window.location.href = 'bookingCheckout.html';
 };
 
+
 // ===== HELPER FUNCTIONS =====
 function hideLoading() {
     const loadingState = document.getElementById('loadingState');
     if (loadingState) loadingState.style.display = 'none';
+}
+
+
+// ===== LOAD HOTEL MAP WITH EMBED API (DYNAMIC) =====
+async function initializeHotelMap() {
+    const mapSection = document.getElementById('locationMapSection');
+    const mapEmbed = document.getElementById('hotelMapEmbed');
+    const directionsBtn = document.getElementById('getDirectionsBtn');
+
+    if (!mapSection || !mapEmbed) {
+        console.warn('⚠️ Map elements not found');
+        return;
+    }
+
+    try {
+        const locationString = decodeURIComponent(hotelLocation || '');
+        const hotelNameString = decodeURIComponent(hotelName || '');
+
+        console.log('🗺️ Loading map for:', hotelNameString);
+
+        // ✅ FETCH API KEY FROM BACKEND
+        console.log('🔑 Fetching API key from backend...');
+        const keyResponse = await fetch('http://localhost:5000/api/config/google-maps-key');
+
+        if (!keyResponse.ok) {
+            console.error('❌ Backend responded with:', keyResponse.status);
+            throw new Error(`Failed to fetch API key - Status: ${keyResponse.status}`);
+        }
+
+        const keyData = await keyResponse.json();
+        console.log('📦 Backend response:', keyData);
+
+        if (!keyData.success || !keyData.key) {
+            throw new Error('API key not available from backend');
+        }
+
+        const apiKey = keyData.key;
+        console.log('✅ API key retrieved:', apiKey.substring(0, 20) + '...');
+
+        // ✅ BUILD EMBED URL
+        const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(hotelNameString + ', ' + locationString)}&zoom=15`;
+
+        console.log('🔗 Embed URL set');
+        mapEmbed.src = embedUrl;
+        mapSection.style.display = 'block';
+
+        // ✅ Set directions link only
+        if (directionsBtn) {
+            const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotelNameString + ', ' + locationString)}`;
+            directionsBtn.href = directionsUrl;
+        }
+
+        console.log('✅ Map loaded successfully!');
+
+    } catch (error) {
+        console.error('❌ Error loading map:', error.message);
+        mapSection.style.display = 'none';
+    }
 }
 
 // ===== AUTH STATE =====
@@ -633,12 +732,14 @@ observeAuthState(async (user) => {
             const userDocRef = doc(db, 'users', user.uid);
             const docSnap = await getDoc(userDocRef);
 
+
             if (docSnap.exists()) {
                 const userData = docSnap.data();
                 if (userData.profilePhotoURL) {
                     userData.profilePhotoURL = `${userData.profilePhotoURL}?t=${new Date().getTime()}`;
                 }
                 updateUserProfileUI(userData);
+
 
                 // Check favorite status after user is authenticated
                 await checkAndUpdateFavoriteButton();
@@ -654,11 +755,13 @@ observeAuthState(async (user) => {
     }
 });
 
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
     const profileTrigger = document.querySelector('.profile-trigger');
     const logoutButton = document.getElementById('logoutButton');
     const profileDropdown = document.getElementById('profileDropdown');
+
 
     if (profileTrigger) {
         profileTrigger.addEventListener('click', () => {
@@ -666,15 +769,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
     document.addEventListener('click', (event) => {
         if (profileDropdown && !profileDropdown.contains(event.target)) {
             profileDropdown.classList.remove('active');
         }
     });
 
+
     if (logoutButton) {
         logoutButton.addEventListener('click', handleLogout);
     }
+
 
     // Favorite button click
     const favBtn = document.getElementById('favoriteBtnLarge');
@@ -689,7 +795,10 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.setItem('lastSearch', JSON.stringify({
                 destination: decodeURIComponent(hotelLocation || ''),
                 checkIn: checkIn,
-                checkOut: checkOut
+                checkOut: checkOut,
+                rooms: parseInt(rooms || '1'),
+                adults: parseInt(adults || '2'),
+                children: parseInt(childrens || '0')
             }));
             window.location.href = 'booking.html';
         });

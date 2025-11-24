@@ -7,6 +7,7 @@
     <title>Plan Itinerary - Travel.Co</title>
     <link rel="stylesheet" href="../Frontend/Css/planItinerary.css">
     <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="module" src="./JavaScript/firebase-config.js"></script>
     <script type="module" src="./JavaScript/plan_itinerary.js"></script>
 </head>
@@ -23,11 +24,16 @@
                 <ul class="nav-menu">
                     <li><a href="home.html">Home</a></li>
                     <li><a href="map.html">Map</a></li>
-                    <li><a href="booking.html">Booking</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
                     <li><a href="planItinerary.html" class="active">Trip Planner</a></li>
                 </ul>
             </nav>
             <div class="nav-right">
+                <!-- Wishlist/Interests Icon -->
+                <a href="wishlist.html" class="wishlist-icon-wrapper" id="wishlistIconWrapper" title="My Interests">
+                    <i class="fa fa-heart"></i>
+                </a>
+
                 <div class="user-profile">
                     <div class="profile-dropdown" id="profileDropdown" style="display: none;">
                         <div class="profile-trigger" id="profileTrigger">
@@ -36,11 +42,11 @@
                         </div>
                         <div class="dropdown-menu">
                             <a href="profile.html" class="dropdown-item">
-                                <i class="gg-profile dropdown-icon"></i>
+                                <i class="fa fa-user dropdown-icon"></i>
                                 Profile
                             </a>
                             <a href="#logout" class="dropdown-item logout" id="logoutButton">
-                                <i class="gg-enter dropdown-icon"></i>
+                                <i class="fa fa-sign-out dropdown-icon"></i>
                                 Logout
                             </a>
                         </div>
@@ -63,93 +69,479 @@
 
                 <form id="tripForm" novalidate>
 
+                    <!-- ========== DEPARTING FROM ========== -->
                     <div class="form-group">
-                        <label class="form-label" for="countrySelect">1. Select a Country:</label>
-                        <select id="countrySelect" class="form-select" required>
-                            <option value="">-- Select Country --</option>
-                            <option value="JP">Japan</option>
-                            <option value="KR">South Korea</option>
-                            <option value="MY">Malaysia</option>
+                        <label class="form-label" for="departingFrom">
+                            <i class="gg-airplane"></i> Departure From
+                        </label>
+                        <select id="departingFrom" class="form-select" required>
+                            <option value="">-- Select Your Departure City --</option>
+
+                            <!-- ASIA -->
+                            <optgroup label="🇲🇾 Malaysia">
+                                <option value="Kuala Lumpur">Kuala Lumpur (KUL)</option>
+                                <option value="Penang">Penang (PEN)</option>
+                                <option value="Langkawi">Langkawi (LGK)</option>
+                            </optgroup>
+
+                            <optgroup label="🇸🇬 Singapore">
+                                <option value="Singapore">Singapore (SIN)</option>
+                            </optgroup>
+
+                            <optgroup label="🇹🇭 Thailand">
+                                <option value="Bangkok">Bangkok (BKK)</option>
+                                <option value="Phuket">Phuket (HKT)</option>
+                                <option value="Chiang Mai">Chiang Mai (CNX)</option>
+                                <option value="Krabi">Krabi (KBV)</option>
+                            </optgroup>
+
+                            <optgroup label="🇮🇩 Indonesia">
+                                <option value="Bali">Bali (DPS)</option>
+                                <option value="Jakarta">Jakarta (CGK)</option>
+                                <option value="Yogyakarta">Yogyakarta (JOG)</option>
+                            </optgroup>
+
+                            <optgroup label="🇯🇵 Japan">
+                                <option value="Tokyo">Tokyo (NRT/HND)</option>
+                                <option value="Kyoto">Kyoto (KIX - Osaka)</option>
+                                <option value="Osaka">Osaka (KIX)</option>
+                                <option value="Hiroshima">Hiroshima (HIJ)</option>
+                            </optgroup>
+
+                            <optgroup label="🇰🇷 South Korea">
+                                <option value="Seoul">Seoul (ICN)</option>
+                                <option value="Busan">Busan (PUS)</option>
+                                <option value="Jeju Island">Jeju Island (CJU)</option>
+                            </optgroup>
+
+                            <optgroup label="🇻🇳 Vietnam">
+                                <option value="Hanoi">Hanoi (HAN)</option>
+                                <option value="Ho Chi Minh City">Ho Chi Minh City (SGN)</option>
+                                <option value="Da Nang">Da Nang (DAD)</option>
+                            </optgroup>
+
+                            <optgroup label="🇰🇭 Cambodia">
+                                <option value="Siem Reap">Siem Reap (REP)</option>
+                            </optgroup>
+
+                            <!-- EUROPE -->
+                            <optgroup label="🇫🇷 France">
+                                <option value="Paris">Paris (CDG)</option>
+                                <option value="Nice">Nice (NCE)</option>
+                                <option value="Lyon">Lyon (LYS)</option>
+                                <option value="Marseille">Marseille (MRS)</option>
+                            </optgroup>
+
+                            <optgroup label="🇮🇹 Italy">
+                                <option value="Rome">Rome (FCO)</option>
+                                <option value="Venice">Venice (VCE)</option>
+                                <option value="Florence">Florence (FLR)</option>
+                                <option value="Milan">Milan (MXP)</option>
+                                <option value="Naples">Naples (NAP)</option>
+                            </optgroup>
+
+                            <optgroup label="🇪🇸 Spain">
+                                <option value="Barcelona">Barcelona (BCN)</option>
+                                <option value="Madrid">Madrid (MAD)</option>
+                                <option value="Seville">Seville (SVQ)</option>
+                                <option value="Valencia">Valencia (VLC)</option>
+                            </optgroup>
+
+                            <optgroup label="🇬🇧 United Kingdom">
+                                <option value="London">London (LHR)</option>
+                                <option value="Edinburgh">Edinburgh (EDI)</option>
+                                <option value="Liverpool">Liverpool (LPL)</option>
+                            </optgroup>
+
+                            <optgroup label="🇩🇪 Germany">
+                                <option value="Berlin">Berlin (BER)</option>
+                                <option value="Munich">Munich (MUC)</option>
+                                <option value="Frankfurt">Frankfurt (FRA)</option>
+                            </optgroup>
+
+                            <optgroup label="🇳🇱 Netherlands">
+                                <option value="Amsterdam">Amsterdam (AMS)</option>
+                                <option value="Rotterdam">Rotterdam (RTM)</option>
+                            </optgroup>
+
+                            <optgroup label="🇨🇭 Switzerland">
+                                <option value="Zurich">Zurich (ZRH)</option>
+                                <option value="Geneva">Geneva (GVA)</option>
+                                <option value="Interlaken">Interlaken (ZRH - Zurich)</option>
+                            </optgroup>
+
+                            <optgroup label="🇬🇷 Greece">
+                                <option value="Athens">Athens (ATH)</option>
+                                <option value="Santorini">Santorini (JTR)</option>
+                                <option value="Mykonos">Mykonos (JMK)</option>
+                            </optgroup>
+
+                            <optgroup label="🇵🇹 Portugal">
+                                <option value="Lisbon">Lisbon (LIS)</option>
+                                <option value="Porto">Porto (OPO)</option>
+                            </optgroup>
+
+                            <optgroup label="🇨🇿 Czech Republic">
+                                <option value="Prague">Prague (PRG)</option>
+                            </optgroup>
+
+                            <!-- AMERICAS -->
+                            <optgroup label="🇺🇸 United States">
+                                <option value="New York">New York (JFK/EWR)</option>
+                                <option value="Los Angeles">Los Angeles (LAX)</option>
+                                <option value="San Francisco">San Francisco (SFO)</option>
+                                <option value="Las Vegas">Las Vegas (LAS)</option>
+                                <option value="Miami">Miami (MIA)</option>
+                                <option value="Orlando">Orlando (MCO)</option>
+                            </optgroup>
+
+                            <optgroup label="🇨🇦 Canada">
+                                <option value="Toronto">Toronto (YYZ)</option>
+                                <option value="Vancouver">Vancouver (YVR)</option>
+                                <option value="Montreal">Montreal (YUL)</option>
+                            </optgroup>
+
+                            <optgroup label="🇧🇷 Brazil">
+                                <option value="Rio de Janeiro">Rio de Janeiro (GIG)</option>
+                                <option value="São Paulo">São Paulo (GRU)</option>
+                            </optgroup>
+
+                            <optgroup label="🇲🇽 Mexico">
+                                <option value="Cancun">Cancun (CUN)</option>
+                                <option value="Mexico City">Mexico City (MEX)</option>
+                                <option value="Playa del Carmen">Playa del Carmen (CUN - Cancun)</option>
+                            </optgroup>
+
+                            <optgroup label="🇵🇪 Peru">
+                                <option value="Cusco">Cusco (CUZ)</option>
+                                <option value="Lima">Lima (LIM)</option>
+                            </optgroup>
+
+                            <optgroup label="🇦🇷 Argentina">
+                                <option value="Buenos Aires">Buenos Aires (EZE)</option>
+                            </optgroup>
+
+                            <!-- MIDDLE EAST & AFRICA -->
+                            <optgroup label="🇦🇪 UAE">
+                                <option value="Dubai">Dubai (DXB)</option>
+                                <option value="Abu Dhabi">Abu Dhabi (AUH)</option>
+                            </optgroup>
+
+                            <optgroup label="🇹🇷 Turkey">
+                                <option value="Istanbul">Istanbul (IST)</option>
+                                <option value="Cappadocia">Cappadocia (ASR/NAV)</option>
+                            </optgroup>
+
+                            <optgroup label="🇪🇬 Egypt">
+                                <option value="Cairo">Cairo (CAI)</option>
+                                <option value="Luxor">Luxor (LXR)</option>
+                                <option value="Sharm El Sheikh">Sharm El Sheikh (SSH)</option>
+                            </optgroup>
+
+                            <optgroup label="🇲🇦 Morocco">
+                                <option value="Marrakech">Marrakech (RAK)</option>
+                                <option value="Casablanca">Casablanca (CMN)</option>
+                            </optgroup>
+
+                            <optgroup label="🇿🇦 South Africa">
+                                <option value="Cape Town">Cape Town (CPT)</option>
+                            </optgroup>
+
+                            <!-- OCEANIA -->
+                            <optgroup label="🇦🇺 Australia">
+                                <option value="Sydney">Sydney (SYD)</option>
+                                <option value="Melbourne">Melbourne (MEL)</option>
+                                <option value="Gold Coast">Gold Coast (OOL)</option>
+                            </optgroup>
+
+                            <optgroup label="🇳🇿 New Zealand">
+                                <option value="Auckland">Auckland (AKL)</option>
+                                <option value="Queenstown">Queenstown (ZQN)</option>
+                            </optgroup>
                         </select>
-                        <div class="error-message" id="countryError"></div>
+
+                        <div class="error-message" id="departingFromError"></div>
                     </div>
 
-                    <div class="form-group" id="citySelectGroup" style="display: none;">
-                        <label class="form-label" for="citySelect">2. Select a City:</label>
-                        <select id="citySelect" class="form-select" required>
-                            <option value="">-- Select City --</option>
+                    <!-- ========== DESTINATION (ARRIVAL) ========== -->
+                    <div class="form-group">
+                        <label class="form-label" for="destination"><i class="gg-pin"></i> Arrival At</label>
+                        <select id="destination" class="form-select" required>
+                            <option value="">-- Select Your Arrival City --</option>
+
+                            <!-- ASIA -->
+                            <optgroup label="🇲🇾 Malaysia">
+                                <option value="Kuala Lumpur">Kuala Lumpur (KUL)</option>
+                                <option value="Penang">Penang (PEN)</option>
+                                <option value="Langkawi">Langkawi (LGK)</option>
+                            </optgroup>
+
+                            <optgroup label="🇸🇬 Singapore">
+                                <option value="Singapore">Singapore (SIN)</option>
+                            </optgroup>
+
+                            <optgroup label="🇹🇭 Thailand">
+                                <option value="Bangkok">Bangkok (BKK)</option>
+                                <option value="Phuket">Phuket (HKT)</option>
+                                <option value="Chiang Mai">Chiang Mai (CNX)</option>
+                                <option value="Krabi">Krabi (KBV)</option>
+                            </optgroup>
+
+                            <optgroup label="🇮🇩 Indonesia">
+                                <option value="Bali">Bali (DPS)</option>
+                                <option value="Jakarta">Jakarta (CGK)</option>
+                                <option value="Yogyakarta">Yogyakarta (JOG)</option>
+                            </optgroup>
+
+                            <optgroup label="🇯🇵 Japan">
+                                <option value="Tokyo">Tokyo (NRT/HND)</option>
+                                <option value="Kyoto">Kyoto (KIX - Osaka)</option>
+                                <option value="Osaka">Osaka (KIX)</option>
+                                <option value="Hiroshima">Hiroshima (HIJ)</option>
+                            </optgroup>
+
+                            <optgroup label="🇰🇷 South Korea">
+                                <option value="Seoul">Seoul (ICN)</option>
+                                <option value="Busan">Busan (PUS)</option>
+                                <option value="Jeju Island">Jeju Island (CJU)</option>
+                            </optgroup>
+
+                            <optgroup label="🇻🇳 Vietnam">
+                                <option value="Hanoi">Hanoi (HAN)</option>
+                                <option value="Ho Chi Minh City">Ho Chi Minh City (SGN)</option>
+                                <option value="Da Nang">Da Nang (DAD)</option>
+                            </optgroup>
+
+                            <optgroup label="🇰🇭 Cambodia">
+                                <option value="Siem Reap">Siem Reap (REP)</option>
+                            </optgroup>
+
+                            <!-- EUROPE -->
+                            <optgroup label="🇫🇷 France">
+                                <option value="Paris">Paris (CDG)</option>
+                                <option value="Nice">Nice (NCE)</option>
+                                <option value="Lyon">Lyon (LYS)</option>
+                                <option value="Marseille">Marseille (MRS)</option>
+                            </optgroup>
+
+                            <optgroup label="🇮🇹 Italy">
+                                <option value="Rome">Rome (FCO)</option>
+                                <option value="Venice">Venice (VCE)</option>
+                                <option value="Florence">Florence (FLR)</option>
+                                <option value="Milan">Milan (MXP)</option>
+                                <option value="Naples">Naples (NAP)</option>
+                            </optgroup>
+
+                            <optgroup label="🇪🇸 Spain">
+                                <option value="Barcelona">Barcelona (BCN)</option>
+                                <option value="Madrid">Madrid (MAD)</option>
+                                <option value="Seville">Seville (SVQ)</option>
+                                <option value="Valencia">Valencia (VLC)</option>
+                            </optgroup>
+
+                            <optgroup label="🇬🇧 United Kingdom">
+                                <option value="London">London (LHR)</option>
+                                <option value="Edinburgh">Edinburgh (EDI)</option>
+                                <option value="Liverpool">Liverpool (LPL)</option>
+                            </optgroup>
+
+                            <optgroup label="🇩🇪 Germany">
+                                <option value="Berlin">Berlin (BER)</option>
+                                <option value="Munich">Munich (MUC)</option>
+                                <option value="Frankfurt">Frankfurt (FRA)</option>
+                            </optgroup>
+
+                            <optgroup label="🇳🇱 Netherlands">
+                                <option value="Amsterdam">Amsterdam (AMS)</option>
+                                <option value="Rotterdam">Rotterdam (RTM)</option>
+                            </optgroup>
+
+                            <optgroup label="🇨🇭 Switzerland">
+                                <option value="Zurich">Zurich (ZRH)</option>
+                                <option value="Geneva">Geneva (GVA)</option>
+                                <option value="Interlaken">Interlaken (ZRH - Zurich)</option>
+                            </optgroup>
+
+                            <optgroup label="🇬🇷 Greece">
+                                <option value="Athens">Athens (ATH)</option>
+                                <option value="Santorini">Santorini (JTR)</option>
+                                <option value="Mykonos">Mykonos (JMK)</option>
+                            </optgroup>
+
+                            <optgroup label="🇵🇹 Portugal">
+                                <option value="Lisbon">Lisbon (LIS)</option>
+                                <option value="Porto">Porto (OPO)</option>
+                            </optgroup>
+
+                            <optgroup label="🇨🇿 Czech Republic">
+                                <option value="Prague">Prague (PRG)</option>
+                            </optgroup>
+
+                            <!-- AMERICAS -->
+                            <optgroup label="🇺🇸 United States">
+                                <option value="New York">New York (JFK/EWR)</option>
+                                <option value="Los Angeles">Los Angeles (LAX)</option>
+                                <option value="San Francisco">San Francisco (SFO)</option>
+                                <option value="Las Vegas">Las Vegas (LAS)</option>
+                                <option value="Miami">Miami (MIA)</option>
+                                <option value="Orlando">Orlando (MCO)</option>
+                            </optgroup>
+
+                            <optgroup label="🇨🇦 Canada">
+                                <option value="Toronto">Toronto (YYZ)</option>
+                                <option value="Vancouver">Vancouver (YVR)</option>
+                                <option value="Montreal">Montreal (YUL)</option>
+                            </optgroup>
+
+                            <optgroup label="🇧🇷 Brazil">
+                                <option value="Rio de Janeiro">Rio de Janeiro (GIG)</option>
+                                <option value="São Paulo">São Paulo (GRU)</option>
+                            </optgroup>
+
+                            <optgroup label="🇲🇽 Mexico">
+                                <option value="Cancun">Cancun (CUN)</option>
+                                <option value="Mexico City">Mexico City (MEX)</option>
+                                <option value="Playa del Carmen">Playa del Carmen (CUN - Cancun)</option>
+                            </optgroup>
+
+                            <optgroup label="🇵🇪 Peru">
+                                <option value="Cusco">Cusco (CUZ)</option>
+                                <option value="Lima">Lima (LIM)</option>
+                            </optgroup>
+
+                            <optgroup label="🇦🇷 Argentina">
+                                <option value="Buenos Aires">Buenos Aires (EZE)</option>
+                            </optgroup>
+
+                            <!-- MIDDLE EAST & AFRICA -->
+                            <optgroup label="🇦🇪 UAE">
+                                <option value="Dubai">Dubai (DXB)</option>
+                                <option value="Abu Dhabi">Abu Dhabi (AUH)</option>
+                            </optgroup>
+
+                            <optgroup label="🇹🇷 Turkey">
+                                <option value="Istanbul">Istanbul (IST)</option>
+                                <option value="Cappadocia">Cappadocia (ASR/NAV)</option>
+                            </optgroup>
+
+                            <optgroup label="🇪🇬 Egypt">
+                                <option value="Cairo">Cairo (CAI)</option>
+                                <option value="Luxor">Luxor (LXR)</option>
+                                <option value="Sharm El Sheikh">Sharm El Sheikh (SSH)</option>
+                            </optgroup>
+
+                            <optgroup label="🇲🇦 Morocco">
+                                <option value="Marrakech">Marrakech (RAK)</option>
+                                <option value="Casablanca">Casablanca (CMN)</option>
+                            </optgroup>
+
+                            <optgroup label="🇿🇦 South Africa">
+                                <option value="Cape Town">Cape Town (CPT)</option>
+                            </optgroup>
+
+                            <!-- OCEANIA -->
+                            <optgroup label="🇦🇺 Australia">
+                                <option value="Sydney">Sydney (SYD)</option>
+                                <option value="Melbourne">Melbourne (MEL)</option>
+                                <option value="Gold Coast">Gold Coast (OOL)</option>
+                            </optgroup>
+
+                            <optgroup label="🇳🇿 New Zealand">
+                                <option value="Auckland">Auckland (AKL)</option>
+                                <option value="Queenstown">Queenstown (ZQN)</option>
+                            </optgroup>
                         </select>
-                        <div class="error-message" id="cityError"></div>
+
+                        <div class="error-message" id="destinationError"></div>
                     </div>
 
+                    <!-- ========== TRAVEL DATES ========== -->
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label" for="startDate">Start Date</label>
+                            <label class="form-label" for="startDate"><i class="gg-calendar"></i> Departure Date</label>
                             <input type="date" class="form-input" id="startDate" required>
                             <div class="error-message" id="startDateError"></div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="endDate">End Date</label>
+                            <label class="form-label" for="endDate"><i class="gg-calendar"></i> Return Date</label>
                             <input type="date" class="form-input" id="endDate" required>
                             <div class="error-message" id="endDateError"></div>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="travelers">Number of Travelers</label>
-                            <select class="form-select" id="travelers" required>
-                                <option value="">Select...</option>
-                                <option value="1">Solo (1 person)</option>
-                                <option value="2">Couple (2 people)</option>
-                                <option value="3-4">Small Group (3-4)</option>
-                                <option value="5+">Large Group (5+)</option>
-                            </select>
-                            <div class="error-message" id="travelersError"></div>
+                    <!-- ========== PREFERENCES SECTION ========== -->
+                    <div class="preferences-section">
+                        <div class="section-header">
+                            <h3 class="section-subtitle"><i class="gg-heart"></i> Preferences</h3>
+                            <button type="button" class="expand-btn" id="expandPreferences">
+                                <i class="gg-chevron-down"></i>
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="budget">Budget (USD)</label>
-                            <select class="form-select" id="budget" required>
-                                <option value="">Select budget...</option>
-                                <option value="budget">Budget ($0 - $500)</option>
-                                <option value="mid-range">Mid-range ($500 - $1500)</option>
-                                <option value="luxury">Luxury ($1500+)</option>
-                            </select>
-                            <div class="error-message" id="budgetError"></div>
+
+                        <div class="preferences-content" id="preferencesContent">
+                            <!-- ========== WITH WHOM ========== -->
+                            <div class="preference-group">
+                                <label class="preference-label">With Whom</label>
+                                <div class="preference-options">
+                                    <label class="preference-option">
+                                        <input type="radio" name="withWhom" value="solo" class="preference-input">
+                                        <span class="preference-text"><i class="fa fa-user"></i> Solo</span>
+                                    </label>
+                                    <label class="preference-option">
+                                        <input type="radio" name="withWhom" value="family" class="preference-input">
+                                        <span class="preference-text"><i class="fa fa-users"></i> Family</span>
+                                    </label>
+                                    <label class="preference-option">
+                                        <input type="radio" name="withWhom" value="couple" class="preference-input">
+                                        <span class="preference-text"><i class="fa fa-heart"></i> Couple</span>
+                                    </label>
+                                    <label class="preference-option">
+                                        <input type="radio" name="withWhom" value="friends" class="preference-input">
+                                        <span class="preference-text"><i class="fa fa-user-friends"></i> Friends</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- ========== TRAVEL STYLE (NO "CLASSIC") ========== -->
+                            <div class="preference-group">
+                                <label class="preference-label">Travel Style</label>
+                                <div class="preference-options">
+                                    <label class="preference-option">
+                                        <input type="checkbox" name="travelStyle" value="cultural"
+                                            class="preference-input">
+                                        <span class="preference-text"><i class="fa fa-landmark"></i> Cultural</span>
+                                    </label>
+
+                                    <label class="preference-option">
+                                        <input type="checkbox" name="travelStyle" value="nature"
+                                            class="preference-input">
+                                        <span class="preference-text"><i class="fa fa-tree"></i> Nature</span>
+                                    </label>
+
+                                    <label class="preference-option">
+                                        <input type="checkbox" name="travelStyle" value="cityscape"
+                                            class="preference-input">
+                                        <span class="preference-text"><i class="fa fa-city"></i> Cityscape</span>
+                                    </label>
+
+                                    <label class="preference-option">
+                                        <input type="checkbox" name="travelStyle" value="historical"
+                                            class="preference-input">
+                                        <span class="preference-text"><i class="fa fa-gopuram"></i> Historical</span>
+                                    </label>
+                                </div>
+                                <div class="error-message" id="travelStyleError"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Interests & Preferences (Select at least one)</label>
-                        <div class="interest-tags">
-                            <span class="interest-tag" data-interest="History">
-                                <i class="gg-format-text"></i> History
-                            </span>
-                            <span class="interest-tag" data-interest="Culture">
-                                <i class="gg-home"></i> Culture & Arts
-                            </span>
-                            <span class="interest-tag" data-interest="Nature">
-                                <i class="gg-tree"></i> Nature & Parks
-                            </span>
-                            <span class="interest-tag" data-interest="Adventure">
-                                <i class="gg-dice"></i> Adventure
-                            </span>
-                            <span class="interest-tag" data-interest="Food">
-                                <i class="gg-coffee"></i> Food
-                            </span>
-                            <span class="interest-tag" data-interest="Shopping">
-                                <i class="gg-shopping-bag"></i> Shopping
-                            </span>
-                        </div>
-                        <div class="error-message" id="interestsError"></div>
-                    </div>
-
+                    <!-- ========== ACTION BUTTONS ========== -->
                     <div class="action-buttons">
-                        <button type="submit" class="btn btn-primary" id="generateBtn">
-                            <i class="gg-check"></i> Generate Itinerary
-                        </button>
                         <button type="button" class="btn btn-secondary" id="clearFormBtn">
-                            <i class="gg-undo"></i> Clear Form
+                            <i class="fa fa-redo"></i> Clear Form
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="generateBtn">
+                            <i class="fa fa-sparkles"></i> Plan a Trip
                         </button>
                     </div>
                 </form>

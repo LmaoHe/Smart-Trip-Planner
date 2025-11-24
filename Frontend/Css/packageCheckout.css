@@ -1,0 +1,1391 @@
+:root {
+    --primary-color: #3b82f6;
+    --primary-dark: #2563eb;
+    --secondary-color: #6b7280;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #ffc107;
+    --text-dark: #1f2937;
+    --text-gray: #6b7280;
+    --text-light: #9ca3af;
+    --border-color: #e5e7eb;
+    --bg-light: #f9fafb;
+    --white: #ffffff;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text-dark);
+    background-color: var(--bg-light);
+    line-height: 1.6;
+}
+
+
+/* ========================================
+   NAVIGATION
+   ======================================== */
+.navbar {
+    background-color: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+
+.nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 70px;
+}
+
+
+.nav-logo {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+
+.profile-dropdown {
+    position: relative;
+}
+
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+
+.profile-trigger:hover {
+    background-color: rgba(61, 155, 243, 0.1);
+}
+
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), #5AABF5);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    overflow: hidden;
+}
+
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+.profile-name {
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 15px;
+}
+
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    min-width: 200px;
+    padding: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+
+.profile-dropdown.active .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: var(--text-dark);
+    font-size: 14px;
+}
+
+
+.dropdown-item:hover {
+    background-color: rgba(61, 155, 243, 0.1);
+    color: var(--primary-color);
+}
+
+
+.dropdown-item.logout:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: var(--danger-color);
+}
+
+
+.dropdown-icon {
+    font-size: 18px;
+    color: var(--text-gray);
+}
+
+
+/* ========================================
+   MAIN CONTAINER
+   ======================================== */
+.checkout-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+
+/* ========================================
+   PROGRESS BAR
+   ======================================== */
+.progress-bar-container {
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow);
+}
+
+
+.progress-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+
+.step-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid var(--border-color);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text-light);
+    transition: all 0.3s;
+}
+
+
+.step-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-light);
+    transition: color 0.3s;
+}
+
+
+.progress-step.active .step-circle {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+
+.progress-step.active .step-label {
+    color: var(--primary-color);
+}
+
+
+.progress-step.completed .step-circle {
+    border-color: var(--success-color);
+    background: var(--success-color);
+    color: white;
+}
+
+
+.progress-step.completed .step-label {
+    color: var(--success-color);
+}
+
+
+.progress-line {
+    flex: 1;
+    height: 3px;
+    background: var(--border-color);
+    margin: 0 16px;
+    max-width: 120px;
+    transition: background 0.3s;
+}
+
+
+.progress-step.completed + .progress-line {
+    background: var(--success-color);
+}
+
+
+/* ========================================
+   MAIN CONTENT LAYOUT
+   ======================================== */
+.checkout-content {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 32px;
+    align-items: start;
+}
+
+
+/* ========================================
+   FORM STEPS (LEFT SIDE)
+   ======================================== */
+.checkout-form {
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+
+.form-step {
+    display: none;
+}
+
+
+.form-step.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in;
+}
+
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+.form-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 24px;
+}
+
+
+.form-subtitle {
+    font-size: 14px;
+    color: var(--text-gray);
+    margin-bottom: 24px;
+}
+
+
+.form-section {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+}
+
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+
+.section-subtitle {
+    font-size: 14px;
+    color: var(--text-gray);
+    margin-bottom: 16px;
+}
+
+
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+
+.form-input,
+.form-input select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-dark);
+    transition: all 0.2s;
+    background: white;
+}
+
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+
+.form-input::placeholder {
+    color: var(--text-light);
+}
+
+
+.form-hint {
+    display: block;
+    font-size: 12px;
+    color: var(--text-gray);
+    margin-top: 4px;
+}
+
+
+textarea.form-input {
+    resize: vertical;
+    min-height: 100px;
+}
+
+
+/* Select Dropdown Styling */
+select.form-input {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+}
+
+
+/* ========================================
+   PASSPORT SECTION STYLES
+   ======================================== */
+.form-section .form-hint {
+    display: block;
+    font-size: 12px;
+    color: var(--text-gray);
+    margin-top: 4px;
+}
+
+/* Optional: Style passport number input differently */
+#passportNumber {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.baggage-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.baggage-option {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+}
+.baggage-option:hover {
+    border-color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.02);
+}
+.baggage-option:has(input[type="radio"]:checked) {
+    border-color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.05);
+}
+.baggage-info {
+    flex: 1;
+}
+.baggage-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+.baggage-details {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: var(--text-gray);
+    margin-bottom: 8px;
+}
+.baggage-details span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.baggage-price {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 16px;
+}
+.baggage-desc {
+    font-size: 12px;
+    color: var(--text-light);
+    margin: 0;
+}
+/* Hide unused radio-option label from old design */
+.baggage-option .radio-option {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+}
+.baggage-option .radio-option:hover {
+    background: none;
+    border: none;
+}
+.baggage-option input[type="radio"] {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+.baggage-option input[type="radio"]:checked {
+    accent-color: #2563eb;
+}
+.baggage-option input[type="radio"]:checked ~ .baggage-info .baggage-title {
+    color: var(--primary-color);
+}
+/* Responsive for baggage options */
+@media (max-width: 768px) {
+    .baggage-options {
+        flex-direction: column;
+    }
+    .baggage-option {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+/* ========================================
+   RADIO & CHECKBOX GROUPS
+   ======================================== */
+.radio-group {
+    display: flex;
+    gap: 16px;
+}
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+.radio-option:hover {
+    border-color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.05);
+}
+.radio-option input[type="radio"] {
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+.checkbox-label {
+    display: flex;
+    align-items: start;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+.checkbox-label input[type="checkbox"] {
+    margin-top: 2px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+.link {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+.link:hover {
+    text-decoration: underline;
+}
+
+/* ========================================
+   PAYMENT OPTIONS
+   ======================================== */
+.security-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #ecfdf5;
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    color: #047857;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+
+.payment-option {
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+
+.payment-option:has(input[type="radio"]:checked) {
+    border-color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.02);
+}
+
+
+.payment-option-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    cursor: pointer;
+}
+
+
+.payment-option-header input[type="radio"] {
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+
+.payment-option-title {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.payment-option-title span {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+
+.card-logos,
+.digital-logos {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+
+.card-logos img {
+    height: 20px;
+}
+
+
+.digital-logo {
+    font-size: 12px;
+    padding: 4px 8px;
+    background: var(--bg-light);
+    border-radius: 4px;
+    color: var(--text-gray);
+}
+
+
+.payment-option-content {
+    padding: 0 16px 16px;
+}
+
+
+.info-text {
+    color: var(--text-gray);
+    font-size: 14px;
+}
+
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+.form-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    margin-top: 32px;
+}
+
+
+.btn-primary,
+.btn-secondary {
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+}
+
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+
+.btn-secondary {
+    background: white;
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+}
+
+
+.btn-secondary:hover {
+    background: var(--bg-light);
+}
+
+
+/* ========================================
+   CONFIRMATION PAGE
+   ======================================== */
+.confirmation-container {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+
+.confirmation-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background: var(--success-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 48px;
+}
+
+
+.confirmation-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+
+.confirmation-subtitle {
+    font-size: 16px;
+    color: var(--text-gray);
+    margin-bottom: 32px;
+}
+
+
+.booking-id {
+    display: inline-flex;
+    gap: 12px;
+    padding: 12px 24px;
+    background: var(--bg-light);
+    border-radius: 8px;
+    margin-bottom: 32px;
+}
+
+
+.booking-id-label {
+    color: var(--text-gray);
+    font-weight: 500;
+}
+
+
+.booking-id-value {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 18px;
+}
+
+
+.confirmation-details {
+    max-width: 500px;
+    margin: 0 auto 32px;
+    text-align: left;
+}
+
+
+.confirmation-section {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-light);
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+
+
+.confirmation-label {
+    font-size: 14px;
+    color: var(--text-gray);
+}
+
+
+.confirmation-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+
+.booking-summary-final {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+
+.booking-summary-final h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-dark);
+}
+
+
+.summary-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 16px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+
+.summary-item.total {
+    border-top: 2px solid var(--text-dark);
+    padding-top: 16px;
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+
+.confirmation-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+
+/* ========================================
+   PACKAGE SUMMARY (RIGHT SIDEBAR - STICKY)
+   ======================================== */
+.booking-summary {
+    position: sticky;
+    top: 100px;
+}
+
+
+.summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow-lg);
+}
+
+
+.summary-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.summary-section {
+    margin-bottom: 20px;
+}
+
+
+.summary-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.summary-divider {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 16px 0;
+}
+
+
+/* ========================================
+   FLIGHT SUMMARY (FROM FLIGHT CHECKOUT)
+   ======================================== */
+.summary-flight {
+    margin-bottom: 20px;
+}
+
+
+.summary-flight-leg {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #4A90E2;
+}
+
+
+.summary-flight-leg:last-child {
+    margin-bottom: 0;
+}
+
+
+.flight-leg-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+
+.flight-leg-header i {
+    color: #4A90E2;
+    font-size: 18px;
+}
+
+
+.flight-leg-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
+.flight-leg-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+
+.flight-route-display {
+    margin-bottom: 8px;
+}
+
+
+.flight-route-full {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    line-height: 1.5;
+}
+
+
+.flight-route-compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+
+.airport-code {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+
+.flight-details-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+
+.flight-time-info {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #555;
+}
+
+
+.flight-time-compact {
+    font-size: 14px;
+    color: var(--text-gray);
+    margin-bottom: 4px;
+}
+
+
+.flight-date-compact {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+
+.flight-class-badge {
+    display: inline-block;
+    background: #4A90E2;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+
+.flight-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--text-gray);
+    margin-top: 12px;
+}
+
+
+.flight-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+
+/* ========================================
+   HOTEL SUMMARY (FROM HOTEL CHECKOUT)
+   ======================================== */
+.summary-hotel {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+
+.summary-hotel-image {
+    width: 80px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+
+.summary-hotel-info {
+    flex: 1;
+}
+
+
+.summary-hotel-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+
+.summary-hotel-rating {
+    font-size: 13px;
+    color: var(--text-gray);
+    margin-bottom: 4px;
+}
+
+
+.summary-location {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-gray);
+}
+
+
+.summary-room-compact {
+    margin-top: 12px;
+}
+
+
+.room-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+
+.room-details {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-gray);
+}
+
+
+.room-details span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+
+.summary-dates-compact {
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+
+.date-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+
+
+.date-label {
+    color: var(--text-gray);
+}
+
+
+.date-value {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+
+/* ========================================
+   PRICE BREAKDOWN
+   ======================================== */
+.summary-price {
+    font-size: 14px;
+}
+
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+
+.price-calculation {
+    font-size: 13px;
+    color: var(--text-gray);
+}
+
+
+.price-row:not(.total) {
+    padding: 8px 0;
+}
+
+
+.price-row.total {
+    border-top: 2px solid var(--text-dark);
+    padding-top: 12px;
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+
+.price-label {
+    color: var(--text-gray);
+}
+
+
+.price-value {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+
+.total-amount {
+    color: var(--primary-color);
+    font-size: 20px;
+}
+
+
+.summary-label {
+    color: var(--text-gray);
+}
+
+
+.summary-value {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+
+/* ========================================
+   ERROR MESSAGES
+   ======================================== */
+.error-message {
+    display: block;
+    color: var(--danger-color);
+    font-size: 12px;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+
+/* ========================================
+   TOAST NOTIFICATION
+   ======================================== */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 16px 24px;
+    background: var(--text-dark);
+    color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+
+.toast.error {
+    background: var(--danger-color);
+}
+
+
+.toast.success {
+    background: var(--success-color);
+}
+
+
+/* ========================================
+   LOADING OVERLAY
+   ======================================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 9999;
+    color: white;
+}
+
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1024px) {
+    .checkout-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .booking-summary {
+        position: static;
+        margin-top: 32px;
+    }
+}
+
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .progress-steps {
+        flex-direction: column;
+    }
+    
+    .progress-line {
+        width: 3px;
+        height: 40px;
+        margin: 8px 0;
+    }
+    
+    .checkout-form {
+        padding: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .summary-hotel {
+        flex-direction: column;
+    }
+    
+    .summary-hotel-image {
+        width: 100%;
+        height: 120px;
+    }
+    
+    .flight-route-compact {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    /* Baggage section responsive */
+    .baggage-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .baggage-price {
+        margin-left: 0;
+    }
+    
+    .baggage-selection {
+        gap: 0.75rem;
+    }
+    
+    .baggage-checkbox {
+        padding: 0.75rem;
+    }
+}

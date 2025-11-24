@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Interests - Travel.Co</title>
+    <link rel="stylesheet" href="./Css/wishlist.css">
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.css">
+    <script type="module" src="./JavaScript/wishlist.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+
+    <!-- Header / Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo" onclick="window.location.href='home.html'">
+                    <i class="gg-airplane"></i> Travel.Co
+                </div>
+            </div>
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
+                    <li><a href="planItinerary.html">Trip Planner</a></li>
+                </ul>
+            </nav>
+            <div class="nav-right">
+                <div class="user-profile">
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-trigger">
+                            <div class="profile-avatar" id="profileAvatarInitials"></div>
+                            <span class="profile-name" id="profileName"></span>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="profile.html" class="dropdown-item">
+                                <i class="fa fa-user dropdown-icon"></i>
+                                Profile
+                            </a>
+                            <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                                <i class="fa fa-sign-out dropdown-icon"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="wishlist-container">
+            <!-- Header -->
+            <div class="wishlist-header">
+                <h1 class="wishlist-title">
+                    <i class="fa fa-thumbs-up"></i> My Interests
+                </h1>
+                <div class="wishlist-count" id="wishlistCount">0 items</div>
+            </div>
+
+            <!-- Info Banner -->
+            <div class="info-banner">
+                <i class="fa fa-info-circle"></i>
+                <span>Express your interest in itineraries you'd like to book. You'll be notified when they become available for purchase!</span>
+            </div>
+
+            <!-- Wishlist Content -->
+            <div class="wishlist-content">
+                <!-- Wishlist Items Section -->
+                <div class="wishlist-items-section">
+                    <!-- Empty Wishlist State -->
+                    <div class="empty-wishlist" id="emptyWishlist" style="display: none;">
+                        <i class="fa fa-heart-o empty-icon"></i>
+                        <h2>You haven't expressed interest yet</h2>
+                        <p>Start exploring amazing trips and express your interest!</p>
+                        <button class="btn-primary" onclick="window.location.href='destinations.html'">
+                            <i class="fa fa-search"></i> Browse Destinations
+                        </button>
+                    </div>
+
+                    <!-- Wishlist Items List -->
+                    <div class="wishlist-items-list" id="wishlistItemsList">
+                        <!-- Items will be loaded here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Action Section -->
+                <div class="wishlist-action-section" id="wishlistActionSection">
+                    <div class="action-card">
+                        <h2>
+                            <i class="fa fa-chart-line"></i> Your Interest Summary
+                        </h2>
+                        
+                        <div class="action-info">
+                            <div class="info-item">
+                                <i class="fa fa-check-circle"></i>
+                                <span>Free to express interest</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fa fa-bell"></i>
+                                <span>Get notified when available</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fa fa-users"></i>
+                                <span>Help us understand demand</span>
+                            </div>
+                        </div>
+
+                        <div class="action-summary">
+                            <div class="summary-row">
+                                <span><i class="fa fa-list"></i> Total Interests</span>
+                                <span class="summary-value" id="totalItems">0</span>
+                            </div>
+                            <div class="summary-row highlight-row">
+                                <span><i class="fa fa-shopping-cart"></i> Available to Purchase</span>
+                                <span class="summary-value success" id="availableItems">0</span>
+                            </div>
+                            <div class="summary-row">
+                                <span><i class="fa fa-clock"></i> Awaiting Approval</span>
+                                <span class="summary-value" id="pendingItems">0</span>
+                            </div>
+                        </div>
+
+                        <p class="help-text">
+                            <i class="fa fa-info-circle"></i>
+                            You can express interest in multiple itineraries at once. This helps us gauge demand!
+                        </p>
+
+                        <button class="btn-secondary" onclick="window.location.href='destinations.html'">
+                            <i class="fa fa-plus"></i> Add More Trips
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

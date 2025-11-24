@@ -1,13 +1,15 @@
 # Backend/services/xotelo_service.py
 import requests
 
+
 class XoteloService:
     def __init__(self):
         self.base_url = "https://data.xotelo.com/api"
         print(f"✓ Xotelo Service initialized")
     
-    # City to location_key mapping (verified working cities only)
+    # Expanded city to location_key mapping
     CITY_TO_LOCATION = {
+        # ===== ASIA =====
         # Malaysia
         'kuala lumpur': 'g298570',
         'penang': 'g298303',
@@ -15,19 +17,105 @@ class XoteloService:
         'johor bahru': 'g298304',
         'kota kinabalu': 'g298307',
         'ipoh': 'g298305',
+        'langkawi': 'g298283',
         
+        # Singapore
+        'singapore': 'g294265',
+        
+        # Thailand
+        'bangkok': 'g293916',
+        'phuket': 'g293920',
+        'chiang mai': 'g293917',
+        'krabi': 'g297927',
+        
+        # Indonesia
+        'bali': 'g294226',
+        'jakarta': 'g294229',
+        'yogyakarta': 'g294230',
+        
+        # Japan
+        'tokyo': 'g298564',
+        'kyoto': 'g298564',  
+        'osaka': 'g298566',
+        'hiroshima': 'g298561',
+        
+        # South Korea
+        'seoul': 'g294197',
+        'busan': 'g297884',
+        'jeju island': 'g983296',
+        
+        # Vietnam
+        'hanoi': 'g293924',
+        'ho chi minh city': 'g293925',
+        'da nang': 'g469418',
+        
+        # Cambodia
+        'siem reap': 'g297390',
+        
+        # ===== EUROPE =====
         # France
         'paris': 'g187147',
         'lyon': 'g187265',
         'nice': 'g187234',
         'marseille': 'g187253',
         
+        # Italy
+        'rome': 'g187791',
+        'venice': 'g187870',
+        'florence': 'g187895',
+        'milan': 'g187849',
+        'naples': 'g187785',
+        
+        # Spain
+        'barcelona': 'g187497',
+        'madrid': 'g187514',
+        'seville': 'g187443',
+        'valencia': 'g187529',
+        
+        # United Kingdom
+        'london': 'g186338',
+        'edinburgh': 'g186525',
+        'liverpool': 'g186337',
+        
+        # Germany
+        'berlin': 'g187323',
+        'munich': 'g187309',
+        'frankfurt': 'g187337',
+        
+        # Netherlands
+        'amsterdam': 'g188590',
+        'rotterdam': 'g188632',
+        
+        # Switzerland
+        'zurich': 'g188113',
+        'geneva': 'g188057',
+        'interlaken': 'g188098',
+        
+        # Greece
+        'athens': 'g189400',
+        'santorini': 'g189433',
+        'mykonos': 'g189433',
+        
+        # Portugal
+        'lisbon': 'g189158',
+        'porto': 'g189180',
+        
+        # Czech Republic
+        'prague': 'g274707',
+        
+        # ===== AMERICAS =====
         # USA
         'new york': 'g60763',
         'los angeles': 'g32655',
         'san francisco': 'g60713',
         'miami': 'g34438',
         'las vegas': 'g45963',
+        'orlando': 'g34515',
+        
+        # Canada
+        'toronto': 'g155019',
+        'vancouver': 'g154943',
+        'montreal': 'g155032',
         
         # Brazil
         'sao paulo': 'g303631',
@@ -39,20 +127,66 @@ class XoteloService:
         'cancun': 'g150807',
         'guadalajara': 'g150798',
         'cabo': 'g152516',
+        'playa del carmen': 'g150812',
+        
+        # Peru
+        'cusco': 'g294314',
+        'lima': 'g294316',
+        
+        # Argentina
+        'buenos aires': 'g312741',
+        
+        # ===== MIDDLE EAST & AFRICA =====
+        # UAE
+        'dubai': 'g295424',
+        'abu dhabi': 'g294013',
+        
+        # Turkey
+        'istanbul': 'g293974',
+        'cappadocia': 'g297981',
+        
+        # Egypt
+        'cairo': 'g294201',
+        'luxor': 'g294205',
+        'sharm el sheikh': 'g297555',
+        
+        # Morocco
+        'marrakech': 'g293734',
+        'casablanca': 'g293732',
+        
+        # South Africa
+        'cape town': 'g312659',
+        
+        # ===== OCEANIA =====
+        # Australia
+        'sydney': 'g255060',
+        'melbourne': 'g255100',
+        'gold coast': 'g255337',
+        
+        # New Zealand
+        'auckland': 'g255106',
+        'queenstown': 'g255122',
     }
     
     def get_location_key(self, city_name):
+        """Get Xotelo location key for supported cities"""
         city_lower = city_name.lower().strip()
         location_key = self.CITY_TO_LOCATION.get(city_lower)
         
         if not location_key:
-            available = ', '.join(sorted(self.CITY_TO_LOCATION.keys()))
-            raise Exception(f"City '{city_name}' not supported. Available: {available}")
+            supported = len(self.CITY_TO_LOCATION)
+            available = ', '.join(sorted(list(self.CITY_TO_LOCATION.keys())[:10])) + f'... ({supported} total)'
+            raise Exception(f"City '{city_name}' not supported by Xotelo. {supported} cities available.")
         
-        print(f"✓ Location key for {city_name}: {location_key}")
+        print(f"✓ Xotelo location key for {city_name}: {location_key}")
         return location_key
     
+    def is_city_supported(self, city_name):
+        """Check if city is supported by Xotelo"""
+        return city_name.lower().strip() in self.CITY_TO_LOCATION
+    
     def get_hotels(self, city_name, check_in=None, check_out=None, adults=2, rooms=1):
+        """Get hotels for a city using Xotelo API"""
         try:
             print(f"\n{'='*60}")
             print(f"🏨 Getting hotels for: {city_name}")
@@ -71,7 +205,7 @@ class XoteloService:
             )
             
             if response.status_code != 200:
-                raise Exception(f"API failed: {response.status_code}")
+                raise Exception(f"Xotelo API failed: {response.status_code}")
             
             data = response.json()
             if data.get('error'):
@@ -116,10 +250,11 @@ class XoteloService:
                 })
             
             print(f"✓ Formatted {len(formatted_hotels)} hotels\n")
-            return {'data': formatted_hotels}
+            return {'data': formatted_hotels, 'source': 'xotelo'}
             
         except Exception as e:
             print(f"✗ Error: {str(e)}")
             raise
+
 
 xotelo_service = XoteloService()

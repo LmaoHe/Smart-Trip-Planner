@@ -1,4 +1,3 @@
-// Frontend/JavaScript/booking.js
 import { db, auth } from './firebase-config.js';
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { observeAuthState, handleLogout } from './auth.js';
@@ -8,11 +7,26 @@ import apiService from './api_service.js';
 // ===== GLOBAL STATE =====
 let allHotels = [];
 let filteredHotels = [];
+let allFlights = [];
+let filteredFlights = [];
 let currentFilters = {
     rating: null,
     priceMin: 0,
     priceMax: 10000,
 };
+
+let currentFlightFilters = {
+    stops: [],
+    priceMax: 5000,
+    departureTime: []
+};
+
+// Close modal
+function closeFlightModal() {
+    const modal = document.getElementById('flightModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
 
 // ===== CURRENCY CONVERSION =====
 function convertToMYR(amount, fromCurrency) {
@@ -466,28 +480,6 @@ function setupFilters() {
         });
     });
 
-    // Clear filters
-    const clearFiltersBtn = document.getElementById('clearFilters');
-    if (clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', () => {
-            console.log('Clearing all filters...');
-
-            currentFilters = {
-                rating: null,
-                priceMin: 0,
-                priceMax: 10000
-            };
-
-            ratingCheckboxes.forEach(cb => cb.checked = false);
-
-            if (priceSlider) priceSlider.value = 750;
-            if (priceRangeLabel) priceRangeLabel.textContent = '(RM 0 - RM 750+)';
-            priceButtons.forEach(b => b.classList.remove('active'));
-
-            console.log(`Showing all ${allHotels.length} hotels`);
-            displayFilteredHotels(allHotels);
-        });
-    }
 }
 
 // ===== SORT HOTELS =====
@@ -528,6 +520,69 @@ function sortHotels(hotels, sortBy) {
             return sorted;
     }
 }
+
+// ===== SORT FLIGHTS =====
+function sortFlights(flights, sortBy) {
+    // Create a copy to avoid mutating original
+    const sorted = [...flights];
+
+    switch (sortBy) {
+        case 'price-low':
+            return sorted.sort((a, b) => {
+                const priceA = parseFloat(a.price?.total || 0);
+                const priceB = parseFloat(b.price?.total || 0);
+                return priceA - priceB;
+            });
+
+        case 'price-high':
+            return sorted.sort((a, b) => {
+                const priceA = parseFloat(a.price?.total || 0);
+                const priceB = parseFloat(b.price?.total || 0);
+                return priceB - priceA;
+            });
+
+        case 'duration-short':
+            return sorted.sort((a, b) => {
+                const durationA = a.itineraries[0]?.duration || 'PT0H';
+                const durationB = b.itineraries[0]?.duration || 'PT0H';
+                const minutesA = parseDuration(durationA);
+                const minutesB = parseDuration(durationB);
+                return minutesA - minutesB;
+            });
+
+        case 'departure-early':
+            return sorted.sort((a, b) => {
+                const timeA = new Date(a.itineraries[0]?.segments[0]?.departure?.time || 0);
+                const timeB = new Date(b.itineraries[0]?.segments[0]?.departure?.time || 0);
+                return timeA - timeB;
+            });
+
+        case 'departure-late':
+            return sorted.sort((a, b) => {
+                const timeA = new Date(a.itineraries[0]?.segments[0]?.departure?.time || 0);
+                const timeB = new Date(b.itineraries[0]?.segments[0]?.departure?.time || 0);
+                return timeB - timeA;
+            });
+
+        case 'recommended':
+        default:
+            return sorted;
+    }
+}
+
+
+// ===== PARSE DURATION TO MINUTES =====
+function parseDuration(duration) {
+    // Convert PT1H30M to minutes
+    const hours = duration.match(/(\d+)H/);
+    const minutes = duration.match(/(\d+)M/);
+
+    const h = hours ? parseInt(hours[1]) : 0;
+    const m = minutes ? parseInt(minutes[1]) : 0;
+
+    return h * 60 + m;
+}
+
 
 // ===== FAVORITES SYSTEM =====
 async function toggleFavorite(hotelId, hotelData) {
@@ -574,24 +629,6 @@ async function toggleFavorite(hotelId, hotelData) {
     }
 }
 
-async function checkIfFavorited(hotelId) {
-    const user = auth.currentUser;
-    if (!user) return false;
-
-    try {
-        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-
-        const favoriteRef = doc(db, 'users', user.uid, 'favorites', hotelId);
-        const favoriteSnap = await getDoc(favoriteRef);
-
-        return favoriteSnap.exists();
-    } catch (error) {
-        console.error('Error checking favorite:', error);
-        return false;
-    }
-}
-
-// ===== DISPLAY FLIGHT RESULTS =====
 async function displayFlightResults(flights, tripType) {
     const resultsGrid = document.getElementById('resultsGrid');
     const resultsCount = document.getElementById('resultsCount');
@@ -604,78 +641,31 @@ async function displayFlightResults(flights, tripType) {
     resultsGrid.innerHTML = '';
 
     if (!flights || flights.length === 0) {
-        if (resultsCount) resultsCount.textContent = 'No flights found';
+        if (resultsCount) {
+            resultsCount.textContent = 'No flights found';
+        }
         resultsGrid.innerHTML = `
             <div class="no-results">
                 <i class="gg-airplane" style="font-size: 48px; color: var(--text-light); margin-bottom: 16px;"></i>
                 <h3>No flights found</h3>
-                <p style="color: var(--text-gray);">Try different search criteria</p>
+                <p style="color: var(--text-gray);">Try different search criteria or adjust filters</p>
             </div>
         `;
         return;
     }
 
     if (resultsCount) {
-        resultsCount.textContent = `${flights.length} ${flights.length === 1 ? 'flight' : 'flights'} found`;
+        resultsCount.textContent = `${flights.length} flights found`;
     }
 
+    // Create combined flight cards
     flights.forEach((flight, index) => {
-        const flightCard = createFlightCard(flight, index, tripType);
+        const flightCard = createCombinedFlightCard(flight, index, tripType);
         resultsGrid.appendChild(flightCard);
     });
+
+    console.log('✓ Displayed', flights.length, 'flights');
 }
-
-function createFlightSegmentHTML(label, itinerary) {
-    const segments = itinerary.segments.map(seg => `
-        <div class="segment">
-            <div class="airline">
-                <strong>${seg.airline} ${seg.flightNumber}</strong>
-            </div>
-            <div class="route">
-                <div class="departure">
-                    <span class="time">${formatTime(seg.departure.time)}</span>
-                    <span class="airport">${seg.departure.airport}</span>
-                </div>
-                <div class="duration">
-                    <i class="gg-airplane"></i>
-                    <span>${formatDuration(seg.duration)}</span>
-                </div>
-                <div class="arrival">
-                    <span class="time">${formatTime(seg.arrival.time)}</span>
-                    <span class="airport">${seg.arrival.airport}</span>
-                </div>
-            </div>
-        </div>
-    `).join('<div class="layover"><i class="gg-sync"></i> Layover</div>');
-
-    return `
-        <div class="flight-segment">
-            <h4><i class="gg-airplane"></i> ${label}</h4>
-            ${segments}
-            <p class="total-duration">Total Duration: ${formatDuration(itinerary.duration)}</p>
-        </div>
-    `;
-}
-
-function formatTime(datetime) {
-    return new Date(datetime).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-function formatDuration(duration) {
-    const match = duration.match(/PT(\d+)H(\d+)?M?/);
-    if (!match) return duration;
-    const hours = match[1];
-    const minutes = match[2] || '0';
-    return `${hours}h ${minutes}m`;
-}
-
-window.selectFlight = function (flight) {
-    sessionStorage.setItem('selectedFlight', JSON.stringify(flight));
-    window.location.href = 'flightCheckout.html';
-};
 
 
 // ===== HELPER FUNCTIONS =====
@@ -692,6 +682,13 @@ function hideLoading() {
     if (loadingState) loadingState.style.display = 'none';
     if (resultsGrid) resultsGrid.style.display = 'grid';
 }
+
+// ===== LIMITS CONFIG =====
+const BOOKING_LIMITS = {
+    rooms: { min: 1, max: 5 },
+    adultsInline: { min: 1, max: 9 },
+    childrenInline: { min: 0, max: 4 }
+};
 
 function setupGuestsCounter() {
     const guestsInline = document.querySelector('.guests-inline');
@@ -721,12 +718,23 @@ function setupGuestsCounter() {
             if (!countElement) return;
 
             let currentValue = parseInt(countElement.textContent);
+            const limits = BOOKING_LIMITS[target];
+
+            // Get limits (roomsInline, adultsInline, childrenInline)
+            const maxLimit = limits?.max || 10;
+            const minLimit = limits?.min || 0;
 
             if (action === 'plus') {
+                if (currentValue >= maxLimit) {
+                    showToast(`Maximum ${target.replace('Inline', '')} limit (${maxLimit}) reached`, true);
+                    return;
+                }
                 currentValue++;
-            } else if (action === 'minus' && currentValue > 0) {
-                if (target === 'adultsInline' && currentValue <= 1) return;
-                if (target === 'roomsInline' && currentValue <= 1) return;
+            } else if (action === 'minus') {
+                if (currentValue <= minLimit) {
+                    showToast(`Minimum ${target.replace('Inline', '')} limit (${minLimit}) required`, true);
+                    return;
+                }
                 currentValue--;
             }
 
@@ -781,12 +789,38 @@ observeAuthState(async (user) => {
     }
 });
 
-// ===== CREATE FLIGHT CARD =====
-function createFlightCard(flightData, index, tripType) {
-    const card = document.createElement('div');
-    card.className = 'flight-card-horizontal';
+// ===== MAP AIRLINE CODES TO FULL NAMES =====
+function getAirlineName(code) {
+    const airlineMap = {
+        'MH': 'Malaysia Airlines',
+        'AK': 'AirAsia',
+        'OD': 'Malindo Air',
+        'FY': 'Firefly',
+        'D7': 'AirAsia X',
+        'SQ': 'Singapore Airlines',
+        'TG': 'Thai Airways',
+        'CX': 'Cathay Pacific',
+        'EK': 'Emirates',
+        'QR': 'Qatar Airways',
+        'EY': 'Etihad Airways',
+        'BA': 'British Airways',
+        'QZ': 'Indonesia AirAsia',
+        'TR': 'Scoot',
+        'VN': 'Vietnam Airlines',
+        'GA': 'Garuda Indonesia',
+        'NH': 'All Nippon Airways',
+        'JL': 'Japan Airlines',
+        'KE': 'Korean Air',
+        'CZ': 'China Southern'
+    };
+    return airlineMap[code] || code;
+}
 
-    // Extract flight information
+// ===== CREATE COMBINED FLIGHT CARD (ROUND-TRIP IN ONE CARD) =====
+function createCombinedFlightCard(flightData, index, tripType) {
+    const card = document.createElement('div');
+    card.className = 'flight-card-combined';
+
     const itineraries = flightData.itineraries || [];
     const price = flightData.price || {};
 
@@ -795,132 +829,854 @@ function createFlightCard(flightData, index, tripType) {
         return card;
     }
 
-    // Get outbound flight (first itinerary)
-    const outbound = itineraries[0];
-    const segments = outbound.segments || [];
-    
-    if (segments.length === 0) {
-        card.innerHTML = '<p>No segments available</p>';
-        return card;
-    }
-
-    const firstSegment = segments[0];
-    const lastSegment = segments[segments.length - 1];
-
-    // ✅ FIX: Use 'time' instead of 'at', 'airport' instead of 'iataCode'
-    const departureDateTime = firstSegment.departure?.time;
-    const arrivalDateTime = lastSegment.arrival?.time;
-
-    if (!departureDateTime || !arrivalDateTime) {
-        card.innerHTML = '<p>Invalid flight data - missing dates</p>';
-        return card;
-    }
-
-    // Parse dates
-    const departureDate = new Date(departureDateTime);
-    const arrivalDate = new Date(arrivalDateTime);
-
-    const departureTime = departureDate.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-    });
-    const arrivalTime = arrivalDate.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-    });
-    const departureDateStr = departureDate.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
-    });
-    const arrivalDateStr = arrivalDate.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
-    });
-
-    // Duration
-    const duration = outbound.duration?.replace('PT', '').replace('H', 'h ').replace('M', 'm') || 'N/A';
-
-    // Stops
-    const stops = segments.length - 1;
-    const stopsText = stops === 0 ? 'Direct' : `${stops} stop${stops > 1 ? 's' : ''}`;
-    const stopsClass = stops === 0 ? 'direct' : '';
-
-    // ✅ FIX: Use 'airline' instead of 'carrierCode'
-    const airlineCode = firstSegment.airline || 'Unknown';
-    const airlineName = airlineCode;
-
     // Price
     const totalPrice = parseFloat(price.total || 0);
     const currency = price.currency || 'MYR';
     const priceInMYR = currency === 'MYR' ? totalPrice : convertToMYR(totalPrice, currency);
 
-    // Travel class (not in your data, default to ECONOMY)
-    const travelClass = 'ECONOMY';
+    // Build the HTML
+    let flightHTML = '<div class="flight-card-wrapper">';
 
-    // ✅ FIX: Use 'flightNumber' directly
-    const flightNumber = firstSegment.flightNumber || 'N/A';
+    // Left side: Flight details
+    flightHTML += '<div class="flights-container">';
 
-    card.innerHTML = `
-        <!-- Airline Logo Section -->
-        <div class="flight-logo-section">
-            <div class="airline-logo">
-                ✈️
-            </div>
-            <div class="airline-name">${airlineName}</div>
-            <div class="flight-number">${flightNumber}</div>
-        </div>
+    // Outbound flight
+    flightHTML += createFlightSegmentHTML(itineraries[0], 'Outbound');
 
-        <!-- Flight Details Section -->
-        <div class="flight-details-section">
-            <!-- Route -->
-            <div class="flight-route">
-                <!-- Departure -->
-                <div class="flight-time-block departure">
-                    <div class="flight-time">${departureTime}</div>
-                    <div class="flight-airport">${firstSegment.departure?.airport || 'N/A'}</div>
-                    <div class="flight-date">${departureDateStr}</div>
-                </div>
+    // Return flight (if round-trip)
+    if (tripType === 'round-trip' && itineraries.length > 1) {
+        flightHTML += '<div class="flight-separator"></div>';
+        flightHTML += createFlightSegmentHTML(itineraries[1], 'Return');
+    }
 
-                <!-- Duration & Stops -->
-                <div class="flight-duration-block">
-                    <div class="flight-duration">${duration}</div>
-                    <div class="flight-line"></div>
-                    <div class="flight-stops ${stopsClass}">${stopsText}</div>
-                </div>
+    flightHTML += '</div>';
 
-                <!-- Arrival -->
-                <div class="flight-time-block arrival">
-                    <div class="flight-time">${arrivalTime}</div>
-                    <div class="flight-airport">${lastSegment.arrival?.airport || 'N/A'}</div>
-                    <div class="flight-date">${arrivalDateStr}</div>
-                </div>
-            </div>
+    // Right side: Price and button
+    const numPassengers = parseInt(document.getElementById('flightTravelersSearch')?.value || '1');
+    const pricePerPerson = priceInMYR / numPassengers;
 
-            <!-- Meta Info -->
-            <div class="flight-meta">
-                <div class="flight-class-badge">
-                    <i class="gg-briefcase"></i>
-                    ${travelClass}
-                </div>
-            </div>
-        </div>
-
-        <!-- Price Section -->
+    flightHTML += `
         <div class="flight-price-section">
-            <div class="price-container">
-                <div class="price-main">RM ${priceInMYR.toFixed(0)}</div>
-                <div class="price-label">per person</div>
-                <div class="price-details">${stopsText}</div>
-            </div>
-            <button class="select-flight-btn" data-flight-index="${index}">
-                Select Flight
+            <div class="price-display">RM${pricePerPerson.toFixed(2)}</div>
+            <p style="font-size: 12px; color: #999; margin-top: 4px;">per person</p>
+            <button class="view-details-btn" data-flight-index="${index}" style="margin-top: 12px;">
+                View details
             </button>
         </div>
     `;
 
+
+    flightHTML += '</div>';
+
+    card.innerHTML = flightHTML;
     return card;
+}
+
+// ===== CREATE FLIGHT SEGMENT HTML (HELPER) =====
+function createFlightSegmentHTML(itinerary, label) {
+    if (!itinerary) return '';
+
+    const segments = itinerary.segments || [];
+    if (segments.length === 0) return '';
+
+    const firstSegment = segments[0];
+    const lastSegment = segments[segments.length - 1];
+
+    // Parse times and dates
+    const departureDateTime = firstSegment.departure?.time;
+    const arrivalDateTime = lastSegment.arrival?.time;
+
+    if (!departureDateTime || !arrivalDateTime) return '';
+
+    const departureDate = new Date(departureDateTime);
+    const arrivalDate = new Date(arrivalDateTime);
+
+    // Format times (HH:MM)
+    const departureTime = departureDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    const arrivalTime = arrivalDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+
+    // Format dates (DD MMM)
+    const departureDay = departureDate.getDate();
+    const departureMonth = departureDate.toLocaleString('en-US', { month: 'short' });
+    const arrivalDay = arrivalDate.getDate();
+    const arrivalMonth = arrivalDate.toLocaleString('en-US', { month: 'short' });
+
+    // Duration
+    const duration = itinerary.duration?.replace('PT', '').replace('H', ' hour ').replace('M', ' min') || 'N/A';
+
+    // Stops
+    const stops = segments.length - 1;
+    const stopsText = stops === 0 ? 'Direct' : `${stops} stop${stops > 1 ? 's' : ''}`;
+    const stopsClass = stops === 0 ? 'direct' : 'with-stops';
+
+    // Airline
+    const airlineCode = firstSegment.airline || 'Unknown';
+    const airlineName = getAirlineName(airlineCode);
+
+    // Airports
+    const departureAirport = firstSegment.departure?.airport || 'N/A';
+    const arrivalAirport = lastSegment.arrival?.airport || 'N/A';
+
+    return `
+        <div class="flight-segment">
+            <div class="flight-airline-small">
+                <div class="airline-logo-small">
+                    <span>${airlineCode}</span>
+                </div>
+                <div class="airline-info">
+                    <div class="airline-name-small">${airlineName}</div>
+                </div>
+            </div>
+            
+            <div class="flight-route-info">
+                <div class="flight-time-block">
+                    <div class="time-large">${departureTime}</div>
+                    <div class="airport-code">${departureAirport}</div>
+                    <div class="date-small">${departureDay} ${departureMonth}</div>
+                </div>
+                
+                <div class="flight-duration-block">
+                    <div class="duration-text">${duration}</div>
+                    <div class="route-line">
+                        <div class="line"></div>
+                        <div class="stops-badge ${stopsClass}">${stopsText}</div>
+                    </div>
+                </div>
+                
+                <div class="flight-time-block">
+                    <div class="time-large">${arrivalTime}</div>
+                    <div class="airport-code">${arrivalAirport}</div>
+                    <div class="date-small">${arrivalDay} ${arrivalMonth}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ===== SETUP FLIGHT FILTERS =====
+function setupFlightFilters() {
+    console.log('Setting up flight filters (one-time setup)');
+
+    document.addEventListener('change', (e) => {
+        if (e.target.matches('input[data-filter="stops"]')) {
+            const stopCheckboxes = document.querySelectorAll('input[data-filter="stops"]');
+            currentFlightFilters.stops = Array.from(stopCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => parseInt(cb.value));
+
+            console.log('Stops filter updated:', currentFlightFilters.stops);
+            applyFlightFilters();
+        }
+    });
+
+    document.addEventListener('change', (e) => {
+        if (e.target.matches('input[data-filter="departTime"]')) {
+            const timeCheckboxes = document.querySelectorAll('input[data-filter="departTime"]');
+            currentFlightFilters.departureTime = Array.from(timeCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            console.log('Departure time filter updated:', currentFlightFilters.departureTime);
+            applyFlightFilters();
+        }
+    });
+
+    const priceSlider = document.getElementById('flightPriceSlider');
+    const priceMaxLabel = document.getElementById('flightPriceMax');
+    if (priceSlider) {
+        priceSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            currentFlightFilters.priceMax = parseInt(value);
+            if (priceMaxLabel) {
+                priceMaxLabel.textContent = value >= 5000 ? 'RM 5000+' : `RM ${value}`;
+            }
+            console.log('Price filter updated:', currentFlightFilters.priceMax);
+            applyFlightFilters();
+        });
+    }
+
+    console.log('✓ Flight filters setup complete (global listeners active)');
+}
+
+function applyFlightFilters() {
+    if (!allFlights || allFlights.length === 0) {
+        console.log('❌ No flights to filter');
+        return;
+    }
+
+    console.log('🔍 Applying filters:', currentFlightFilters);
+    console.log('📊 allFlights.length:', allFlights.length);
+
+    filteredFlights = allFlights.filter(flight => {
+        // ✅ Only apply price filter if it's LESS than default max (5000)
+        const price = parseFloat(flight.price?.total || 0);
+        const currency = flight.price?.currency || 'MYR';
+        const priceInMYR = currency === 'MYR' ? price : convertToMYR(price, currency);
+
+        // Only filter by price if slider has been moved from default
+        if (currentFlightFilters.priceMax < 5000 && priceInMYR > currentFlightFilters.priceMax) {
+            return false;
+        }
+
+        // Stops filter
+        if (currentFlightFilters.stops.length > 0) {
+            const segments = flight.itineraries?.[0]?.segments || [];
+            const stops = segments.length - 1;
+
+            const has2PlusStops = currentFlightFilters.stops.includes(2);
+            const matchesStops = currentFlightFilters.stops.includes(stops);
+            const is2OrMoreStops = stops >= 2 && has2PlusStops;
+
+            if (!matchesStops && !is2OrMoreStops) {
+                return false;
+            }
+        }
+
+        // Departure time filter
+        if (currentFlightFilters.departureTime.length > 0) {
+            const departureTime = flight.itineraries?.[0]?.segments?.[0]?.departure?.time;
+            if (!departureTime) {
+                return false;
+            }
+
+            const hour = new Date(departureTime).getHours();
+            const timeSlot = getTimeSlot(hour);
+            if (!currentFlightFilters.departureTime.includes(timeSlot)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    console.log(`✓ Filtered ${allFlights.length} → ${filteredFlights.length} flights`);
+
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        resultsCount.textContent = `${filteredFlights.length} flight${filteredFlights.length !== 1 ? 's' : ''} found`;
+    }
+
+    displayFlightResults(filteredFlights, 'round-trip');
+}
+
+// ===== GET TIME SLOT =====
+function getTimeSlot(hour) {
+    if (hour >= 6 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 18) return 'afternoon';
+    if (hour >= 18 && hour < 24) return 'evening';
+    return 'night';
+}
+
+// ===== CLEAR FLIGHT FILTERS (SIMPLE) =====
+function clearFlightFilters() {
+    console.log('Clearing flight filters...');
+
+    // 1. Reset filter object
+    currentFlightFilters = {
+        stops: [],
+        priceMax: 5000,
+        departureTime: []
+    };
+
+    // 2. Uncheck all checkboxes
+    document.querySelectorAll('input[data-filter="stops"]:checked').forEach(cb => cb.checked = false);
+    document.querySelectorAll('input[data-filter="departTime"]:checked').forEach(cb => cb.checked = false);
+
+    // 3. Reset price slider
+    const priceSlider = document.getElementById('flightPriceSlider');
+    const priceMaxLabel = document.getElementById('flightPriceMax');
+    if (priceSlider) priceSlider.value = 5000;
+    if (priceMaxLabel) priceMaxLabel.textContent = 'RM 5000+';
+
+    // 4. Re-apply filters (this will show all flights since filters are empty)
+    applyFlightFilters();
+
+    console.log('✓ Flight filters cleared');
+}
+
+// ===== SETUP CLEAR FILTERS BUTTON =====
+function setupClearFilters() {
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    if (!clearFiltersBtn) return;
+
+    clearFiltersBtn.addEventListener('click', () => {
+        const activeTab = document.querySelector('.search-tab.active');
+        const tabType = activeTab?.dataset.type;
+
+        if (tabType === 'hotel') {
+            // Your existing hotel clear code
+            console.log('Clearing HOTEL filters');
+
+            const ratingCheckboxes = document.querySelectorAll('input[data-filter="rating"]');
+            ratingCheckboxes.forEach(cb => cb.checked = false);
+
+            const priceSlider = document.getElementById('priceSlider');
+            const priceRangeLabel = document.querySelector('.price-range-label');
+            if (priceSlider) priceSlider.value = 750;
+            if (priceRangeLabel) priceRangeLabel.textContent = 'RM 0 - RM 750+';
+
+            currentFilters = {
+                rating: null,
+                priceMin: 0,
+                priceMax: 10000,
+            };
+
+            if (allHotels.length > 0) {
+                const cityName = document.getElementById('hotelDestSearch')?.value || 'selected city';
+                const resultsCount = document.getElementById('resultsCount');
+                if (resultsCount) {
+                    resultsCount.textContent = `${allHotels.length} properties found in ${cityName}`;
+                }
+                displayFilteredHotels(allHotels);
+            }
+
+        } else if (tabType === 'flight') {
+            // ✅ SIMPLE: Just call the clear function
+            clearFlightFilters();
+        }
+    });
+}
+
+// ==================== FLIGHT MODAL FUNCTIONS ====================
+// Open flight details modal
+function openFlightModal(flightData) {
+    const modal = document.getElementById('flightModal');
+    const modalBody = document.getElementById('modalBody');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalPrice = document.getElementById('modalTotalPrice');
+
+    // Set title and price
+    const origin = flightData.itineraries[0].segments[0].departure.airport;
+    const destination = flightData.itineraries[0].segments[flightData.itineraries[0].segments.length - 1].arrival.airport;
+    modalTitle.textContent = `Your flight to ${getAirportCity(destination)}`;
+    const totalPrice = parseFloat(flightData.price.total);
+    const numPassengers = parseInt(document.getElementById('flightTravelersSearch')?.value || '1');
+    const pricePerPerson = totalPrice / numPassengers;
+    const currency = flightData.price.currency === 'MYR' ? 'RM' : flightData.price.currency;
+
+    modalPrice.textContent = `${currency}${pricePerPerson.toFixed(2)}`;
+
+    // Build modal content
+    let html = '';
+
+    // Outbound flight
+    html += buildFlightLegHTML(flightData.itineraries[0], 'outbound');
+
+    // Return flight (if exists)
+    if (flightData.itineraries.length > 1) {
+        html += buildFlightLegHTML(flightData.itineraries[1], 'return');
+    }
+
+    // In buildFlightLegHTML() function, the modal content should now be:
+
+    html += `
+        <div class="modal-info-section">
+            <div class="info-section-title">
+                <i class="fas fa-suitcase-rolling"></i> Included baggage
+            </div>
+            <div class="info-row">
+                <span class="info-label">The total baggage included in the price</span>
+                <span class="info-value highlight">1 cabin bag</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Dimensions</span>
+                <span class="info-value">23 x 36 x 56 cm · Max weight 7 kg</span>
+            </div>
+        </div>
+    `;
+
+    modalBody.innerHTML = html;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Build HTML for a flight leg (outbound or return)
+function buildFlightLegHTML(itinerary, type) {
+    const title = type === 'outbound' ? 'Flight to' : 'Flight to';
+    const lastSegment = itinerary.segments[itinerary.segments.length - 1];
+    const destination = getAirportCity(lastSegment.arrival.airport);
+
+    let html = `
+        <div class="flight-leg-section">
+            <div class="flight-leg-header">
+                ${title} ${destination}
+                <span class="flight-leg-type">Direct · ${formatDuration(itinerary.duration)}</span>
+            </div>
+    `;
+
+    itinerary.segments.forEach((segment, index) => {
+        const depTime = formatTime(segment.departure.time);
+        const arrTime = formatTime(segment.arrival.time);
+        const depDate = formatDate(segment.departure.time);
+        const arrDate = formatDate(segment.arrival.time);
+
+        html += `
+            <div class="flight-segment-detail">
+                <div class="segment-time-row">
+                    <span class="segment-time">${depTime}</span>
+                    <span class="segment-airport">${segment.departure.airport} · ${getAirportName(segment.departure.airport)}</span>
+                </div>
+                <div class="segment-location">${depDate}</div>
+                
+                <div class="segment-airline-info">
+                    <div class="airline-logo-modal">${segment.airline}</div>
+                    <div class="airline-details">
+                        <div class="airline-name-modal">${getAirlineName(segment.airline)}</div>
+                        <div class="flight-number-modal">${segment.airline}${segment.flightNumber} · Economy</div>
+                    </div>
+                    <div class="flight-duration-modal">Flight time ${formatDuration(segment.duration)}</div>
+                </div>
+                
+                <div class="segment-time-row">
+                    <span class="segment-time">${arrTime}</span>
+                    <span class="segment-airport">${segment.arrival.airport} · ${getAirportName(segment.arrival.airport)}</span>
+                </div>
+                <div class="segment-location">${arrDate}</div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    return html;
+}
+
+function bookFlight() {
+    // Hide any leftover loading state from previous searches
+    const loadingState = document.getElementById('loadingState');
+    if (loadingState) loadingState.style.display = 'none';
+
+    try {
+        // Detect trip type from the dropdown
+        const tripTypeSelect = document.getElementById('tripTypeSelect');
+        const tripType = tripTypeSelect ? tripTypeSelect.value : 'round-trip';
+
+        // Get current flight data from the modal
+        const modal = document.getElementById('flightModal');
+        const modalPrice = document.getElementById('modalTotalPrice')?.textContent || '0';
+        const numPassengers = parseInt(document.getElementById('flightTravelersSearch')?.value || 1);
+
+        if (!modal.classList.contains('active')) {
+            showToast('Please view a flight first', true);
+            return;
+        }
+
+        // Extract price value (remove currency symbols)
+        let pricePerPerson = parseFloat(modalPrice.replace(/[^\d.]/g, '') || 0);
+
+        if (pricePerPerson === 0) {
+            showToast('Could not retrieve flight price', true);
+            return;
+        }
+
+        // Get the flight that's currently displayed in the modal
+        const currentFlights = filteredFlights.length > 0 ? filteredFlights : allFlights;
+
+        if (currentFlights.length === 0) {
+            showToast('No flights available', true);
+            return;
+        }
+
+        // Get the last clicked flight (the one in the modal)
+        let selectedFlight = currentFlights[0];
+
+        // Extract flight details
+        const outboundItinerary = selectedFlight.itineraries[0];
+        const outboundSegment = outboundItinerary?.segments[0];
+
+        // For one-way, return itinerary won't exist
+        const returnItinerary = selectedFlight.itineraries[1];
+        const returnSegment = returnItinerary?.segments[0];
+
+        // Helper function to format time
+        const formatTimeHelper = (isoString) => {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        };
+
+        // Helper function to calculate duration in hours and minutes
+        const parseDurationHelper = (durationStr) => {
+            const hours = durationStr.match(/(\d+)H/);
+            const minutes = durationStr.match(/(\d+)M/);
+            const h = hours ? parseInt(hours[1]) : 0;
+            const m = minutes ? parseInt(minutes[1]) : 0;
+            return { hours: h, minutes: m };
+        };
+
+        // Prepare outbound flight data
+        const outboundDuration = parseDurationHelper(outboundItinerary?.duration || 'PT0H');
+
+        // ✅ Get the LAST segment for final destination
+        const lastOutboundSegment = outboundItinerary?.segments?.[outboundItinerary.segments.length - 1];
+
+        // ✅ Build stops array (all intermediate airports)
+        const outboundStops = [];
+        if (outboundItinerary?.segments?.length > 1) {
+            // Get all middle segments (not first, not last)
+            for (let i = 0; i < outboundItinerary.segments.length - 1; i++) {
+                const stopAirport = outboundItinerary.segments[i]?.arrival?.airport;
+                if (stopAirport) {
+                    outboundStops.push({ airport: stopAirport });
+                }
+            }
+        }
+
+        const outboundData = {
+            fromAirport: outboundSegment?.departure?.airport || 'N/A',
+            toAirport: lastOutboundSegment?.arrival?.airport || 'N/A', // ✅ FIXED: Final destination
+            departDate: outboundSegment?.departure?.time?.split('T')[0] || '',
+            departTime: formatTimeHelper(outboundSegment?.departure?.time) || '',
+            arriveTime: formatTimeHelper(lastOutboundSegment?.arrival?.time) || '', // ✅ FIXED: Final arrival time
+            airline: outboundSegment?.airline || '',
+            flightNumber: outboundSegment?.flightNumber || '',
+            duration: `${outboundDuration.hours}h ${outboundDuration.minutes}m`,
+            stops: outboundStops // ✅ FIXED: Array of stop airports
+        };
+
+        // Prepare return flight data (only for round-trip)
+        let returnData = null;
+        if (tripType === 'round-trip' && returnItinerary) {
+            const returnDuration = parseDurationHelper(returnItinerary?.duration || 'PT0H');
+
+            // ✅ Get the LAST segment for final destination
+            const lastReturnSegment = returnItinerary?.segments?.[returnItinerary.segments.length - 1];
+
+            // ✅ Build stops array
+            const returnStops = [];
+            if (returnItinerary?.segments?.length > 1) {
+                for (let i = 0; i < returnItinerary.segments.length - 1; i++) {
+                    const stopAirport = returnItinerary.segments[i]?.arrival?.airport;
+                    if (stopAirport) {
+                        returnStops.push({ airport: stopAirport });
+                    }
+                }
+            }
+
+            returnData = {
+                fromAirport: returnSegment?.departure?.airport || 'N/A',
+                toAirport: lastReturnSegment?.arrival?.airport || 'N/A', // ✅ FIXED
+                departDate: returnSegment?.departure?.time?.split('T')[0] || '',
+                departTime: formatTimeHelper(returnSegment?.departure?.time) || '',
+                arriveTime: formatTimeHelper(lastReturnSegment?.arrival?.time) || '', // ✅ FIXED
+                airline: returnSegment?.airline || '',
+                flightNumber: returnSegment?.flightNumber || '',
+                duration: `${returnDuration.hours}h ${returnDuration.minutes}m`,
+                stops: returnStops // ✅ FIXED
+            };
+        }
+
+        // Prepare complete flight data
+        const flightData = {
+            tripType: tripType,
+            outbound: outboundData,
+            return: returnData,
+            passengers: numPassengers,
+            pricePerPerson: pricePerPerson,
+            currency: selectedFlight.price?.currency || 'MYR',
+            travelClass: selectedFlight.travelerPricings?.[0]?.fareDetailsBySegment?.[0]?.cabin || 'ECONOMY' // ✅ Add this
+        };
+
+        console.log('✓ Flight booking data:', flightData);
+
+        // Store in sessionStorage for checkout page
+        sessionStorage.setItem('selectedFlight', JSON.stringify(flightData));
+
+        // Close modal
+        closeFlightModal();
+
+        window.location.href = 'flightCheckout.html';
+
+    } catch (error) {
+        console.error('Error booking flight:', error);
+        showToast('Failed to book flight. Please try again.', true);
+    }
+}
+
+window.bookFlight = bookFlight;
+
+
+// ==================== AIRPORT LOOKUPS  ====================
+// Helper: Get airport city name
+function getAirportCity(code) {
+    const cities = {
+        // Asia
+        'KUL': 'Kuala Lumpur',
+        'PEN': 'Penang',
+        'LGK': 'Langkawi',
+        'SIN': 'Singapore',
+        'BKK': 'Bangkok',
+        'HKT': 'Phuket',
+        'CNX': 'Chiang Mai',
+        'KBV': 'Krabi',
+        'DPS': 'Bali',
+        'CGK': 'Jakarta',
+        'JOG': 'Yogyakarta',
+        'NRT': 'Tokyo',
+        'HND': 'Tokyo',
+        'KIX': 'Osaka',
+        'HIJ': 'Hiroshima',
+        'ICN': 'Seoul',
+        'PUS': 'Busan',
+        'CJU': 'Jeju Island',
+        'HAN': 'Hanoi',
+        'SGN': 'Ho Chi Minh City',
+        'DAD': 'Da Nang',
+        'REP': 'Siem Reap',
+
+        // Europe
+        'CDG': 'Paris',
+        'NCE': 'Nice',
+        'LYS': 'Lyon',
+        'MRS': 'Marseille',
+        'FCO': 'Rome',
+        'VCE': 'Venice',
+        'FLR': 'Florence',
+        'MXP': 'Milan',
+        'NAP': 'Naples',
+        'BCN': 'Barcelona',
+        'MAD': 'Madrid',
+        'SVQ': 'Seville',
+        'VLC': 'Valencia',
+        'LHR': 'London',
+        'EDI': 'Edinburgh',
+        'LPL': 'Liverpool',
+        'BER': 'Berlin',
+        'MUC': 'Munich',
+        'FRA': 'Frankfurt',
+        'AMS': 'Amsterdam',
+        'RTM': 'Rotterdam',
+        'ZRH': 'Zurich',
+        'GVA': 'Geneva',
+        'ATH': 'Athens',
+        'JTR': 'Santorini',
+        'JMK': 'Mykonos',
+        'LIS': 'Lisbon',
+        'OPO': 'Porto',
+        'PRG': 'Prague',
+
+        // Americas
+        'JFK': 'New York',
+        'EWR': 'New York',
+        'LAX': 'Los Angeles',
+        'SFO': 'San Francisco',
+        'LAS': 'Las Vegas',
+        'MIA': 'Miami',
+        'MCO': 'Orlando',
+        'YYZ': 'Toronto',
+        'YVR': 'Vancouver',
+        'YUL': 'Montreal',
+        'GIG': 'Rio de Janeiro',
+        'GRU': 'São Paulo',
+        'CUN': 'Cancun',
+        'MEX': 'Mexico City',
+        'GDL': 'Guadalajara',
+        'CUZ': 'Cusco',
+        'LIM': 'Lima',
+        'EZE': 'Buenos Aires',
+
+        // Middle East & Africa
+        'DXB': 'Dubai',
+        'AUH': 'Abu Dhabi',
+        'IST': 'Istanbul',
+        'ASR': 'Cappadocia',
+        'NAV': 'Cappadocia',
+        'CAI': 'Cairo',
+        'LXR': 'Luxor',
+        'SSH': 'Sharm El Sheikh',
+        'RAK': 'Marrakech',
+        'CMN': 'Casablanca',
+        'CPT': 'Cape Town',
+
+        // Oceania
+        'SYD': 'Sydney',
+        'MEL': 'Melbourne',
+        'OOL': 'Gold Coast',
+        'AKL': 'Auckland',
+        'ZQN': 'Queenstown'
+    };
+    return cities[code] || code;
+}
+
+// Helper: Get airport full name
+function getAirportName(code) {
+    const airports = {
+        // 🌏 ASIA - Malaysia
+        'KUL': 'Kuala Lumpur International Airport',
+        'PEN': 'Penang International Airport',
+        'LGK': 'Langkawi International Airport',
+
+        // Singapore
+        'SIN': 'Singapore Changi Airport',
+
+        // Thailand
+        'BKK': 'Suvarnabhumi Airport',
+        'HKT': 'Phuket International Airport',
+        'CNX': 'Chiang Mai International Airport',
+        'KBV': 'Krabi International Airport',
+
+        // Indonesia
+        'DPS': 'Ngurah Rai International Airport',
+        'CGK': 'Soekarno-Hatta International Airport',
+        'JOG': 'Yogyakarta International Airport',
+
+        // Japan
+        'NRT': 'Narita International Airport',
+        'HND': 'Tokyo Haneda Airport',
+        'KIX': 'Kansai International Airport',
+        'HIJ': 'Hiroshima Airport',
+
+        // South Korea
+        'ICN': 'Incheon International Airport',
+        'PUS': 'Gimhae International Airport',
+        'CJU': 'Jeju International Airport',
+
+        // Vietnam
+        'HAN': 'Noi Bai International Airport',
+        'SGN': 'Tan Son Nhat International Airport',
+        'DAD': 'Da Nang International Airport',
+
+        // Cambodia
+        'REP': 'Siem Reap Angkor International Airport',
+
+        // 🌍 EUROPE - France
+        'CDG': 'Paris Charles de Gaulle Airport',
+        'NCE': 'Nice Côte d\'Azur Airport',
+        'LYS': 'Lyon-Saint Exupéry Airport',
+        'MRS': 'Marseille Provence Airport',
+
+        // Italy
+        'FCO': 'Leonardo da Vinci-Fiumicino Airport',
+        'VCE': 'Venice Marco Polo Airport',
+        'FLR': 'Florence Airport',
+        'MXP': 'Milan Malpensa Airport',
+        'NAP': 'Naples International Airport',
+
+        // Spain
+        'BCN': 'Barcelona-El Prat Airport',
+        'MAD': 'Adolfo Suárez Madrid-Barajas Airport',
+        'SVQ': 'Seville Airport',
+        'VLC': 'Valencia Airport',
+
+        // United Kingdom
+        'LHR': 'London Heathrow Airport',
+        'EDI': 'Edinburgh Airport',
+        'LPL': 'Liverpool John Lennon Airport',
+
+        // Germany
+        'BER': 'Berlin Brandenburg Airport',
+        'MUC': 'Munich Airport',
+        'FRA': 'Frankfurt Airport',
+
+        // Netherlands
+        'AMS': 'Amsterdam Airport Schiphol',
+        'RTM': 'Rotterdam The Hague Airport',
+
+        // Switzerland
+        'ZRH': 'Zurich Airport',
+        'GVA': 'Geneva Airport',
+
+        // Greece
+        'ATH': 'Athens International Airport',
+        'JTR': 'Santorini (Thira) Airport',
+        'JMK': 'Mykonos Airport',
+
+        // Portugal
+        'LIS': 'Lisbon Portela Airport',
+        'OPO': 'Porto Airport',
+
+        // Czech Republic
+        'PRG': 'Václav Havel Airport Prague',
+
+        // 🌎 AMERICAS - United States
+        'JFK': 'John F. Kennedy International Airport',
+        'EWR': 'Newark Liberty International Airport',
+        'LAX': 'Los Angeles International Airport',
+        'SFO': 'San Francisco International Airport',
+        'LAS': 'Harry Reid International Airport',
+        'MIA': 'Miami International Airport',
+        'MCO': 'Orlando International Airport',
+
+        // Canada
+        'YYZ': 'Toronto Pearson International Airport',
+        'YVR': 'Vancouver International Airport',
+        'YUL': 'Montréal-Pierre Elliott Trudeau International Airport',
+
+        // Brazil
+        'GIG': 'Rio de Janeiro-Galeão International Airport',
+        'GRU': 'São Paulo-Guarulhos International Airport',
+
+        // Mexico
+        'CUN': 'Cancún International Airport',
+        'MEX': 'Mexico City International Airport',
+        'GDL': 'Guadalajara International Airport',
+
+        // Peru
+        'CUZ': 'Alejandro Velasco Astete International Airport',
+        'LIM': 'Jorge Chávez International Airport',
+
+        // Argentina
+        'EZE': 'Ministro Pistarini International Airport',
+
+        // 🌍 MIDDLE EAST & AFRICA - UAE
+        'DXB': 'Dubai International Airport',
+        'AUH': 'Abu Dhabi International Airport',
+
+        // Turkey
+        'IST': 'Istanbul Airport',
+        'ASR': 'Kayseri Erkilet Airport',
+        'NAV': 'Nevşehir Kapadokya Airport',
+
+        // Egypt
+        'CAI': 'Cairo International Airport',
+        'LXR': 'Luxor International Airport',
+        'SSH': 'Sharm El Sheikh International Airport',
+
+        // Morocco
+        'RAK': 'Marrakesh Menara Airport',
+        'CMN': 'Mohammed V International Airport',
+
+        // South Africa
+        'CPT': 'Cape Town International Airport',
+
+        // 🌏 OCEANIA - Australia
+        'SYD': 'Sydney Kingsford Smith Airport',
+        'MEL': 'Melbourne Airport',
+        'OOL': 'Gold Coast Airport',
+
+        // New Zealand
+        'AKL': 'Auckland Airport',
+        'ZQN': 'Queenstown Airport'
+    };
+    return airports[code] || code;
+}
+
+// Helper: Format time from ISO string
+function formatTime(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+// Helper: Format date
+function formatDate(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+// Helper: Format duration (PT1H30M -> 1 hour 30 min)
+function formatDuration(duration) {
+    const match = duration.match(/PT(\d+H)?(\d+M)?/);
+    let result = '';
+    if (match[1]) result += match[1].replace('H', ' hour ');
+    if (match[2]) result += match[1] ? match[2].replace('M', ' min') : match[2].replace('M', ' minutes');
+    return result.trim();
 }
 
 /* ==== INIT ==== */
@@ -945,6 +1701,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const returnDateSeparator = document.getElementById('returnDateSeparator');
     const hotelFilters = document.getElementById('hotelFilters');
     const flightFilters = document.getElementById('flightFilters');
+    const flightFromSearch = document.getElementById('flightFromSearch');
+    const flightToSearch = document.getElementById('flightToSearch');
 
     // ===== PROFILE DROPDOWN =====
     if (profileTrigger) {
@@ -971,10 +1729,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // When user selects origin airport
+    flightFromSearch.addEventListener('autocomplete:select', (e) => {
+        selectedOriginData = {
+            code: e.detail.code,
+            name: e.detail.name,
+            city: e.detail.city
+        };
+    });
+
+    // When user selects destination airport
+    flightToSearch.addEventListener('autocomplete:select', (e) => {
+        selectedDestinationData = {
+            code: e.detail.code,
+            name: e.detail.name,
+            city: e.detail.city
+        };
+    });
+
     // ===== SETUP FUNCTIONS =====
     setupGuestsCounter();
     setupNightCalculator();
     setupFilters();
+    setupDateValidation();
+    setupClearFilters();
+    setupFlightFilters();
 
     // ===== DATE INPUT MIN VALUES =====
     if (checkInInput && checkOutInput) {
@@ -1002,6 +1781,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const checkIn = document.getElementById('hotelCheckInSearch')?.value;
                     const checkOut = document.getElementById('hotelCheckOutSearch')?.value;
                     const searchCity = document.getElementById('hotelDestSearch')?.value.trim() || '';
+                    const adults = parseInt(document.getElementById('adultsInlineCount')?.textContent || '2');
+                    const childrens = parseInt(document.getElementById('childrenInlineCount')?.textContent || '0');
+                    const rooms = parseInt(document.getElementById('roomsInlineCount')?.textContent || '1');
 
                     const params = new URLSearchParams({
                         hotel_key: hotelId,
@@ -1014,7 +1796,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         reviews: hotel.reviewCount || 0,
                         location: hotel.address?.cityName || 'Unknown',
                         mentions: (hotel.mentions || []).join(','),
-                        search_city: searchCity
+                        search_city: searchCity,
+                        adults: adults,
+                        childrens: childrens,
+                        rooms: rooms
                     });
 
                     window.location.href = `hotelDetails.html?${params.toString()}`;
@@ -1038,9 +1823,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const flightFilters = document.getElementById('flightFilters');
 
             if (type === 'hotel') {
+                console.log('Switching to HOTEL tab');
+
                 // Show hotel form, hide flight
-                hotelForm?.classList.remove('hidden');
-                flightForm?.classList.add('hidden');
+                if (hotelForm) hotelForm.classList.remove('hidden');
+                if (flightForm) flightForm.classList.add('hidden');
 
                 // Show filters sidebar and hotel filters
                 if (filtersSidebar) filtersSidebar.style.display = 'block';
@@ -1048,27 +1835,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (flightFilters) flightFilters.style.display = 'none';
 
                 // Update sort options for hotels
-                sortSelect.innerHTML = `
-                <option value="recommended">Recommended</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating-high">Rating: High to Low</option>
-                <option value="rating-low">Rating: Low to High</option>
-            `;
+                if (sortSelect) {
+                    sortSelect.innerHTML = `
+                    <option value="recommended">Recommended</option>
+                    <option value="rating-high">Rating: High to Low</option>
+                    <option value="rating-low">Rating: Low to High</option>
+                `;
+                }
 
-                // Update search prompt for hotels
-                promptIcon.className = 'gg-search';
-                promptTitle.textContent = 'Ready to find your perfect stay?';
-                promptText.textContent = 'Enter your destination, dates, and number of guests above to search for hotels.';
-
-                // Clear results grid
-                resultsGrid.innerHTML = '';
-                resultsGrid.appendChild(searchPrompt);
+                if (resultsGrid && resultsCount) {
+                    if (allHotels.length > 0) {
+                        // Restore hotel results
+                        const hotelsToShow = filteredHotels.length > 0 ? filteredHotels : allHotels;
+                        resultsCount.textContent = `${hotelsToShow.length} properties found in ${document.getElementById('hotelDestSearch')?.value || 'selected city'}`;
+                        displayFilteredHotels(hotelsToShow);
+                    } else {
+                        // Show hotel search prompt
+                        if (promptIcon) promptIcon.className = 'gg-search';
+                        if (promptTitle) promptTitle.textContent = 'Ready to find your perfect stay?';
+                        if (promptText) promptText.textContent = 'Enter your destination, dates, and number of guests above to search for hotels.';
+                        resultsGrid.innerHTML = '';
+                        resultsGrid.appendChild(searchPrompt);
+                        resultsCount.textContent = '';
+                    }
+                }
 
             } else if (type === 'flight') {
+                console.log('Switching to FLIGHT tab');
+
                 // Show flight form, hide hotel
-                hotelForm?.classList.add('hidden');
-                flightForm?.classList.remove('hidden');
+                if (hotelForm) hotelForm.classList.add('hidden');
+                if (flightForm) flightForm.classList.remove('hidden');
 
                 // Show filters sidebar and flight filters
                 if (filtersSidebar) filtersSidebar.style.display = 'block';
@@ -1076,28 +1873,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (flightFilters) flightFilters.style.display = 'block';
 
                 // Update sort options for flights
-                sortSelect.innerHTML = `
-                <option value="recommended">Recommended</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="duration-short">Duration: Shortest</option>
-                <option value="departure-early">Departure: Earliest</option>
-                <option value="departure-late">Departure: Latest</option>
-            `;
+                if (sortSelect) {
+                    sortSelect.innerHTML = `
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="duration-short">Duration: Shortest</option>
+                        <option value="departure-early">Departure: Earliest</option>
+                        <option value="departure-late">Departure: Latest</option>
+                    `;
+                }
 
-                // Update search prompt for flights
-                promptIcon.className = 'gg-airplane';
-                promptTitle.textContent = 'Ready to fly?';
-                promptText.textContent = 'Enter your departure city, destination, and travel dates above to search for flights.';
-
-                // Clear results grid
-                resultsGrid.innerHTML = '';
-                resultsGrid.appendChild(searchPrompt);
+                // Restore flight data if exists
+                if (resultsGrid && resultsCount) {
+                    if (allFlights.length > 0) {
+                        // Restore flight results
+                        const flightsToShow = filteredFlights.length > 0 ? filteredFlights : allFlights;
+                        resultsCount.textContent = `${flightsToShow.length} flights found`;
+                        displayFlightResults(flightsToShow, 'round-trip');
+                    } else {
+                        // Show flight search prompt
+                        if (promptIcon) promptIcon.className = 'gg-airplane';
+                        if (promptTitle) promptTitle.textContent = 'Ready to fly?';
+                        if (promptText) promptText.textContent = 'Enter your departure city, destination, and travel dates above to search for flights.';
+                        resultsGrid.innerHTML = '';
+                        resultsGrid.appendChild(searchPrompt);
+                        resultsCount.textContent = '';
+                    }
+                }
             }
         });
     });
 
-    // ===== TRIP TYPE SELECT (SIMPLIFIED) =====
+
+    // ===== TRIP TYPE SELECT =====
     const tripTypeSelect = document.getElementById('tripTypeSelect');
 
     if (tripTypeSelect) {
@@ -1161,7 +1969,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 origin: originCode,
                 destination: destinationCode,
                 departureDate: departureDate,
-                adults: parseInt(document.getElementById('flightTravelersSearch')?.value || '1'),
+                adults: parseInt(document.getElementById('flightTravelersSearch')?.value || 1),
                 travelClass: document.getElementById('flightClassSearch')?.value || 'ECONOMY'
             };
 
@@ -1169,10 +1977,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchData.returnDate = returnDate;
             }
 
-            // ✅ Use unified elements
-            const loadingState = document.getElementById('loadingState');
-            if (loadingState) loadingState.style.display = 'block';
-            if (resultsGrid) resultsGrid.innerHTML = '';
+            showLoading();
 
             try {
                 const response = await fetch('http://127.0.0.1:5000/search-flights', {
@@ -1182,11 +1987,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 const data = await response.json();
-                if (loadingState) loadingState.style.display = 'none';
 
                 if (data.success) {
+                    console.log('🔍 API Response:', data);
+                    console.log('🔍 Number of flights from API:', data.flights?.length);
+
+                    // ✅ Save to allFlights AND window.allFlights
+                    allFlights = data.flights ? [...data.flights] : [];
+                    filteredFlights = data.flights ? [...data.flights] : [];
+
+                    // Make accessible globally for debugging
+                    window.allFlights = allFlights;
+                    window.filteredFlights = filteredFlights;
+
+                    console.log('✅ Saved', allFlights.length, 'flights to allFlights');
+                    console.log('✅ window.allFlights.length:', window.allFlights.length);
+
                     await displayFlightResults(data.flights, tripType);
-                } else {
+                }
+                else {
                     if (resultsGrid) {
                         resultsGrid.innerHTML = `
                         <div class="error-message">
@@ -1197,9 +2016,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             } catch (error) {
-                if (loadingState) loadingState.style.display = 'none';
                 console.error('Error:', error);
                 showToast('Failed to search flights. Please try again.', true);
+            } finally {
+                hideLoading();
             }
         });
     }
@@ -1210,9 +2030,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const sortBy = e.target.value;
             console.log(`Sorting by: ${sortBy}`);
 
-            const currentHotels = filteredHotels.length > 0 ? filteredHotels : allHotels;
-            const sortedHotels = sortHotels(currentHotels, sortBy);
-            displayFilteredHotels(sortedHotels);
+            const activeTab = document.querySelector('.search-tab.active');
+            const tabType = activeTab?.dataset.type;
+
+            if (tabType === 'hotel') {
+                console.log('Sorting HOTELS');
+                // Sort hotels
+                const currentHotels = filteredHotels.length > 0 ? filteredHotels : allHotels;
+                const sortedHotels = sortHotels(currentHotels, sortBy);
+                displayFilteredHotels(sortedHotels);
+
+            } else if (tabType === 'flight') {
+                console.log('Sorting FLIGHTS');
+                const baseFlights = filteredFlights.length > 0 ? filteredFlights : allFlights;
+                const sortedFlights = sortFlights(baseFlights, sortBy);
+                displayFlightResults(sortedFlights, 'round-trip');
+            }
         });
     }
 
@@ -1245,6 +2078,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ===== FLIGHT DETAILS BUTTON HANDLER =====
+    if (resultsGrid) {
+        resultsGrid.addEventListener('click', (e) => {
+            const viewDetailsBtn = e.target.closest('.view-details-btn');
+            if (viewDetailsBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const flightIndex = parseInt(viewDetailsBtn.dataset.flightIndex);
+
+                // Get flight data from the current displayed flights
+                const activeTab = document.querySelector('.search-tab.active');
+                const tabType = activeTab?.dataset.type;
+
+                if (tabType === 'flight') {
+                    const currentFlights = filteredFlights.length > 0 ? filteredFlights : allFlights;
+                    const flightData = currentFlights[flightIndex];
+
+                    console.log('Flight Index:', flightIndex);
+                    console.log('Flight Data:', flightData);
+
+                    if (flightData) {
+                        openFlightModal(flightData);
+                    } else {
+                        showToast('Flight data not found', true);
+                    }
+                }
+            }
+        });
+    }
+
     // ===== RESTORE LAST SEARCH =====
     const lastSearch = sessionStorage.getItem('lastSearch');
     if (lastSearch) {
@@ -1253,15 +2117,40 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('✓ Restoring last search:', searchData);
 
             const destInput = document.getElementById('hotelDestSearch');
-
             if (destInput && searchData.destination) {
                 destInput.value = searchData.destination;
             }
+
             if (checkInInput && searchData.checkIn) {
                 checkInInput.value = searchData.checkIn;
             }
+
             if (checkOutInput && searchData.checkOut) {
                 checkOutInput.value = searchData.checkOut;
+            }
+
+            const roomsCount = document.getElementById('roomsInlineCount');
+            const adultsCount = document.getElementById('adultsInlineCount');
+            const childrenCount = document.getElementById('childrenInlineCount');
+            const guestsDisplay = document.getElementById('guestsInlineDisplay');
+
+            if (roomsCount && searchData.rooms) {
+                roomsCount.textContent = searchData.rooms;
+            }
+
+            if (adultsCount && searchData.adults) {
+                adultsCount.textContent = searchData.adults;
+            }
+
+            if (childrenCount && searchData.children) {
+                childrenCount.textContent = searchData.children;
+            }
+
+            if (guestsDisplay) {
+                const rooms = parseInt(roomsCount?.textContent || '1');
+                const adults = parseInt(adultsCount?.textContent || '2');
+                const children = parseInt(childrenCount?.textContent || '0');
+                guestsDisplay.textContent = `${rooms} room${rooms > 1 ? 's' : ''}, ${adults} adult${adults > 1 ? 's' : ''}, ${children} ${children === 1 ? 'child' : 'children'}`;
             }
 
             updateNightCount();
@@ -1270,10 +2159,135 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchHotels();
                 sessionStorage.removeItem('lastSearch');
             }, 500);
-
         } catch (error) {
             console.error('Error restoring search:', error);
             sessionStorage.removeItem('lastSearch');
         }
     }
+
+    // DATE VALIDATION
+    function setupDateValidation() {
+        const today = new Date().toISOString().split('T')[0];
+
+        // ===== HOTEL DATES =====
+        const hotelCheckIn = document.getElementById('hotelCheckInSearch');
+        const hotelCheckOut = document.getElementById('hotelCheckOutSearch');
+
+        if (hotelCheckIn) {
+            hotelCheckIn.min = today;
+            hotelCheckIn.addEventListener('change', () => {
+                const selectedDate = new Date(hotelCheckIn.value);
+                const todayDate = new Date(today);
+
+                if (selectedDate < todayDate) {
+                    showToast('Check-in date cannot be in the past', true);
+                    hotelCheckIn.value = today;
+                }
+
+                // Update check-out minimum date
+                if (hotelCheckOut) {
+                    hotelCheckOut.min = hotelCheckIn.value;
+                }
+            });
+        }
+
+        if (hotelCheckOut) {
+            hotelCheckOut.min = today;
+            hotelCheckOut.addEventListener('change', () => {
+                if (hotelCheckIn && hotelCheckOut.value <= hotelCheckIn.value) {
+                    showToast('Check-out date must be after check-in date', true);
+                    hotelCheckOut.value = '';
+                }
+            });
+        }
+
+        // ===== FLIGHT DATES =====
+        const flightDepart = document.getElementById('flightDepartSearch');
+        const flightReturn = document.getElementById('flightReturnSearch');
+        const tripTypeSelect = document.getElementById('tripTypeSelect');
+
+        if (flightDepart) {
+            flightDepart.min = today;
+
+            flightDepart.addEventListener('change', () => {
+                const selectedDate = new Date(flightDepart.value);
+                const todayDate = new Date(today);
+
+                // Prevent past dates
+                if (selectedDate < todayDate) {
+                    showToast('Departure date cannot be in the past', true);
+                    flightDepart.value = today;
+                }
+
+                // Update return date minimum (must be same or after departure)
+                if (flightReturn) {
+                    flightReturn.min = flightDepart.value;
+
+                    // Clear return date if it's now before departure
+                    if (flightReturn.value && flightReturn.value < flightDepart.value) {
+                        showToast('Return date updated to match new departure date', false);
+                        flightReturn.value = '';
+                    }
+                }
+            });
+        }
+
+        if (flightReturn) {
+            flightReturn.min = today;
+
+            flightReturn.addEventListener('change', () => {
+                // Only validate if trip type is round-trip
+                const tripType = tripTypeSelect ? tripTypeSelect.value : 'round-trip';
+
+                if (tripType === 'round-trip') {
+                    // Check if return date is before departure
+                    if (flightDepart && flightReturn.value < flightDepart.value) {
+                        showToast('Return date must be on or after departure date', true);
+                        flightReturn.value = '';
+                        return;
+                    }
+
+                    // Check if return date is same as departure (warn but allow)
+                    if (flightDepart && flightReturn.value === flightDepart.value) {
+                        showToast('Same-day return flight selected', true);
+                    }
+                }
+            });
+        }
+
+        // Handle trip type change (one-way vs round-trip)
+        if (tripTypeSelect) {
+            tripTypeSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'one-way') {
+                    // Clear return date for one-way trips
+                    if (flightReturn) {
+                        flightReturn.value = '';
+                    }
+                }
+            });
+        }
+    }
+
+    // Close via X button
+    document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('.modal-close-btn');
+        if (closeBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeFlightModal();
+            console.log('✓ Close button clicked');
+        }
+    });
+
+    // Close via overlay click
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+            closeFlightModal();
+            console.log('✓ Overlay clicked');
+        }
+    });
+
+    // Call it in DOMContentLoaded
+    setupDateValidation();
+
 });

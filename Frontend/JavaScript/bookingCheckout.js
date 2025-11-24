@@ -1,4 +1,3 @@
-// Frontend/JavaScript/bookingCheckout.js
 import { db, auth } from './firebase-config.js';
 import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { observeAuthState } from './auth.js';
@@ -8,7 +7,7 @@ import { showToast, showError, hideError } from './utils.js';
 let currentStep = 1;
 const totalSteps = 3;
 
-// Booking data from session storage (from hotel details page)
+// Booking data from session storage 
 let bookingData = {
     hotelKey: '',
     hotelName: '',
@@ -25,7 +24,10 @@ let bookingData = {
     checkOut: '',
     nights: 0,
     pricePerNight: 0,
-    totalPrice: 0
+    totalPrice: 0,
+    rooms: 1,
+    adults: 2,
+    children: 0
 };
 
 // User booking details
@@ -48,28 +50,86 @@ let bookingDetails = {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🎯 Booking Checkout Page Loaded');
 
-    // Load booking data from session storage
     loadBookingData();
-
-    // Populate booking summary
+    restoreBookingData();
     populateBookingSummary();
-
-    // Setup event listeners
     setupEventListeners();
-
-    // Show initial step
     showStep(1);
 });
+
+// ===== SAVE BOOKING DATA TO SESSION STORAGE =====
+function saveBookingData() {
+    bookingDetails.firstName = document.getElementById('firstName').value.trim();
+    bookingDetails.lastName = document.getElementById('lastName').value.trim();
+    bookingDetails.email = document.getElementById('email').value.trim();
+    bookingDetails.phone = document.getElementById('phone').value.trim();
+    bookingDetails.smoking = document.querySelector('input[name="smoking"]:checked')?.value || 'non-smoking';
+    bookingDetails.bedPreference = document.querySelector('input[name="bed"]:checked')?.value || 'large';
+    bookingDetails.specialRequests = document.getElementById('requests').value.trim();
+
+    sessionStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
+    console.log('✓ Booking data saved to session');
+}
+
+// ===== RESTORE BOOKING DATA FROM SESSION STORAGE =====
+function restoreBookingData() {
+    const savedData = sessionStorage.getItem('bookingDetails');
+    if (savedData) {
+        try {
+            const data = JSON.parse(savedData);
+            bookingDetails = data;
+
+            const firstNameInput = document.getElementById('firstName');
+            const lastNameInput = document.getElementById('lastName');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            const requestsInput = document.getElementById('requests');
+
+            if (firstNameInput && !firstNameInput.value) firstNameInput.value = data.firstName || '';
+            if (lastNameInput && !lastNameInput.value) lastNameInput.value = data.lastName || '';
+            if (emailInput && !emailInput.value) emailInput.value = data.email || '';
+            if (phoneInput && !phoneInput.value) phoneInput.value = data.phone || '';
+            if (requestsInput && !requestsInput.value) requestsInput.value = data.specialRequests || '';
+
+            if (data.smoking) {
+                const smokingRadio = document.querySelector(`input[name="smoking"][value="${data.smoking}"]`);
+                if (smokingRadio) smokingRadio.checked = true;
+            }
+
+            if (data.bedPreference) {
+                const bedRadio = document.querySelector(`input[name="bed"][value="${data.bedPreference}"]`);
+                if (bedRadio) bedRadio.checked = true;
+            }
+
+            console.log('✓ Booking data restored from session');
+        } catch (error) {
+            console.error('Error restoring booking data:', error);
+        }
+    }
+}
+
+// ===== BACK TO HOTEL DETAILS =====
+function backToHotelDetails() {
+    saveBookingData();
+    const hotelKey = bookingData.hotelKey;
+    if (hotelKey) {
+        window.location.href = `booking.html`;
+    }
+}
 
 // ===== LOAD BOOKING DATA =====
 function loadBookingData() {
     try {
-        // Get data from sessionStorage (set by hotelDetails.js)
         const selectedRoom = sessionStorage.getItem('selectedRoom');
 
         if (selectedRoom) {
             const data = JSON.parse(selectedRoom);
             console.log('✓ Loaded booking data:', data);
+
+            const rooms = data.rooms || 1;
+            const pricePerNight = data.roomPrice || 0;
+            const nights = data.nights || calculateNights(data.checkIn, data.checkOut);
+            const totalPrice = pricePerNight * nights * rooms;
 
             bookingData = {
                 hotelKey: data.hotelKey || '',
@@ -85,13 +145,15 @@ function loadBookingData() {
                 roomAmenities: data.roomAmenities || ['Free WiFi', 'Air Conditioning'],
                 checkIn: data.checkIn || '',
                 checkOut: data.checkOut || '',
-                nights: data.nights || calculateNights(data.checkIn, data.checkOut),
-                pricePerNight: data.roomPrice || 0,
-                totalPrice: data.roomPrice * calculateNights(data.checkIn, data.checkOut) || 0
+                nights: nights,
+                pricePerNight: pricePerNight,
+                totalPrice: totalPrice,
+                rooms: rooms,
+                adults: data.adults || 2,
+                children: data.children || 0,
+                totalGuests: (data.adults || 2) + (data.children || 0)
             };
-
         } else {
-            // Fallback mock data for testing
             console.log('⚠️ No booking data found, using mock data');
             bookingData = {
                 hotelKey: 'test-hotel',
@@ -109,7 +171,11 @@ function loadBookingData() {
                 checkOut: '2025-11-01',
                 nights: 2,
                 pricePerNight: 630,
-                totalPrice: 1260
+                totalPrice: 1260,
+                rooms: 1,
+                adults: 2,
+                children: 0,
+                totalGuests: 2
             };
         }
     } catch (error) {
@@ -121,11 +187,9 @@ function loadBookingData() {
 // ===== CALCULATE NIGHTS =====
 function calculateNights(checkIn, checkOut) {
     if (!checkIn || !checkOut) return 1;
-
     const start = new Date(checkIn);
     const end = new Date(checkOut);
     const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-
     return nights > 0 ? nights : 1;
 }
 
@@ -171,24 +235,45 @@ function populateBookingSummary() {
     if (summaryCheckOut) summaryCheckOut.textContent = formatDate(bookingData.checkOut);
     if (summaryNights) summaryNights.textContent = `${bookingData.nights} night${bookingData.nights > 1 ? 's' : ''}`;
 
-    // Price
+    // ✅ PRICE BREAKDOWN WITH SUBTOTAL ON CALCULATION ROW
     const pricePerNightAmount = document.getElementById('pricePerNightAmount');
     const pricePerNightCalc = document.getElementById('pricePerNightCalc');
     const priceNightCount = document.getElementById('priceNightCount');
+    const priceRoomCount = document.getElementById('priceRoomCount');
     const priceSubtotal = document.getElementById('priceSubtotal');
+    const serviceChargeDisplay = document.getElementById('serviceChargeDisplay');
     const priceTotal = document.getElementById('priceTotal');
 
-    if (pricePerNightAmount) pricePerNightAmount.textContent = `MYR ${bookingData.pricePerNight}`;
-    if (pricePerNightCalc) pricePerNightCalc.textContent = `MYR ${bookingData.pricePerNight}`;
-    if (priceNightCount) priceNightCount.textContent = `${bookingData.nights} night${bookingData.nights > 1 ? 's' : ''}`;
-    if (priceSubtotal) priceSubtotal.textContent = `MYR ${bookingData.totalPrice.toLocaleString()}`;
-    if (priceTotal) priceTotal.textContent = `MYR ${bookingData.totalPrice.toLocaleString()}`;
+    const rooms = bookingData.rooms || 1;
+    const subtotal = bookingData.totalPrice;
+    const serviceCharge = subtotal * 0.10;
+    const totalWithService = subtotal + serviceCharge;
+
+    if (pricePerNightAmount) pricePerNightAmount.textContent = `MYR ${bookingData.pricePerNight.toLocaleString()}`;
+    if (pricePerNightCalc) pricePerNightCalc.textContent = `MYR ${bookingData.pricePerNight.toLocaleString()}`;
+
+    // Show calculation with rooms
+    if (priceNightCount) {
+        if (rooms > 1) {
+            priceNightCount.textContent = `${bookingData.nights} night${bookingData.nights > 1 ? 's' : ''} × ${rooms} room${rooms > 1 ? 's' : ''}`;
+        } else {
+            priceNightCount.textContent = `${bookingData.nights} night${bookingData.nights > 1 ? 's' : ''}`;
+        }
+    }
+
+    // ✅ Show subtotal on same row as calculation
+    if (priceSubtotal) priceSubtotal.textContent = `MYR ${subtotal.toLocaleString()}`;
+
+    // Hide separate room count row
+    if (priceRoomCount) priceRoomCount.style.display = 'none';
+
+    if (serviceChargeDisplay) serviceChargeDisplay.textContent = `MYR ${serviceCharge.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (priceTotal) priceTotal.textContent = `MYR ${totalWithService.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // ===== FORMAT DATE =====
 function formatDate(dateString) {
     if (!dateString) return '';
-
     const date = new Date(dateString);
     const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
     return date.toLocaleDateString('en-US', options);
@@ -196,10 +281,14 @@ function formatDate(dateString) {
 
 // ===== SETUP EVENT LISTENERS =====
 function setupEventListeners() {
-    // Step navigation buttons
     const nextToPayment = document.getElementById('nextToPayment');
+    const backToHotelDetailsBtn = document.getElementById('backToHotelDetails');
     const backToPersonal = document.getElementById('backToPersonal');
     const confirmBooking = document.getElementById('confirmBooking');
+
+    if (backToHotelDetailsBtn) {
+        backToHotelDetailsBtn.addEventListener('click', backToHotelDetails);
+    }
 
     if (nextToPayment) {
         nextToPayment.addEventListener('click', () => {
@@ -289,12 +378,10 @@ function goToStep(step) {
 }
 
 function showStep(step) {
-    // Hide all steps
     document.querySelectorAll('.form-step').forEach(stepEl => {
         stepEl.classList.remove('active');
     });
 
-    // Show current step
     const currentStepEl = document.getElementById(`step-${step}`);
     if (currentStepEl) {
         currentStepEl.classList.add('active');
@@ -323,7 +410,6 @@ function updateProgress(step) {
 function validateStep1() {
     let isValid = true;
 
-    // Clear all errors first
     hideError('firstNameError');
     hideError('lastNameError');
     hideError('emailError');
@@ -346,7 +432,6 @@ function validateStep1() {
         showError('emailError', 'Please enter your email');
         isValid = false;
     } else {
-        // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             showError('emailError', 'Please enter a valid email address');
@@ -363,14 +448,12 @@ function validateStep2() {
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     const agreeTerms = document.getElementById('agreeTerms').checked;
 
-    // Clear errors
     hideError('agreeTermsError');
     hideError('cardNameError');
     hideError('cardNumberError');
     hideError('cardExpiryError');
     hideError('cardCVVError');
 
-    // Check terms
     if (!agreeTerms) {
         showError('agreeTermsError', 'Please agree to the terms and conditions');
         isValid = false;
@@ -435,29 +518,22 @@ function saveStep2Data() {
 // ===== PROCESS BOOKING =====
 async function processBooking() {
     try {
-        // Show loading
         showLoading();
 
-        // Simulate API call delay (2 seconds)
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Generate booking ID
         const bookingId = generateBookingId();
 
-        // Save to Firebase
         await saveBookingToFirebase(bookingId);
 
-        // Update confirmation page
         populateConfirmationPage(bookingId);
 
-        // Hide loading
         hideLoading();
 
-        // Go to confirmation page
         goToStep(3);
 
-        // Clear session storage
         sessionStorage.removeItem('selectedRoom');
+        sessionStorage.removeItem('bookingDetails');
 
         showToast('Booking confirmed successfully!', false);
 
@@ -476,7 +552,7 @@ function generateBookingId() {
     return `${prefix}${timestamp}${random}`;
 }
 
-// In bookingCheckout.js - Update saveBookingToFirebase function
+// ===== SAVE BOOKING TO FIREBASE =====
 async function saveBookingToFirebase(bookingId) {
     const user = auth.currentUser;
     if (!user) {
@@ -485,25 +561,40 @@ async function saveBookingToFirebase(bookingId) {
     }
 
     try {
+        const subtotal = bookingData.totalPrice;
+        const serviceCharge = subtotal * 0.10;
+        const totalWithService = subtotal + serviceCharge;
+
         const bookingRef = doc(db, 'users', user.uid, 'bookings', bookingId);
 
         await setDoc(bookingRef, {
             bookingId: bookingId,
+            bookingType: 'hotel',
             hotelName: bookingData.hotelName,
-            hotelImage: bookingData.hotelImage,        // ✅ Add hotel image
-            roomImage: bookingData.roomImage,          // ✅ Add room image
+            hotelImage: bookingData.hotelImage,
+            roomImage: bookingData.roomImage,
             hotelLocation: bookingData.hotelLocation,
             roomName: bookingData.roomName,
             checkIn: bookingData.checkIn,
             checkOut: bookingData.checkOut,
             nights: bookingData.nights,
+            rooms: bookingData.rooms,
+            adults: bookingData.adults,
+            children: bookingData.children,
+            totalGuests: bookingData.totalGuests,
             guests: bookingData.roomGuests,
-            totalPrice: bookingData.totalPrice,
+            pricePerNight: bookingData.pricePerNight,
+            subtotal: subtotal,
+            serviceCharge: serviceCharge,
+            totalPrice: totalWithService,
             currency: 'RM',
             firstName: bookingDetails.firstName,
             lastName: bookingDetails.lastName,
             email: bookingDetails.email,
             phone: bookingDetails.phone,
+            smoking: bookingDetails.smoking,
+            bedPreference: bookingDetails.bedPreference,
+            specialRequests: bookingDetails.specialRequests,
             paymentMethod: bookingDetails.paymentMethod,
             status: 'confirmed',
             createdAt: serverTimestamp()
@@ -526,14 +617,28 @@ function populateConfirmationPage(bookingId) {
     const finalRoomName = document.getElementById('finalRoomName');
     const finalTotal = document.getElementById('finalTotal');
 
+    const subtotal = bookingData.totalPrice;
+    const serviceCharge = subtotal * 0.10;
+    const totalWithService = subtotal + serviceCharge;
+
+    const rooms = bookingData.rooms || 1;
+
     if (bookingIdEl) bookingIdEl.textContent = `#${bookingId}`;
     if (confirmEmail) confirmEmail.textContent = bookingDetails.email;
     if (finalHotelName) finalHotelName.textContent = bookingData.hotelName;
     if (finalCheckIn) finalCheckIn.textContent = formatDate(bookingData.checkIn);
     if (finalCheckOut) finalCheckOut.textContent = formatDate(bookingData.checkOut);
-    if (finalNights) finalNights.textContent = `${bookingData.nights} night${bookingData.nights > 1 ? 's' : ''}`;
+
+    if (finalNights) {
+        if (rooms > 1) {
+            finalNights.textContent = `${rooms} room${rooms > 1 ? 's' : ''}, ${bookingData.nights} night${bookingData.nights > 1 ? 's' : ''}`;
+        } else {
+            finalNights.textContent = `${bookingData.nights} night${bookingData.nights > 1 ? 's' : ''}`;
+        }
+    }
+
     if (finalRoomName) finalRoomName.textContent = bookingData.roomName;
-    if (finalTotal) finalTotal.textContent = `MYR ${bookingData.totalPrice.toLocaleString()}`;
+    if (finalTotal) finalTotal.textContent = `MYR ${totalWithService.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // ===== LOADING STATE =====
@@ -558,7 +663,6 @@ observeAuthState(async (user) => {
                 const userData = docSnap.data();
                 updateUserProfileUI(userData);
 
-                // Pre-fill form with user data
                 const firstNameInput = document.getElementById('firstName');
                 const lastNameInput = document.getElementById('lastName');
                 const emailInput = document.getElementById('email');
@@ -573,7 +677,6 @@ observeAuthState(async (user) => {
             console.error('Error fetching user data:', error);
         }
     } else {
-        // Redirect to login if not authenticated
         window.location.href = 'login.html';
     }
 });

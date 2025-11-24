@@ -4,45 +4,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Travel.Co</title>
-    <link rel="stylesheet" href="../Frontend/Css/admin_dashboard.css">
+    <title>User Management - Travel.Co</title>
+
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="../Frontend/Css/admin_dashboard.css">
     <script type="module" src="./JavaScript/firebase-config.js"></script>
     <script type="module" src="./JavaScript/auth.js"></script>
     <script type="module" src="./JavaScript/admin_dashboard.js"></script>
 </head>
 
 <body>
-    <div id="messageToast" class="message-toast" style="display: none;"></div>
+    <!-- Toast Message -->
+    <div id="messageToast" class="message-toast"></div>
+
+    <!-- Header -->
     <header class="header">
-        <!-- ... (Your existing header HTML) ... -->
         <div class="nav-container">
+            <!-- Logo -->
             <div class="nav-left">
-                <div class="logo">✈️ Travel.Co</div>
+                <div class="logo">
+                    <i class="fa fa-plane"></i> Travel.Co
+                </div>
             </div>
+
+            <!-- Navigation Menu -->
             <nav class="nav-center">
                 <ul class="nav-menu">
-                    <li><a href="admin_dashboard.html" class="active">Home</a></li>
-                    <li><a href="user_management.html">Member</a></li>
-                    <li><a href="admin_register.html">Register Admin</a></li>
+                    <li><a href="admin_dashboard.html" class="active">User Management</a></li>
+                    <li><a href="itineraryHub.html">Itinerary Hub</a></li> 
+                    <li><a href="reports.html">Business Reports</a></li>
+                    <li id="registerAdminNav" style="display: none;">
+                        <a href="admin_register.html">Register Admin</a>
+                    </li>
+                </ul>
             </nav>
+
+            <!-- Profile Dropdown -->
             <div class="nav-right">
-                <div class="user-profile">
-                    <div class="profile-dropdown" id="profileDropdown" style="display: none;">
-                        <div class="profile-trigger" id="profileTrigger">
-                            <div class="profile-avatar" id="profileAvatarInitials"></div>
-                            <span class="profile-name" id="profileName"></span>
-                            <span class="arrow">▼</span>
-                        </div>
-                        <div class="dropdown-menu">
-                            <a href="admin_profile.html" class="dropdown-item">
-                                <span class="dropdown-icon">👤</span> Profile
-                            </a>
-                            <a href="#logout" class="dropdown-item logout" id="logoutButton">
-                                <span class="dropdown-icon">🚪</span> Logout
-                            </a>
-                        </div>
+                <div class="profile-dropdown" id="profileDropdown" style="display: none;">
+                    <div class="profile-trigger" id="profileTrigger">
+                        <div class="profile-avatar" id="profileAvatarInitials"></div>
+                        <span class="profile-name" id="profileName">Admin</span>
+                        <span class="arrow"><i class="fa fa-chevron-down"></i></span>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="admin_profile.html" class="dropdown-item">
+                            <i class="fa fa-user dropdown-icon"></i> Profile
+                        </a>
+                        <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                            <i class="fa fa-sign-out-alt dropdown-icon"></i> Logout
+                        </a>
                     </div>
                 </div>
             </div>
@@ -51,12 +66,16 @@
 
     <!-- Main Content -->
     <main class="admin-dashboard-main">
+        <!-- Page Header -->
         <div class="dashboard-header">
-            <h1 class="dashboard-title">Admin Dashboard</h1>
-            <button class="btn-primary" id="exportPdfBtn">Export as PDF</button>
+            <h1 class="dashboard-title">
+                <i class="fa fa-users-cog"></i> User Management & Reports
+            </h1>
         </div>
 
-        <!-- Section 0: Time Period Filter -->
+        <!-- [REST OF YOUR CONTENT STAYS THE SAME] -->
+        
+        <!-- Time Period Filter -->
         <section class="dashboard-section" id="time-filter">
             <div class="filter-bar">
                 <span class="filter-label">Select Time Period:</span>
@@ -66,56 +85,206 @@
             </div>
         </section>
 
-        <!-- Section 1: At a Glance (Number Cards) -->
-        <section class="dashboard-section" id="at-a-glance">
-            <div class="stats-grid">
+        <!-- User Statistics -->
+        <section class="dashboard-section">
+            <h2 class="section-title">
+                <i class="fa fa-chart-line"></i> User Statistics
+            </h2>
+            <div class="stats-grid stats-grid-4">
+                <!-- Total Users Card -->
                 <div class="stat-card blue-accent">
-                    <div class="stat-icon users">👥</div>
+                    <div class="stat-icon">
+                        <i class="fa fa-users"></i>
+                    </div>
                     <div class="stat-info">
-                        <span class="stat-title">Total Users</span>
+                        <span class="stat-title">Total Registered Users</span>
                         <span class="stat-value" id="totalUsersCount">...</span>
                     </div>
                 </div>
+
+                <!-- New Registrations Card -->
                 <div class="stat-card green-accent">
-                    <div class="stat-icon itineraries">📈</div> <!-- Changed icon -->
+                    <div class="stat-icon">
+                        <i class="fa fa-user-plus"></i>
+                    </div>
                     <div class="stat-info">
-                        <!-- Changed title -->
                         <span class="stat-title">New Registrations</span>
-                        <!-- ID now reflects what it shows -->
                         <span class="stat-value" id="newRegistrationsCount">...</span>
                     </div>
                 </div>
+
+                <!-- Active Users Card -->
                 <div class="stat-card red-accent">
-                    <div class="stat-icon">🔥</div> <!-- Changed icon -->
+                    <div class="stat-icon">
+                        <i class="fa fa-fire"></i>
+                    </div>
                     <div class="stat-info">
-                        <span class="stat-title">Active Logins (Last 2 Weeks)</span>
-                        <!-- ID now reflects what it shows -->
+                        <span class="stat-title">Active Users (2 Weeks)</span>
                         <span class="stat-value" id="activeLoginsCount">...</span>
+                    </div>
+                </div>
+
+                <!-- Engagement Rate Card -->
+                <div class="stat-card orange-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">User Engagement Rate</span>
+                        <span class="stat-value" id="userEngagementRate">...</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: Key Insights (Charts) -->
-        <section class="dashboard-section" id="key-insights">
-            <h2 class="section-title">Key Insights</h2>
-            <!-- Grid for two charts -->
+        <!-- User Trends Charts -->
+        <section class="dashboard-section">
+            <h2 class="section-title">
+                <i class="fa fa-chart-area"></i> User Trends
+            </h2>
             <div class="charts-grid">
-                <!-- New Chart: User Registrations Over Time -->
+                <!-- Registrations Chart -->
                 <div class="chart-container">
                     <h3 class="chart-title">User Registrations Over Time</h3>
                     <canvas id="registrationsChart"></canvas>
                 </div>
 
-                <!-- Existing Chart: Popular Destinations -->
+                <!-- Activity Distribution Chart -->
                 <div class="chart-container">
-                    <h3 class="chart-title">Most Popular Destinations (SEA)</h3>
-                    <canvas id="destinationsChart"></canvas>
+                    <h3 class="chart-title">User Activity Distribution</h3>
+                    <canvas id="userActivityChart"></canvas>
                 </div>
             </div>
         </section>
 
+        <!-- User Management Table -->
+        <section class="dashboard-section">
+            <h2 class="section-title">
+                <i class="fa fa-table"></i> User Management
+            </h2>
+
+            <!-- Search and Filters -->
+            <div class="table-controls">
+                <div class="search-box">
+                    <i class="fa fa-search"></i>
+                    <input type="text" id="userSearchInput" placeholder="Search by name or email..."
+                        class="search-input">
+                </div>
+                <div class="filter-group">
+                    <select id="adminFilter" class="filter-select">
+                        <option value="all">All Users</option>
+                        <option value="admins">Admins Only</option>
+                        <option value="non-admins">Travelers Only</option>
+                    </select>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Modern Users Table -->
+            <div class="table-wrapper">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <div class="th-content">
+                                    <i class="fa fa-user"></i>
+                                    <span>User</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
+                                    <i class="fa fa-envelope"></i>
+                                    <span>Email</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
+                                    <i class="fa fa-shield-alt"></i>
+                                    <span>Role</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
+                                    <i class="fa fa-calendar-alt"></i>
+                                    <span>Joined</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
+                                    <i class="fa fa-clock"></i>
+                                    <span>Last Login</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
+                                    <i class="fa fa-info-circle"></i>
+                                    <span>Status</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
+                                    <i class="fa fa-cog"></i>
+                                    <span>Actions</span>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <!-- Loading State -->
+                        <tr class="loading-row">
+                            <td colspan="7">
+                                <div class="loading-state">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                    <span>Loading users...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-controls">
+                <div class="pagination-info">
+                    Showing <strong><span id="showingStart">0</span>-<span id="showingEnd">0</span></strong> of
+                    <strong><span id="totalCount">0</span></strong> users
+                </div>
+                <div class="pagination-buttons">
+                    <button class="pagination-btn" id="prevPageBtn" disabled>
+                        <i class="fa fa-chevron-left"></i>
+                        <span>Previous</span>
+                    </button>
+                    <span class="page-indicator">
+                        Page <strong><span id="currentPage">1</span></strong> of <strong><span
+                                id="totalPages">1</span></strong>
+                    </span>
+                    <button class="pagination-btn" id="nextPageBtn" disabled>
+                        <span>Next</span>
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
     </main>
+
+    <!-- User Details Modal -->
+    <div id="userDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa fa-user-circle"></i> User Details</h2>
+                <button class="modal-close" id="closeModal">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- User details will be populated here -->
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Flight Booking - Travel.Co</title>
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="CSS/flightCheckout.css">
+    <script type="module" src="JavaScript/flightCheckout.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="" class="nav-logo">
+                <i class="gg-airplane"></i>
+                <span>Travel.Co</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="checkout-container">
+
+        <!-- Progress Bar -->
+        <div class="progress-bar-container">
+            <div class="progress-steps">
+                <div class="progress-step active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Passenger Info</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Payment</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Confirmation</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="checkout-content">
+
+            <!-- Left Side - Form Steps -->
+            <div class="checkout-form">
+                <!-- Step 1: Part 1 - Lead Passenger Details -->
+                <div class="form-step active" id="step-1">
+                    <h2 class="form-title">Passenger Information</h2>
+
+                    <!-- Lead Passenger Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Lead Passenger Details</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First name *</label>
+                                <input type="text" id="firstName" class="form-input" required>
+                                <span id="firstNameError" class="error-message" style="display: none;"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last name *</label>
+                                <input type="text" id="lastName" class="form-input" required>
+                                <span id="lastNameError" class="error-message" style="display: none;"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" class="form-input" required>
+                            <small class="form-hint">We'll use this to send your booking confirmation and
+                                e-ticket</small>
+                            <span id="emailError" class="error-message" style="display: none;"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone number *</label>
+                            <input type="tel" id="phone" class="form-input" required>
+                            <span id="phoneError" class="error-message" style="display: none;"></span>
+                        </div>
+                    </div>
+
+                    <!-- Step 1 Buttons - UPDATED WITH BACK BUTTON -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="backToFlightBooking2"
+                            onclick="backToFlightBooking()">
+                            <i class="gg-arrow-left"></i>
+                            Back to Booking
+                        </button>
+                        <button type="button" class="btn-primary" id="nextToAuth">
+                            Next: Authentication Details
+                            <i class="gg-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2.5: Part 2 - Authentication Details (Dynamic per Passenger) -->
+                <div class="form-step" id="step-auth">
+                    <h2 class="form-title">Authentication Details</h2>
+                    <p class="form-subtitle">Verify identity for all passengers</p>
+
+                    <!-- Authentication forms will be generated here -->
+                    <div id="authenticationFormsContainer">
+                        <!-- Forms will be dynamically generated -->
+                    </div>
+
+                    <!-- Step Auth Buttons -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="backToPassengers">
+                            <i class="gg-arrow-left"></i>
+                            Back
+                        </button>
+                        <button type="button" class="btn-primary" id="nextToBaggage">
+                            Next: Baggage & Add-ons
+                            <i class="gg-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2.75: Part 3 - Baggage & Add-ons -->
+                <div class="form-step" id="step-baggage">
+                    <h2 class="form-title">Baggage & Add-ons</h2>
+                    <p class="form-subtitle">Optional - Add extra baggage for your journey</p>
+
+                    <div class="form-section">
+                        <h3 class="section-title">Baggage Selection</h3>
+
+                        <div class="baggage-options">
+                            <!-- Standard Baggage -->
+                            <div class="baggage-option">
+                                <div class="baggage-info">
+                                    <div class="baggage-title">Standard Baggage</div>
+                                    <div class="baggage-details">
+                                        <span><i class="fa-solid fa-bag-shopping"></i> 1x 20kg</span>
+                                        <span class="baggage-price">RM 0</span>
+                                    </div>
+                                    <p class="baggage-desc">Included in your ticket</p>
+                                </div>
+                                <label class="radio-option">
+                                    <input type="radio" name="baggageOption" value="standard" checked>
+                                </label>
+                            </div>
+
+                            <!-- Extra Baggage 20kg -->
+                            <div class="baggage-option">
+                                <div class="baggage-info">
+                                    <div class="baggage-title">Extra Baggage (20kg)</div>
+                                    <div class="baggage-details">
+                                        <span><i class="fa-solid fa-bag-shopping"></i> 1x 20kg</span>
+                                        <span class="baggage-price">RM 80</span>
+                                    </div>
+                                    <p class="baggage-desc">Per person, per flight</p>
+                                </div>
+                                <label class="radio-option">
+                                    <input type="radio" name="baggageOption" value="extra20">
+                                </label>
+                            </div>
+
+                            <!-- Extra Baggage 30kg -->
+                            <div class="baggage-option">
+                                <div class="baggage-info">
+                                    <div class="baggage-title">Extra Baggage (30kg)</div>
+                                    <div class="baggage-details">
+                                        <span><i class="fa-solid fa-bag-shopping"></i> 1x 30kg</span>
+                                        <span class="baggage-price">RM 120</span>
+                                    </div>
+                                    <p class="baggage-desc">Per person, per flight</p>
+                                </div>
+                                <label class="radio-option">
+                                    <input type="radio" name="baggageOption" value="extra30">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step Baggage Buttons -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="backToAuth">
+                            <i class="gg-arrow-left"></i>
+                            Back
+                        </button>
+                        <button type="button" class="btn-primary" id="nextToPayment">
+                            Next: Payment Details
+                            <i class="gg-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Payment -->
+                <div class="form-step" id="step-2">
+                    <h2 class="form-title">Payment Details</h2>
+
+                    <div class="form-section">
+                        <div class="security-badge">
+                            <i class="gg-lock"></i>
+                            <span>Secure Payment - All card information is encrypted</span>
+                        </div>
+
+                        <h3 class="section-title">Select Payment Method *</h3>
+
+                        <!-- Credit/Debit Card -->
+                        <div class="payment-option">
+                            <label class="payment-option-header">
+                                <input type="radio" name="paymentMethod" value="card" checked>
+                                <div class="payment-option-title">
+                                    <span>Credit/Debit Card</span>
+                                    <div class="card-logos">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
+                                            alt="Visa" height="20">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                                            alt="Mastercard" height="20">
+                                    </div>
+                                </div>
+                            </label>
+
+                            <div class="payment-option-content" id="cardPaymentContent">
+                                <div class="form-group">
+                                    <label for="cardName">Card holder name *</label>
+                                    <input type="text" id="cardName" class="form-input" placeholder="Name on card"
+                                        autocomplete="off">
+                                    <span id="cardNameError" class="error-message" style="display: none;"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="cardNumber">Card number *</label>
+                                    <input type="text" id="cardNumber" class="form-input"
+                                        placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="off">
+                                    <span id="cardNumberError" class="error-message" style="display: none;"></span>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="cardExpiry">Expiry date *</label>
+                                        <input type="text" id="cardExpiry" class="form-input" placeholder="MM/YY"
+                                            maxlength="5" autocomplete="off">
+                                        <span id="cardExpiryError" class="error-message" style="display: none;"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cardCVV">CVV *</label>
+                                        <input type="text" id="cardCVV" class="form-input" placeholder="123"
+                                            maxlength="3" autocomplete="off">
+                                        <span id="cardCVVError" class="error-message" style="display: none;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Digital Payment -->
+                        <div class="payment-option">
+                            <label class="payment-option-header">
+                                <input type="radio" name="paymentMethod" value="digital">
+                                <div class="payment-option-title">
+                                    <span>Digital Payment</span>
+                                    <div class="digital-logos">
+                                        <span class="digital-logo">PayPal</span>
+                                        <span class="digital-logo">Touch 'n Go</span>
+                                        <span class="digital-logo">GrabPay</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <div class="payment-option-content" id="digitalPaymentContent" style="display: none;">
+                                <p class="info-text">You will be redirected to complete your payment securely.</p>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="agreeTerms" required>
+                                <span>I agree to the <a href="#" class="link">Terms and Conditions</a> and <a href="#"
+                                        class="link">Privacy Policy</a></span>
+                            </label>
+                            <span id="agreeTermsError" class="error-message" style="display: none;"></span>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 Buttons -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="backToBaggage">
+                            <i class="gg-arrow-left"></i>
+                            Back
+                        </button>
+                        <button type="button" class="btn-primary" id="confirmBooking">
+                            Confirm & Pay
+                            <i class="gg-check"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Confirmation -->
+                <div class="form-step" id="step-3">
+                    <div class="confirmation-container">
+                        <div class="confirmation-icon">
+                            <i class="gg-check-o"></i>
+                        </div>
+                        <h2 class="confirmation-title">Booking Confirmed!</h2>
+                        <p class="confirmation-subtitle">Your flight reservation has been successfully completed</p>
+
+                        <div class="booking-id">
+                            <span class="booking-id-label">Booking Reference:</span>
+                            <span class="booking-id-value" id="bookingId">#FLT123456</span>
+                        </div>
+
+                        <div class="confirmation-details">
+                            <div class="confirmation-section">
+                                <i class="gg-mail"></i>
+                                <div>
+                                    <p class="confirmation-label">Confirmation Email Sent To:</p>
+                                    <p class="confirmation-value" id="confirmEmail">email@example.com</p>
+                                </div>
+                            </div>
+
+                            <div class="booking-summary-final">
+                                <h3>Flight Itinerary</h3>
+                                <div class="summary-item">
+                                    <span class="summary-label">Passenger:</span>
+                                    <span class="summary-value" id="finalPassengerName">John Doe</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Outbound:</span>
+                                    <span class="summary-value" id="finalOutbound">Oct 30 • 08:00-12:45</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Return:</span>
+                                    <span class="summary-value" id="finalReturn">Nov 1 • 09:00-13:45</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Route:</span>
+                                    <span class="summary-value" id="finalRoute">KUL ↔ SIN</span>
+                                </div>
+                                <div class="summary-item total">
+                                    <span class="summary-label">Total Paid:</span>
+                                    <span class="summary-value" id="finalTotal">RM 500</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="confirmation-actions">
+                            <button type="button" class="btn-primary" onclick="window.location.href='profile.html'">
+                                <i class="gg-list"></i>
+                                View My Bookings
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="window.location.href='Home.html'">
+                                <i class="fa fa-home"></i>
+                                Back to Home
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side - Booking Summary (Sticky) -->
+            <div class="booking-summary">
+                <div class="summary-card">
+                    <h3 class="summary-title">Booking Summary</h3>
+
+                    <!-- Flight Legs Summary -->
+                    <div class="summary-flight">
+                        <div class="summary-flight-leg">
+                            <div class="flight-leg-header">
+                                <i class="gg-airplane"></i>
+                                <span class="flight-leg-title">Outbound Flight</span>
+                            </div>
+                            <div class="flight-route-display">
+                                <div class="flight-route-full" id="summaryOutboundRoute"></div>
+                            </div>
+                            <div class="flight-details-row">
+                                <div class="flight-time-info">
+                                    <i class="fa fa-clock" style="font-size: 12px; margin-right: 4px;"></i>
+                                    <span id="summaryOutboundTime"></span> - <span id="summaryOutboundArrival"></span>
+                                </div>
+                            </div>
+                            <div class="flight-class-badge" id="summaryOutboundClass"></div>
+                        </div>
+
+                        <div class="summary-flight-leg" id="returnFlightLeg">
+                            <div class="flight-leg-header">
+                                <i class="gg-airplane" style="transform: rotate(180deg);"></i>
+                                <span class="flight-leg-title">Return Flight</span>
+                            </div>
+                            <div class="flight-route-display">
+                                <div class="flight-route-full" id="summaryReturnRoute"></div>
+                            </div>
+                            <div class="flight-details-row">
+                                <div class="flight-time-info">
+                                    <i class="fa fa-clock" style="font-size: 12px; margin-right: 4px;"></i>
+                                    <span id="summaryReturnTime"></span> - <span id="summaryReturnArrival"></span>
+                                </div>
+                            </div>
+                            <div class="flight-class-badge" id="summaryReturnClass"></div>
+                        </div>
+                    </div>
+
+                    <hr class="summary-divider">
+
+                    <!-- Price Breakdown -->
+                    <div class="summary-price">
+
+                        <!-- Calculation: price × passengers -->
+                        <div class="price-row">
+                            <span class="price-label price-calculation">
+                                <span id="pricePerPersonCalc"></span> × <span id="pricePassengerCount"></span>
+                            </span>
+                            <span class="price-value" id="baseFlightTotal"></span>
+                        </div>
+
+                        <!-- Baggage cost (if have) -->
+                        <div class="price-row" id="baggagePriceRow" style="display: none;">
+                            <span class="price-label">Baggage Add-on</span>
+                            <span class="price-value" id="baggagePriceDisplay"></span>
+                        </div>
+
+                        <!-- SERVICE CHARGE (10%) - ADD THIS -->
+                        <div class="price-row" id="serviceChargeRow">
+                            <span class="price-label">Service Charge (10%)</span>
+                            <span class="price-value" id="serviceChargeDisplay">RM 0.00</span>
+                        </div>
+
+                        <!-- Total -->
+                        <div class="price-row total">
+                            <span class="price-label">Total</span>
+                            <span class="price-value total-amount" id="priceTotal"></span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Processing your booking...</p>
+    </div>
+
+</body>
+
+</html>

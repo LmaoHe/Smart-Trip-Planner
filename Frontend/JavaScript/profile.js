@@ -7,6 +7,7 @@ import { showToast, setLoading, showError, hideError } from './utils.js';
 // --- Global Variables ---
 let currentUser = null;
 let originalProfileData = null;
+let allItineraries = [];
 
 // --- Profile Page Specific Utility Functions ---
 function showStatusMessage(message, isError = true) {
@@ -26,6 +27,18 @@ function showStatusMessage(message, isError = true) {
 function hideStatusMessage() {
     const statusEl = document.getElementById('saveStatus');
     if (statusEl) statusEl.style.display = 'none';
+}
+
+function updateNavigationUI(userRole) {
+    const registerAdminNav = document.getElementById('registerAdminNav');
+
+    if (registerAdminNav) {
+        if (userRole === 'superadmin') {
+            registerAdminNav.style.display = 'block';
+        } else {
+            registerAdminNav.style.display = 'none';
+        }
+    }
 }
 
 // --- UI Population Functions ---
@@ -335,6 +348,8 @@ function setupTabs() {
                 loadHotelBookings();
             } else if (targetTab === 'flights') {
                 loadFlightBookings();
+            } else if (targetTab === 'itineraries') {
+                loadUserItineraries();
             }
         });
     });
@@ -359,7 +374,6 @@ async function loadHotelBookings() {
         return;
     }
 
-    // Show loading state
     hotelsContainer.innerHTML = `
         <div class="loading-state">
             <div class="spinner"></div>
@@ -374,7 +388,16 @@ async function loadHotelBookings() {
         const q = query(bookingsRef, orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
 
-        if (querySnapshot.empty) {
+        // Filter for hotels
+        const hotelBookings = [];
+        querySnapshot.forEach((doc) => {
+            const booking = doc.data();
+            if (booking.bookingType === 'hotel') {
+                hotelBookings.push(booking);
+            }
+        });
+
+        if (hotelBookings.length === 0) {
             hotelsContainer.innerHTML = `
                 <div class="empty-state">
                     <i class="fa-solid fa-hotel"></i>
@@ -386,15 +409,15 @@ async function loadHotelBookings() {
             return;
         }
 
-        // Display bookings
-        const bookingsHTML = [];
-        querySnapshot.forEach((doc) => {
-            const booking = doc.data();
-            bookingsHTML.push(createBookingCard(booking));
+        // Sort: Confirmed first, then cancelled
+        hotelBookings.sort((a, b) => {
+            const statusOrder = { 'confirmed': 1, 'completed': 2, 'cancelled': 3 };
+            return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
         });
 
+        const bookingsHTML = hotelBookings.map(booking => createBookingCard(booking));
         hotelsContainer.innerHTML = bookingsHTML.join('');
-        console.log(`✓ Loaded ${querySnapshot.size} hotel bookings`);
+        console.log(`✓ Loaded ${hotelBookings.length} hotel bookings (sorted by status)`);
 
     } catch (error) {
         console.error('Error loading hotel bookings:', error);
@@ -408,63 +431,162 @@ async function loadHotelBookings() {
     }
 }
 
-// ===== LOAD FLIGHT BOOKINGS (PLACEHOLDER) =====
+// ===== LOAD FLIGHT BOOKINGS =====
 async function loadFlightBookings() {
-    const flightsContainer = document.getElementById('flightsContainer');
-    if (!flightsContainer) return;
+    if (!currentUser) {
+        console.error('No user logged in');
+        return;
+    }
 
-    // For now, show empty state (implement later when you add flights)
+    const flightsContainer = document.getElementById('flightsContainer');
+    if (!flightsContainer) {
+        console.error('Flights container not found');
+        return;
+    }
+
     flightsContainer.innerHTML = `
-        <div class="empty-state">
-            <i class="fa-solid fa-plane-slash"></i>
-            <h3>No Flight Bookings Yet</h3>
-            <p>Flight booking feature coming soon! Stay tuned.</p>
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading your flight bookings...</p>
         </div>
     `;
+
+    try {
+        const { collection, query, orderBy, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+        const bookingsRef = collection(db, 'users', currentUser.uid, 'bookings');
+        const q = query(bookingsRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+
+        // Filter for flights
+        const flightBookings = [];
+        querySnapshot.forEach((doc) => {
+            const booking = doc.data();
+            if (booking.bookingType === 'flight') {
+                flightBookings.push(booking);
+            }
+        });
+
+        if (flightBookings.length === 0) {
+            flightsContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-plane-slash"></i>
+                    <h3>No Flight Bookings Yet</h3>
+                    <p>You haven't booked any flights. Start planning your next adventure!</p>
+                    <a href="booking.html" class="btn-primary">Browse Flights</a>
+                </div>
+            `;
+            return;
+        }
+
+        // Sort: Confirmed first, then cancelled
+        flightBookings.sort((a, b) => {
+            const statusOrder = { 'confirmed': 1, 'completed': 2, 'cancelled': 3 };
+            return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
+        });
+
+        const bookingsHTML = flightBookings.map(booking => createFlightBookingCard(booking));
+        flightsContainer.innerHTML = bookingsHTML.join('');
+        console.log(`✓ Loaded ${flightBookings.length} flight bookings (sorted by status)`);
+
+    } catch (error) {
+        console.error('Error loading flight bookings:', error);
+        flightsContainer.innerHTML = `
+            <div class="error-state">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+                <h3>Error Loading Bookings</h3>
+                <p>${error.message}</p>
+            </div>
+        `;
+    }
 }
 
-// ===== CREATE BOOKING CARD =====
+// CREATE BOOKING CARD
 function createBookingCard(booking) {
     const checkInDate = new Date(booking.checkIn);
     const checkOutDate = new Date(booking.checkOut);
-    const bookingDate = booking.createdAt && booking.createdAt.toDate ? booking.createdAt.toDate() : new Date();
+
+    let bookingDate = new Date();
+    if (booking.createdAt) {
+        if (typeof booking.createdAt.toDate === 'function') {
+            bookingDate = booking.createdAt.toDate();
+        } else if (booking.createdAt instanceof Date) {
+            bookingDate = booking.createdAt;
+        } else if (typeof booking.createdAt === 'string' || typeof booking.createdAt === 'number') {
+            bookingDate = new Date(booking.createdAt);
+        }
+    }
 
     const formatDate = (date) => {
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
-    // Status configuration
     const statusConfig = {
-        'confirmed': { class: 'status-confirmed', text: 'Confirmed' },
-        'cancelled': { class: 'status-cancelled', text: 'Cancelled' },
-        'completed': { class: 'status-completed', text: 'Completed' }
+        confirmed: { class: 'status-confirmed', text: 'Confirmed' },
+        cancelled: { class: 'status-cancelled', text: 'Cancelled' },
+        completed: { class: 'status-completed', text: 'Completed' }
     };
 
     const status = statusConfig[booking.status] || statusConfig['confirmed'];
 
-    // Show cancel button only for confirmed bookings
     const cancelButton = booking.status === 'confirmed' ? `
         <button class="btn-cancel" onclick="cancelBooking('${booking.bookingId}')">
-            <i class="fa-solid fa-times-circle"></i>
-            Cancel Booking
+            <i class="fa-solid fa-times-circle"></i> Cancel Booking
         </button>
     ` : '';
 
-    // Get room/hotel image (fallback to placeholder if not available)
     const roomImage = booking.roomImage || booking.hotelImage || 'https://via.placeholder.com/300x300?text=Hotel';
+
+    const hasSpecialRequests = booking.smoking || booking.bedPreference || (booking.specialRequests && booking.specialRequests.trim());
+
+    const smokingPref = booking.smoking === 'smoking' ? 'Smoking Room' : 'Non-Smoking Room';
+    const bedPref = booking.bedPreference === 'large' ? '1 Large Bed' : '2 Twin Beds';
+    const specialRequestsText = booking.specialRequests && booking.specialRequests.trim()
+        ? booking.specialRequests
+        : 'None';
+
+    const specialRequestsSection = hasSpecialRequests ? `
+        <div class="booking-section">
+            <h4><i class="fa-solid fa-clipboard-list"></i> Special Requests</h4>
+            <div class="booking-details">
+                ${booking.smoking ? `
+                <div class="booking-detail-item">
+                    <i class="fa-solid fa-smoking-ban"></i>
+                    <div>
+                        <span class="detail-label">Room Type</span>
+                        <span class="detail-value">${smokingPref}</span>
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${booking.bedPreference ? `
+                <div class="booking-detail-item">
+                    <i class="fa-solid fa-bed"></i>
+                    <div>
+                        <span class="detail-label">Bed Setup</span>
+                        <span class="detail-value">${bedPref}</span>
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${booking.specialRequests && booking.specialRequests.trim() ? `
+                <div class="booking-detail-item special-requests-full">
+                    <i class="fa-solid fa-message"></i>
+                    <div>
+                        <span class="detail-label">Additional Requests</span>
+                        <span class="detail-value">${specialRequestsText}</span>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    ` : '';
 
     return `
         <div class="booking-card">
-            <!-- Small Thumbnail Image -->
             <div class="booking-image">
                 <img src="${roomImage}" alt="${booking.roomName}" onerror="this.src='https://via.placeholder.com/300x300?text=Hotel'">
             </div>
-
-            <!-- Booking Content -->
             <div class="booking-content">
                 <div class="booking-header">
                     <div class="booking-id">
@@ -473,16 +595,15 @@ function createBookingCard(booking) {
                     </div>
                     <div class="booking-status ${status.class}">${status.text}</div>
                 </div>
-
+                
                 <div class="booking-body">
                     <div class="booking-hotel">
                         <h3>${booking.hotelName}</h3>
                         <p class="booking-location">
-                            <i class="fa-solid fa-location-dot"></i>
-                            ${booking.hotelLocation}
+                            <i class="fa-solid fa-location-dot"></i> ${booking.hotelLocation}
                         </p>
                     </div>
-
+                    
                     <div class="booking-details">
                         <div class="booking-detail-item">
                             <i class="fa-solid fa-door-open"></i>
@@ -491,7 +612,6 @@ function createBookingCard(booking) {
                                 <span class="detail-value">${booking.roomName}</span>
                             </div>
                         </div>
-
                         <div class="booking-detail-item">
                             <i class="fa-solid fa-calendar-check"></i>
                             <div>
@@ -499,7 +619,6 @@ function createBookingCard(booking) {
                                 <span class="detail-value">${formatDate(checkInDate)}</span>
                             </div>
                         </div>
-
                         <div class="booking-detail-item">
                             <i class="fa-solid fa-calendar-xmark"></i>
                             <div>
@@ -507,7 +626,6 @@ function createBookingCard(booking) {
                                 <span class="detail-value">${formatDate(checkOutDate)}</span>
                             </div>
                         </div>
-
                         <div class="booking-detail-item">
                             <i class="fa-solid fa-moon"></i>
                             <div>
@@ -515,7 +633,6 @@ function createBookingCard(booking) {
                                 <span class="detail-value">${booking.nights} night${booking.nights > 1 ? 's' : ''}</span>
                             </div>
                         </div>
-
                         <div class="booking-detail-item">
                             <i class="fa-solid fa-users"></i>
                             <div>
@@ -523,7 +640,6 @@ function createBookingCard(booking) {
                                 <span class="detail-value">${booking.guests}</span>
                             </div>
                         </div>
-
                         <div class="booking-detail-item">
                             <i class="fa-solid fa-credit-card"></i>
                             <div>
@@ -532,13 +648,15 @@ function createBookingCard(booking) {
                             </div>
                         </div>
                     </div>
-                </div>
 
+                    ${specialRequestsSection}
+                </div>
+                
                 <div class="booking-footer">
                     <div class="booking-info">
                         <div class="booking-price">
                             <span class="price-label">Total Paid</span>
-                            <span class="price-value">${booking.currency} ${booking.totalPrice.toLocaleString()}</span>
+                            <span class="price-value">${booking.currency || 'MYR'} ${(booking.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div class="booking-date">
                             <i class="fa-regular fa-clock"></i>
@@ -554,14 +672,396 @@ function createBookingCard(booking) {
     `;
 }
 
-// ===== CANCEL BOOKING =====
+// ===== CREATE FLIGHT BOOKING CARD =====
+function createFlightBookingCard(booking) {
+    let bookingDate = new Date();
+    if (booking.createdAt) {
+        if (typeof booking.createdAt.toDate === 'function') {
+            bookingDate = booking.createdAt.toDate();
+        } else if (booking.createdAt instanceof Date) {
+            bookingDate = booking.createdAt;
+        } else if (typeof booking.createdAt === 'string' || typeof booking.createdAt === 'number') {
+            bookingDate = new Date(booking.createdAt);
+        }
+    }
+
+    const formatDate = (date) => {
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
+
+    const statusConfig = {
+        'confirmed': { class: 'status-confirmed', text: 'Confirmed' },
+        'cancelled': { class: 'status-cancelled', text: 'Cancelled' },
+        'completed': { class: 'status-completed', text: 'Completed' }
+    };
+
+    const status = statusConfig[booking.status] || statusConfig['confirmed'];
+
+    const cancelButton = booking.status === 'confirmed' ? `
+        <button class="btn-cancel" onclick="cancelBooking('${booking.bookingId}')">
+            <i class="fa-solid fa-times-circle"></i>
+            Cancel Booking
+        </button>
+    ` : '';
+
+    const outbound = booking.flightDetails?.outbound || {};
+    const returnFlight = booking.flightDetails?.return || null;
+
+    const outboundRoute = `${outbound.fromAirport || 'N/A'} → ${outbound.toAirport || 'N/A'}`;
+    const returnRoute = returnFlight ? `${returnFlight.fromAirport || 'N/A'} → ${returnFlight.toAirport || 'N/A'}` : null;
+
+    const baggageType = booking.baggageDetails?.type || 'standard';
+    const baggageLabels = {
+        'standard': 'Standard (7kg)',
+        'extra20': 'Extra 20kg',
+        'extra30': 'Extra 30kg'
+    };
+
+    return `
+        <div class="booking-card flight-booking-card">
+            <div class="booking-content" style="width: 100%;">
+                <div class="booking-header">
+                    <div class="booking-id">
+                        <i class="fa-solid fa-plane"></i>
+                        <span>${booking.bookingId}</span>
+                    </div>
+                    <div class="booking-status ${status.class}">${status.text}</div>
+                </div>
+
+                <div class="booking-body">
+                    <div class="flight-routes">
+                        <div class="flight-route-section">
+                            <h4><i class="fa-solid fa-plane-departure"></i> Outbound</h4>
+                            <p class="route-detail">${outboundRoute}</p>
+                            <p class="flight-time">${outbound.departDate || 'N/A'} • ${outbound.departTime || 'N/A'} - ${outbound.arriveTime || 'N/A'}</p>
+                        </div>
+
+                        ${returnFlight ? `
+                        <div class="flight-route-section">
+                            <h4><i class="fa-solid fa-plane-arrival"></i> Return</h4>
+                            <p class="route-detail">${returnRoute}</p>
+                            <p class="flight-time">${returnFlight.departDate || 'N/A'} • ${returnFlight.departTime || 'N/A'} - ${returnFlight.arriveTime || 'N/A'}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="booking-details">
+                        <div class="booking-detail-item">
+                            <i class="fa-solid fa-users"></i>
+                            <div>
+                                <span class="detail-label">Passengers</span>
+                                <span class="detail-value">${booking.totalPassengers || 1}</span>
+                            </div>
+                        </div>
+
+                        <div class="booking-detail-item">
+                            <i class="fa-solid fa-suitcase"></i>
+                            <div>
+                                <span class="detail-label">Baggage</span>
+                                <span class="detail-value">${baggageLabels[baggageType]}</span>
+                            </div>
+                        </div>
+
+                        <div class="booking-detail-item">
+                            <i class="fa-solid fa-user"></i>
+                            <div>
+                                <span class="detail-label">Lead Passenger</span>
+                                <span class="detail-value">${booking.leadPassenger?.firstName || 'N/A'} ${booking.leadPassenger?.lastName || ''}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="booking-footer">
+                    <div class="booking-info">
+                        <div class="booking-price">
+                            <span class="price-label">Total Paid</span>
+                            <span class="price-value">MYR ${(booking.pricing?.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div class="booking-date">
+                            <i class="fa-regular fa-clock"></i>
+                            Booked on ${formatDate(bookingDate)}
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        ${cancelButton}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ===== LOAD ITINERARIES (UPDATED FOR NEW SINGLE-DOCUMENT STRUCTURE) =====
+async function loadUserItineraries() {
+    if (!currentUser) {
+        console.error('No user logged in');
+        return;
+    }
+
+    const itinerariesGrid = document.getElementById('itinerariesGrid');
+    if (!itinerariesGrid) {
+        console.error('Itineraries grid not found');
+        return;
+    }
+
+    itinerariesGrid.innerHTML = `
+        <div class="loading-itineraries">
+            <p>Loading your itineraries...</p>
+        </div>
+    `;
+
+    try {
+        const { collection, getDocs, query, where } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+        const bookingsRef = collection(db, 'users', currentUser.uid, 'bookings');
+        const bookingsSnapshot = await getDocs(bookingsRef);
+
+        const fetchedItineraries = [];
+
+        for (const bookingDoc of bookingsSnapshot.docs) {
+            const bookingData = bookingDoc.data();
+
+            // Only process itinerary bookings
+            if (bookingData.bookingType !== 'itinerary') {
+                console.log(`⏭️ Skipping non-itinerary booking ${bookingDoc.id} (type: ${bookingData.bookingType})`);
+                continue;
+            }
+
+            console.log(`📦 Processing itinerary ${bookingDoc.id}:`, bookingData);
+
+            // Check BOTH field patterns (AI uses unprefixed, Paid uses prefixed)
+            const title = bookingData.title || bookingData.itineraryTitle || 'Untitled';
+            const city = bookingData.city || bookingData.itineraryCity || 'Unknown';
+            const country = bookingData.country || bookingData.itineraryCountry || 'Unknown';
+            const duration = bookingData.duration || bookingData.itineraryDuration || 'N/A';
+            const image = bookingData.image || bookingData.itineraryImage || '';
+
+            console.log(`🔍 Extracted values for ${bookingDoc.id}:`, {
+                title, city, country, duration, hasImage: !!image
+            });
+
+            fetchedItineraries.push({
+                id: bookingDoc.id,
+                bookingId: bookingData.bookingId || bookingDoc.id,
+                itemBookingId: bookingData.bookingId || bookingDoc.id,
+                source: bookingData.isAIGenerated || bookingData.source === 'ai-generated' ? 'ai-generated' : 'purchased',
+                hasSubcollection: false,
+                isAIGenerated: bookingData.isAIGenerated || bookingData.source === 'ai-generated' || false,
+                status: bookingData.status || 'confirmed',
+                email: currentUser.email,
+                userId: currentUser.uid,
+                itineraryId: bookingData.itineraryId,
+                itineraryTitle: title,
+                itineraryCity: city,
+                itineraryCountry: country,
+                itineraryDuration: duration,
+                itineraryImage: image,
+                
+                title: title,
+                city: city,
+                country: country,
+                duration: duration,
+                image: image,
+                
+                numberOfPeople: bookingData.numberOfPeople,
+                pricePerPerson: bookingData.pricePerPerson,
+                subtotal: bookingData.subtotal,
+                serviceFee: bookingData.serviceFee,
+                totalPrice: bookingData.totalPrice,
+                currency: bookingData.currency,
+                firstName: bookingData.firstName,
+                lastName: bookingData.lastName,
+                phone: bookingData.phone,
+                paymentMethod: bookingData.paymentMethod,
+                createdAt: bookingData.createdAt
+            });
+
+            console.log(`✅ Loaded itinerary booking ${bookingDoc.id}`);
+        }
+
+        console.log(`📊 Total fetched: ${fetchedItineraries.length} itineraries`);
+        console.log('📋 Fetched data:', fetchedItineraries);
+
+        displayItineraries(fetchedItineraries);
+
+    } catch (error) {
+        console.error('❌ Error loading itineraries:', error);
+        itinerariesGrid.innerHTML = `
+            <div class="error-state">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+                <h3>Error Loading Itineraries</h3>
+                <p>${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function displayItineraries(itineraries) {
+    const itinerariesGrid = document.getElementById('itinerariesGrid');
+    if (!itinerariesGrid) return;
+    
+    if (!currentUser) {
+        itinerariesGrid.innerHTML = `<div class="error-state"><p>Please log in to view your itineraries</p></div>`;
+        return;
+    }
+
+    allItineraries = itineraries.filter(itinerary => {
+        return itinerary.email === currentUser.email || 
+               (itinerary.userId && itinerary.userId === currentUser.uid);
+    });
+
+    if (allItineraries.length === 0) {
+        displayEmptyItineraryState();
+        return;
+    }
+
+    const itineraryCards = allItineraries.map(itinerary => {
+        const isAIGenerated = itinerary.isAIGenerated || itinerary.source === 'ai-generated';
+        const isCancelled = itinerary.status === 'cancelled';
+        
+        const displayCity = itinerary.city || itinerary.itineraryCity || 'Unknown';
+        const displayCountry = itinerary.country || itinerary.itineraryCountry || 'Unknown';
+        const displayDuration = itinerary.duration || itinerary.itineraryDuration || 'N/A';
+        const displayImage = itinerary.image || itinerary.itineraryImage || '';
+        const displayTitle = itinerary.title || itinerary.itineraryTitle || 'Itinerary';
+        
+        const sourceBadge = isAIGenerated 
+            ? `<span class="itinerary-source-badge ai">AI-Generated</span>`
+            : `<span class="itinerary-source-badge preloaded">Curated</span>`;
+        
+        const bookingId = itinerary.bookingId || itinerary.id;
+        const escapedBookingId = bookingId.replace(/'/g, "\\'");
+        
+        return `
+            <div class="itinerary-card">
+                <div class="itinerary-image">
+                    ${displayImage ? 
+                        `<img src="${displayImage}" alt="${displayTitle}" onerror="this.src='https://via.placeholder.com/300x300?text=Itinerary'">` 
+                        : `<i class="fa-solid fa-map"></i>`
+                    }
+                </div>
+                <div class="itinerary-content">
+                    <div class="itinerary-top">
+                        <div class="itinerary-badges">
+                            ${sourceBadge}
+                        </div>
+                        <span class="itinerary-status status-${itinerary.status}">
+                            ${itinerary.status.charAt(0).toUpperCase() + itinerary.status.slice(1)}
+                        </span>
+                    </div>
+                    <h3 class="itinerary-title">${displayTitle}</h3>
+                    <p class="itinerary-location">
+                        <i class="fa-solid fa-map-marker-alt"></i>
+                        ${displayCity}, ${displayCountry}
+                    </p>
+                    <div class="itinerary-details">
+                        <div class="detail-item">
+                            <i class="fa-solid fa-calendar"></i>
+                            <div>
+                                <span class="detail-label">Booked</span>
+                                <span class="detail-value">
+                                    ${new Date(itinerary.createdAt?.toDate ? itinerary.createdAt.toDate() : itinerary.createdAt).toLocaleDateString()}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fa-solid fa-moon"></i>
+                            <div>
+                                <span class="detail-label">Duration</span>
+                                <span class="detail-value">${displayDuration}</span>
+                            </div>
+                        </div>
+                        ${!isAIGenerated ? `
+                            <div class="detail-item">
+                                <i class="fa-solid fa-users"></i>
+                                <div>
+                                    <span class="detail-label">People</span>
+                                    <span class="detail-value">${itinerary.numberOfPeople || 1}</span>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="itinerary-footer">
+                        ${!isAIGenerated ? `
+                            <div class="itinerary-price-section">
+                                <span class="itinerary-price-label">Total Paid</span>
+                                <span class="itinerary-price-value">
+                                    ${itinerary.currency || 'RM'} ${(itinerary.totalPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                            </div>
+                        ` : '<div></div>'}
+                        <div class="itinerary-actions">
+                            ${!isCancelled ? `
+                                <button class="itinerary-btn-view" onclick="viewItineraryDetails('${escapedBookingId}', ${isAIGenerated})">
+                                    <i class="fa-solid fa-eye"></i> View
+                                </button>
+                            ` : ''}
+                            
+                            ${isAIGenerated && !isCancelled ? `
+                                <button class="itinerary-btn-delete" onclick="deleteItinerary('${escapedBookingId}')">
+                                    <i class="fa-solid fa-trash"></i> Delete
+                                </button>
+                            ` : ''}
+                            
+                            ${!isAIGenerated && !isCancelled ? `
+                                <button class="itinerary-btn-cancel" onclick="cancelBooking('${escapedBookingId}')">
+                                    <i class="fa-solid fa-times-circle"></i> Cancel
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    itinerariesGrid.innerHTML = itineraryCards;
+}
+
+// ===== VIEW ITINERARY DETAILS (SIMPLIFIED) =====
+function viewItineraryDetails(bookingId, isAIGenerated) {
+    console.log('📍 Viewing itinerary:', { bookingId, isAIGenerated });
+
+    if (isAIGenerated) {
+        // AI-generated itinerary
+        console.log('🤖 Redirecting to AI itinerary view:', bookingId);
+        window.location.href = `ai_itinerary_view.html?id=${bookingId}`;
+    } else {
+        // Purchased itinerary - use itineraryId from booking
+        const itinerary = allItineraries.find(it => 
+            (it.bookingId === bookingId || it.id === bookingId)
+        );
+
+        if (!itinerary) {
+            console.error('❌ Itinerary not found in allItineraries for bookingId:', bookingId);
+            showToast('Error: Itinerary not found', true);
+            return;
+        }
+
+        console.log('📦 Found itinerary:', itinerary);
+
+        if (itinerary.itineraryId) {
+            console.log('✅ Using itineraryId:', itinerary.itineraryId);
+            window.location.href = `itineraryDetails.html?id=${itinerary.itineraryId}`;
+        } else {
+            console.error('❌ itineraryId not found in itinerary:', itinerary);
+            showToast('Error: Original itinerary details not found', true);
+        }
+    }
+}
+
+// ===== CANCEL BOOKING (SIMPLIFIED FOR SINGLE DOCUMENT) =====
 async function cancelBooking(bookingId) {
     if (!currentUser) {
         showToast('Please log in to cancel bookings', true);
         return;
     }
 
-    // Show modal
     const modal = document.getElementById('cancelModal');
     const modalBookingId = document.getElementById('modalBookingId');
     const confirmBtn = document.getElementById('modalConfirmBtn');
@@ -572,61 +1072,62 @@ async function cancelBooking(bookingId) {
         return;
     }
 
-    // Set booking ID in modal
     if (modalBookingId) {
         modalBookingId.textContent = `#${bookingId}`;
     }
 
-    // Show modal
     modal.classList.add('show');
 
-    // Handle confirm button click
     const handleConfirm = async () => {
         try {
-            // Hide modal
             modal.classList.remove('show');
-
-            // Show loading toast
             showToast('Cancelling booking...', false);
 
             const { updateDoc, doc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
 
+            // ✅ All bookings are now single documents - no subcollections
             const bookingRef = doc(db, 'users', currentUser.uid, 'bookings', bookingId);
+            console.log('✓ Cancelling booking:', bookingId);
 
-            // Update status to cancelled
             await updateDoc(bookingRef, {
                 status: 'cancelled',
                 cancelledAt: serverTimestamp()
             });
 
-            console.log('✓ Booking cancelled:', bookingId);
+            console.log('✅ Booking cancelled successfully');
             showToast('Booking cancelled successfully', false);
 
-            // Reload hotel bookings
-            loadHotelBookings();
+            // Auto-refresh active tab
+            const activeTab = document.querySelector('.tab-btn.active');
+            if (activeTab) {
+                const tabType = activeTab.dataset.tab;
+                if (tabType === 'hotels') {
+                    await loadHotelBookings();
+                } else if (tabType === 'flights') {
+                    await loadFlightBookings();
+                } else if (tabType === 'itineraries') {
+                    await loadUserItineraries();
+                }
+            }
 
         } catch (error) {
-            console.error('Error cancelling booking:', error);
+            console.error('❌ Error cancelling booking:', error);
             showToast('Failed to cancel booking. Please try again.', true);
         } finally {
-            // Remove event listeners
             confirmBtn.removeEventListener('click', handleConfirm);
             cancelBtn.removeEventListener('click', handleCancel);
         }
     };
 
-    // Handle cancel button click
     const handleCancel = () => {
         modal.classList.remove('show');
         confirmBtn.removeEventListener('click', handleConfirm);
         cancelBtn.removeEventListener('click', handleCancel);
     };
 
-    // Attach event listeners
     confirmBtn.addEventListener('click', handleConfirm);
     cancelBtn.addEventListener('click', handleCancel);
 
-    // Close modal when clicking outside
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             handleCancel();
@@ -634,21 +1135,39 @@ async function cancelBooking(bookingId) {
     });
 }
 
-// Make cancelBooking globally accessible
+// ===== DISPLAY EMPTY ITINERARY STATE =====
+function displayEmptyItineraryState() {
+    const itinerariesGrid = document.getElementById('itinerariesGrid');
+    if (!itinerariesGrid) return;
+
+    itinerariesGrid.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fa-solid fa-hotel"></i>
+            </div>
+            <h3 class="empty-state-title">No Itineraries Yet</h3>
+            <p class="empty-state-text">You haven't booked any itineraries yet. Start exploring and create your first one!</p>
+            <a href="booking.html" class="empty-state-btn">Browse Itineraries</a>
+        </div>
+    `;
+}
+
+// Make globally accessible
 window.cancelBooking = cancelBooking;
+
+// Make globally accessible
+window.viewItineraryDetails = viewItineraryDetails;
 
 // --- Main Execution Logic ---
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Profile page DOM fully loaded");
 
-    // Get elements
     const profileForm = document.getElementById('profileForm');
     const saveBtn = document.getElementById('saveChangesBtn');
     const cancelBtn = document.getElementById('cancelChangesBtn');
     const changePhotoBtn = document.getElementById('changePhotoButton');
     const photoUploadInput = document.getElementById('photoUploadInput');
 
-    // Attach listeners
     if (profileForm && saveBtn) {
         profileForm.addEventListener('submit', handleProfileSave);
     } else {
@@ -668,7 +1187,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Change photo elements missing");
     }
 
-    // Initialize tabs
     setupTabs();
 
     // --- Authentication Check ---
@@ -684,7 +1202,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const userData = docSnap.data();
                     console.log("Fetched user data:", userData);
 
-                    // Cache-bust profile photo if it exists
                     if (userData.profilePhotoURL) {
                         userData.profilePhotoURL = `${userData.profilePhotoURL}?t=${new Date().getTime()}`;
                     }
@@ -692,6 +1209,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     originalProfileData = userData;
                     populateProfileHeader(originalProfileData);
                     populateProfileForm(originalProfileData);
+                    updateNavigationUI(userData.role);
+
+                    const activeTab = document.querySelector('.tab-btn.active');
+                    if (activeTab && activeTab.dataset.tab === 'itineraries') {
+                        loadUserItineraries();
+                    }
 
                 } else {
                     console.error("Firestore document missing:", user.uid);
@@ -711,4 +1234,93 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'login.html';
         }
     });
+});
+
+// ===== DELETE AI-GENERATED ITINERARY (WITH MODAL) =====
+window.deleteItinerary = function (bookingId) {
+    if (!currentUser) {
+        showToast('Please log in to delete itineraries', true);
+        return;
+    }
+
+    const modal = document.getElementById('deleteModal');
+    const modalBookingId = document.getElementById('deleteModalBookingId');
+    const confirmBtn = document.getElementById('deleteModalConfirmBtn');
+    const cancelBtn = document.getElementById('deleteModalCancelBtn');
+
+    if (!modal) {
+        console.error('Delete modal not found');
+        return;
+    }
+
+    // Set booking ID in modal
+    if (modalBookingId) {
+        modalBookingId.textContent = bookingId;
+    }
+
+    // Show modal
+    modal.classList.add('show');
+
+    const handleConfirm = async () => {
+        try {
+            // Hide modal
+            modal.classList.remove('show');
+            
+            showToast('Deleting itinerary...', false);
+
+            const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+            // Delete from Firestore
+            const itineraryRef = doc(db, 'users', currentUser.uid, 'bookings', bookingId);
+            await deleteDoc(itineraryRef);
+
+            console.log('✅ AI itinerary deleted:', bookingId);
+            showToast('Itinerary deleted successfully', false);
+
+            // Refresh the itineraries list
+            await loadUserItineraries();
+
+        } catch (error) {
+            console.error('❌ Error deleting itinerary:', error);
+            showToast('Failed to delete itinerary. Please try again.', true);
+        } finally {
+            // Clean up event listeners
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            modal.removeEventListener('click', handleBackdropClick); 
+        }
+    };
+
+    const handleCancel = () => {
+        modal.classList.remove('show');
+        confirmBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+        modal.removeEventListener('click', handleBackdropClick); 
+    };
+
+    // Named function so we can remove it
+    const handleBackdropClick = (e) => {
+        if (e.target === modal) {
+            handleCancel();
+        }
+    };
+
+    // Attach event listeners
+    confirmBtn.addEventListener('click', handleConfirm);
+    cancelBtn.addEventListener('click', handleCancel);
+    modal.addEventListener('click', handleBackdropClick);
+}
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const cancelModal = document.getElementById('cancelModal');
+        if (cancelModal && cancelModal.classList.contains('show')) {
+            cancelModal.classList.remove('show');
+        }
+        
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal && deleteModal.classList.contains('show')) {
+            deleteModal.classList.remove('show');
+        }
+    }
 });

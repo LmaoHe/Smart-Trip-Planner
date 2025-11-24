@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Travel.Co</title>
+    <link rel="stylesheet" href="./Css/itinerary_checkout.css">
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script type="module" src="./JavaScript/itinerary_checkout.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo" onclick="window.location.href='home.html'">
+                    <i class="gg-airplane"></i> Travel.Co
+                </div>
+            </div>
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
+                    <li><a href="planItinerary.html">Trip Planner</a></li>
+                </ul>
+            </nav>
+            <div class="nav-right">
+                <div class="user-profile">
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-trigger">
+                            <div class="profile-avatar" id="profileAvatarInitials"></div>
+                            <span class="profile-name" id="profileName"></span>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="profile.html" class="dropdown-item">
+                                <i class="fa fa-user dropdown-icon"></i>
+                                Profile
+                            </a>
+                            <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                                <i class="fa fa-sign-out dropdown-icon"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="checkout-container">
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Passenger Info</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Payment</div>
+                </div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Confirmation</div>
+                </div>
+            </div>
+
+            <div class="checkout-content">
+                <!-- Left: Main Form -->
+                <div class="checkout-left">
+                    <!-- STEP 1: PASSENGER INFO -->
+                    <div class="checkout-step active" id="step1">
+                        <h2 class="step-title">Passenger Information</h2>
+
+                        <div class="section">
+                            <h3 class="section-subtitle">Lead Passenger Details</h3>
+
+                            <form id="travelerForm">
+                                <!-- Name Row -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">First name *</label>
+                                        <input type="text" id="firstName" class="form-input" placeholder="Ron" required>
+                                        <span class="error-message" id="firstNameError"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Last name *</label>
+                                        <input type="text" id="lastName" class="form-input" placeholder="Lee" required>
+                                        <span class="error-message" id="lastNameError"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Email & Phone Row -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Email *</label>
+                                        <input type="email" id="email" class="form-input"
+                                            placeholder="adamkhoo2004@gmail.com" required>
+                                        <span class="error-message" id="emailError"></span>
+                                        <small>We'll use this to send your booking confirmation and e-ticket</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Phone number *</label>
+                                        <input type="tel" id="phone" class="form-input" placeholder="0123456789"
+                                            required>
+                                        <span class="error-message" id="phoneError"></span>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="button-group">
+                            <button type="button" class="btn-secondary" id="backToCart">
+                                <i class="fa fa-arrow-left"></i> Back to Wishlist
+                            </button>
+                            <button class="btn-next" id="nextToPayment" style="flex: 2;">
+                                Next: Payment Details <i class="fa fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: PAYMENT -->
+                    <div class="checkout-step" id="step2">
+                        <h2 class="step-title">Payment Details</h2>
+
+                        <div class="section">
+                            <div class="security-badge">
+                                <i class="fa fa-lock"></i>
+                                <span>Secure Payment - All card information is encrypted</span>
+                            </div>
+
+                            <h3 class="section-subtitle">Select Payment Method *</h3>
+
+                            <!-- PAYMENT OPTIONS WRAPPER -->
+                            <div class="payment-options-wrapper">
+
+                                <!-- CREDIT/DEBIT CARD OPTION -->
+                                <div class="payment-option-box">
+                                    <label class="payment-option-header">
+                                        <input type="radio" name="paymentMethod" value="card" checked>
+                                        <div class="payment-option-title">
+                                            <span>Credit/Debit Card</span>
+                                            <div class="card-logos">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
+                                                    alt="Visa" height="20">
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                                                    alt="Mastercard" height="20">
+                                            </div>
+                                        </div>
+                                    </label>
+
+                                    <!-- CARD PAYMENT FORM -->
+                                    <div class="payment-option-content" id="cardPaymentContent">
+                                        <div class="form-group">
+                                            <label class="form-label">Card holder name *</label>
+                                            <input type="text" id="cardHolder" class="form-input"
+                                                placeholder="Name on card" autocomplete="off">
+                                            <span class="error-message" id="cardHolderError"></span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Card number *</label>
+                                            <input type="text" id="cardNumber" class="form-input"
+                                                placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="off">
+                                            <span class="error-message" id="cardNumberError"></span>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">Expiry date *</label>
+                                                <input type="text" id="expiryDate" class="form-input"
+                                                    placeholder="MM/YY" maxlength="5" autocomplete="off">
+                                                <span class="error-message" id="expiryDateError"></span>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">CVV *</label>
+                                                <input type="text" id="cvv" class="form-input" placeholder="123"
+                                                    maxlength="3" autocomplete="off">
+                                                <span class="error-message" id="cvvError"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- DIGITAL PAYMENT OPTION -->
+                                <div class="payment-option-box">
+                                    <label class="payment-option-header">
+                                        <input type="radio" name="paymentMethod" value="digital">
+                                        <div class="payment-option-title">
+                                            <span>Digital Payment</span>
+                                            <div class="digital-logos">
+                                                <span class="digital-logo">PayPal</span>
+                                                <span class="digital-logo">Touch 'n Go</span>
+                                                <span class="digital-logo">GrabPay</span>
+                                            </div>
+                                        </div>
+                                    </label>
+
+                                    <div class="payment-option-content" id="digitalPaymentContent">
+                                        <p class="info-text">You will be redirected to complete your payment securely.
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- TERMS AND CONDITIONS -->
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="termsCheckbox" required>
+                                    <span>I agree to the <a href="#" class="link">Terms and Conditions</a> and <a
+                                            href="#" class="link">Privacy Policy</a></span>
+                                </label>
+                                <span class="error-message" id="termsError"></span>
+                            </div>
+                        </div>
+
+                        <!-- ACTION BUTTONS -->
+                        <div class="button-group">
+                            <button type="button" class="btn-back" id="backToPassenger">
+                                <i class="fa fa-arrow-left"></i> Back
+                            </button>
+                            <button type="button" class="btn-pay" id="confirmPayment">
+                                Confirm & Pay <i class="fa fa-lock"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: CONFIRMATION -->
+                    <div class="checkout-step confirmation-section" id="step3">
+                        <div class="confirmation-icon">
+                            <i class="fa fa-check"></i>
+                        </div>
+
+                        <h2 class="step-title">Booking Confirmed!</h2>
+                        <p class="confirmation-subtitle">Your trip reservation has been successfully completed</p>
+
+                        <div class="confirmation-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Booking Reference</span>
+                                <span class="detail-value" id="bookingRef">#BK123456789</span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label">Confirmation Email Sent To</span>
+                                <span class="detail-value" id="confirmEmail">adamkhoo2004@gmail.com</span>
+                            </div>
+                        </div>
+
+                        <div class="section itinerary-recap">
+                            <h3 class="section-subtitle">Trip Itinerary</h3>
+                            <div id="confirmationItinerary"></div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="button-group">
+                            <button class="btn-secondary" onclick="window.location.href='profile.html'">
+                                <i class="fa fa-calendar"></i> View My Bookings
+                            </button>
+                            <button class="btn-primary" onclick="window.location.href='home.html'">
+                                <i class="fa fa-home"></i> Back to Home
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Booking Summary -->
+                <div class="checkout-right">
+                    <!-- Itinerary Summary -->
+                    <div class="booking-summary">
+                        <h3 class="summary-title">Booking Summary</h3>
+
+                        <div id="summaryItems" class="summary-items">
+                            <!-- Items will be loaded here -->
+                        </div>
+
+                        <div class="summary-divider"></div>
+
+                        <!-- Pricing -->
+                        <div class="pricing-details">
+                            <div class="price-row">
+                                <span>Subtotal</span>
+                                <span id="summarySubtotal">RM0</span>
+                            </div>
+                            <div class="price-row">
+                                <span>Service Fee (10%)</span>
+                                <span id="summaryServiceFee">RM0</span>
+                            </div>
+                            <div class="price-row total">
+                                <span>Total</span>
+                                <span id="summaryTotal">RM0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Processing your booking...</p>
+    </div>
+</body>
+
+</html>

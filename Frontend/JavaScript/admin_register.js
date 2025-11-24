@@ -1,9 +1,18 @@
 // JavaScript/admin_register.js
 
 // --- Imports ---
-import { auth, db } from './firebase-config.js'; // Import auth and db
-import { onAuthStateChanged, getIdToken, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { auth, db } from './firebase-config.js';
+import { 
+    onAuthStateChanged, 
+    createUserWithEmailAndPassword,
+    signOut 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { 
+    doc, 
+    getDoc, 
+    setDoc, 
+    serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { showToast, setLoading, showError, hideError } from './utils.js';
 import { handleLogout } from './auth.js';
 
@@ -21,7 +30,7 @@ function nextStep() {
     if (!document.getElementById('registrationForm')) return;
     console.log('nextStep called, currentStep:', currentStep);
     if (validateCurrentStep()) {
-        if (currentStep < 2) { // Only 2 steps
+        if (currentStep < 2) {
             currentStep++;
             updateUI();
             console.log('Moved to step:', currentStep);
@@ -60,12 +69,12 @@ function updateUI() {
             }
         }
     }
+    
     // Hide line2/step3 if they exist in the HTML by mistake
     const line2 = document.getElementById('line2');
     if (line2) line2.style.display = 'none';
     const step3 = document.getElementById('step3');
     if (step3) step3.style.display = 'none';
-
 
     // Update step info
     const titleEl = document.getElementById('stepTitle');
@@ -77,7 +86,7 @@ function updateUI() {
 
     // Update form steps visibility
     document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
-    const stepIds = ['personalInfo', 'passwordSetup']; // Only 2 steps
+    const stepIds = ['personalInfo', 'passwordSetup'];
     const activeStep = document.getElementById(stepIds[currentStep - 1]);
     if (activeStep) activeStep.classList.add('active');
 }
@@ -93,7 +102,6 @@ function validateCurrentStep() {
     }
 
     if (currentStep === 1) {
-        // --- Full Step 1 Validation (CORRECTED) ---
         const firstName = document.getElementById('firstName').value.trim();
         const lastName = document.getElementById('lastName').value.trim();
         const email = document.getElementById('email').value.trim();
@@ -144,7 +152,6 @@ function validateCurrentStep() {
         return isValid;
 
     } else if (currentStep === 2) {
-        // --- Full Step 2 Validation (Password) ---
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
 
@@ -169,7 +176,7 @@ function validateCurrentStep() {
         return isValid;
     }
 
-    return isValid; // Default return
+    return isValid;
 }
 
 function getInitials(firstName = '', lastName = '') {
@@ -190,10 +197,10 @@ function updateHeaderUI(userData) {
 
     const firstName = userData.firstName || '';
     const lastName = userData.lastName || '';
-    profileNameEl.textContent = `${firstName} ${lastName}`.trim() || 'Super Admin'; // Fallback text
+    profileNameEl.textContent = `${firstName} ${lastName}`.trim() || 'Super Admin';
 
     const photoURL = userData.profilePhotoURL;
-    profileAvatarEl.innerHTML = ''; // Clear
+    profileAvatarEl.innerHTML = '';
 
     if (photoURL) {
         const cacheBustedURL = `${photoURL}?t=${new Date().getTime()}`;
@@ -201,6 +208,9 @@ function updateHeaderUI(userData) {
         img.src = cacheBustedURL;
         img.alt = "Avatar";
         img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:50%;";
+        img.onerror = () => {
+            profileAvatarEl.textContent = getInitials(firstName, lastName);
+        };
         profileAvatarEl.appendChild(img);
     } else {
         profileAvatarEl.textContent = getInitials(firstName, lastName);
@@ -208,23 +218,26 @@ function updateHeaderUI(userData) {
     profileDropdown.style.display = 'flex';
 }
 
-function toggleDropdown() {
+function toggleDropdown(event) {
+    event.stopPropagation();
     const dropdown = document.getElementById('profileDropdown');
     if (dropdown) {
         dropdown.classList.toggle('active');
+        console.log('Dropdown toggled:', dropdown.classList.contains('active'));
     }
 }
 
-// --- Core Admin Registration Logic ---
+// --- Core Admin Registration Logic (FRONTEND ONLY - NO BACKEND) ---
 async function handleAdminRegistration(event) {
     event.preventDefault();
     const form = event.target;
 
     if (currentStep !== 2 || !validateCurrentStep()) {
-        showError('Please complete all fields correctly', true);
+        showToast('Please complete all fields correctly', true);
         return;
     }
-    if (!currentSuperAdmin) { // Security check
+    
+    if (!currentSuperAdmin) {
         showToast('Authentication error. Please log in again.', true);
         return;
     }
@@ -233,48 +246,63 @@ async function handleAdminRegistration(event) {
     setLoading(registerBtn, true, 'Creating Admin Account...', 'Create Account');
 
     // Get all form data for the NEW admin
-    const email = form.querySelector('#email').value;
+    const email = form.querySelector('#email').value.trim();
     const password = form.querySelector('#password').value;
-    const firstName = form.querySelector('#firstName').value;
-    const lastName = form.querySelector('#lastName').value;
+    const firstName = form.querySelector('#firstName').value.trim();
+    const lastName = form.querySelector('#lastName').value.trim();
     const birthDate = form.querySelector('#birthDate').value;
     const gender = form.querySelector('#gender').value;
-    const phone = form.querySelector('#phone').value;
+    const phone = form.querySelector('#phone').value.trim();
 
     try {
-        // Step 1: Get the logged-in SUPERADMIN's ID Token
-        const idToken = await currentSuperAdmin.getIdToken();
-
-        // Step 2: Send NEW admin data and SUPERADMIN's token to the backend
+        console.log('Creating new admin account...');
+        
+        // Step 1: Create new admin user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const newAdminUid = userCredential.user.uid;
+        
+        console.log(`✅ Admin created in Auth: ${newAdminUid}`);
+        
+        // Step 2: Create admin profile in Firestore
         const profileData = {
-            firstName, lastName, birthDate, gender, phone, email,
-            password // Send password to backend
+            firstName,
+            lastName,
+            birthDate,
+            gender,
+            phone,
+            email,
+            role: 'admin',
+            createdAt: serverTimestamp(),
+            createdBy: currentSuperAdmin.uid,
+            profilePhotoURL: null
         };
-
-        const backendResponse = await fetch('http://127.0.0.1:5000/create-admin', { // Call the correct route
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-            body: JSON.stringify(profileData)
-        });
-
-        if (!backendResponse.ok) {
-            const errorData = await backendResponse.json();
-            throw new Error(errorData.message || 'Failed to create admin.');
-        }
-
-        // Step 3: Success
-        const result = await backendResponse.json();
-        console.log('Backend response:', result);
-        showToast('Admin account created successfully!', false);
-        currentStep = 1;
-        updateUI();
-        form.reset();
+        
+        await setDoc(doc(db, 'users', newAdminUid), profileData);
+        console.log('✅ Admin profile created in Firestore');
+        
+        // Step 3: Sign out the newly created admin
+        await signOut(auth);
+        console.log('✅ Signed out new admin');
+        
+        // Step 4: Show success message and redirect
+        showToast('✅ Admin account created successfully! Redirecting to login...', false);
+        
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
 
     } catch (error) {
         console.error('Admin registration failed:', error);
-        // Check for specific backend errors
-        if (error.message.includes('Email already in use')) {
+        
+        // Handle specific errors
+        if (error.code === 'auth/email-already-in-use') {
             showError('emailError', 'This email is already in use.');
+            currentStep = 1;
+            updateUI();
+        } else if (error.code === 'auth/weak-password') {
+            showError('passwordError', 'Password is too weak.');
+        } else if (error.code === 'auth/invalid-email') {
+            showError('emailError', 'Invalid email address.');
             currentStep = 1;
             updateUI();
         } else {
@@ -291,34 +319,28 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Authentication Check ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            currentSuperAdmin = user; // Store the logged-in user
+            currentSuperAdmin = user;
             console.log("Auth State: User signed in (UID:", user.uid + ")");
             try {
-                // Check the user's role
                 const userDocRef = doc(db, 'users', user.uid);
                 const docSnap = await getDoc(userDocRef);
 
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
 
-                    // --- ADDED: Update Header UI ---
                     updateHeaderUI(userData);
-                    // --- END ADDED ---
 
                     // --- SECURITY CHECK ---
                     if (userData.role !== 'superadmin') {
-                        // If not a superadmin, redirect them
                         console.warn("Access Denied: User is not a superadmin.");
                         showToast("You do not have permission to access this page.", true);
                         setTimeout(() => { window.location.href = 'admin_dashboard.html'; }, 3000);
-                        return; // Stop further execution
+                        return;
                     }
 
                     console.log("Superadmin access confirmed.");
-                    // Now that we know user is a superadmin, set up the page listeners
                     setupPageListeners();
                 } else {
-                    // This superadmin's profile doc is missing
                     console.error("Critical: Superadmin data missing from Firestore:", user.uid);
                     showToast("Error: Your profile data not found. Logging out.", true);
                     await handleLogout();
@@ -329,13 +351,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 await handleLogout();
             }
         } else {
-            // No user signed in
             console.log("Auth State: User signed out. Redirecting to login.");
             window.location.href = 'login.html';
         }
     });
-
-}); // End of DOMContentLoaded
+});
 
 function setupPageListeners() {
     console.log('Setting up Admin Registration Form');
@@ -365,20 +385,27 @@ function setupPageListeners() {
         console.log('Registration listeners attached.');
     }
 
+    // ===== PROFILE DROPDOWN LISTENERS =====
     const logoutButton = document.getElementById('logoutButton');
     if (logoutButton) {
         logoutButton.addEventListener('click', handleLogout);
         console.log('Logout listener attached.');
     }
 
-    const profileTrigger = document.querySelector('.profile-trigger');
+    // Profile trigger - use ID selector
+    const profileTrigger = document.getElementById('profileDropdown');
     if (profileTrigger) {
-        profileTrigger.addEventListener('click', toggleDropdown);
+        const trigger = profileTrigger.querySelector('.profile-trigger');
+        if (trigger) {
+            trigger.addEventListener('click', toggleDropdown);
+            console.log('Profile trigger listener attached.');
+        }
     }
 
+    // Close dropdown when clicking outside
     document.addEventListener('click', function (event) {
         const profileDropdown = document.getElementById('profileDropdown');
-        if (profileDropdown && !profileDropdown.contains(event.target) && !event.target.closest('.profile-trigger')) {
+        if (profileDropdown && !profileDropdown.contains(event.target)) {
             profileDropdown.classList.remove('active');
         }
     });

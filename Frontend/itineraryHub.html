@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itinerary Hub - Travel.Co Admin</title>
+
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="./Css/itinerary_hub.css">
+    <script type="module" src="./JavaScript/firebase-config.js"></script>
+    <script type="module" src="./JavaScript/auth.js"></script>
+    <script type="module" src="./JavaScript/itinerary_hub.js"></script>
+</head>
+
+<body>
+    <!-- Toast Message -->
+    <div id="messageToast" class="message-toast"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <!-- Logo -->
+            <div class="nav-left">
+                <div class="logo">
+                    <i class="fa fa-plane"></i> Travel.Co
+                </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="admin_dashboard.html">User Management</a></li>
+                    <li><a href="itineraryHub.html" class="active">Itinerary Hub</a></li>
+                    <li><a href="reports.html">Business Reports</a></li>
+                    <li id="registerAdminNav" style="display: none;">
+                        <a href="admin_register.html">Register Admin</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Profile Dropdown -->
+            <div class="nav-right">
+                <div class="profile-dropdown" id="profileDropdown" style="display: none;">
+                    <div class="profile-trigger" id="profileTrigger">
+                        <div class="profile-avatar" id="profileAvatarInitials"></div>
+                        <span class="profile-name" id="profileName">Admin</span>
+                        <span class="arrow"><i class="fa fa-chevron-down"></i></span>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="admin_profile.html" class="dropdown-item">
+                            <i class="fa fa-user dropdown-icon"></i> Profile
+                        </a>
+                        <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                            <i class="fa fa-sign-out-alt dropdown-icon"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title">
+                    <i class="fa fa-map-marked-alt"></i> Itinerary Management Hub
+                </h1>
+                <p class="page-subtitle">Create, manage, and monitor all your travel itineraries</p>
+            </div>
+            <div class="header-actions">
+                <a href="add_trip.html" class="btn-add">
+                    <i class="fa fa-plus"></i> Create New Itinerary
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Stats Dashboard -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <!-- Total Itineraries -->
+                <div class="stat-card blue-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-list-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">Total Itineraries</span>
+                        <span class="stat-value" id="totalTrips">0</span>
+                    </div>
+                </div>
+
+                <!-- Published -->
+                <div class="stat-card green-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">Published</span>
+                        <span class="stat-value" id="publishedTrips">0</span>
+                    </div>
+                </div>
+
+                <!-- Drafts -->
+                <div class="stat-card gray-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-file-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">Drafts</span>
+                        <span class="stat-value" id="draftTrips">0</span>
+                    </div>
+                </div>
+
+                <!-- Total Interests -->
+                <div class="stat-card red-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-heart"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">Total Interests</span>
+                        <span class="stat-value" id="totalInterests">0</span>
+                    </div>
+                </div>
+
+                <!-- Payment Open -->
+                <div class="stat-card orange-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">Payment Open</span>
+                        <span class="stat-value" id="paymentOpenCount">0</span>
+                    </div>
+                </div>
+
+                <!-- Threshold Reached -->
+                <div class="stat-card purple-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-flag-checkered"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">Threshold Reached</span>
+                        <span class="stat-value" id="thresholdReachedCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters and Search -->
+        <section class="filters-section">
+            <div class="filters-container">
+                <div class="search-wrapper">
+                    <i class="fa fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search by title, destination, or tags..."
+                        class="search-input">
+                </div>
+
+                <div class="filters-group">
+                    <div class="filter-item">
+                        <label for="statusFilter" class="filter-label">Status</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="all">All Status</option>
+                            <option value="published">Published</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+
+                    <!-- Payment Status Filter -->
+                    <div class="filter-item">
+                        <label for="paymentStatusFilter" class="filter-label">Payment Status</label>
+                        <select id="paymentStatusFilter" class="filter-select">
+                            <option value="all">All Payment Status</option>
+                            <option value="closed">Closed</option>
+                            <option value="open">Open</option>
+                            <option value="booking_closed">Booking Closed</option>
+                        </select>
+                    </div>
+
+                    <!-- Interest Filter -->
+                    <div class="filter-item">
+                        <label for="interestFilter" class="filter-label">Interest Level</label>
+                        <select id="interestFilter" class="filter-select">
+                            <option value="all">All Interest Levels</option>
+                            <option value="threshold-reached">Threshold Reached</option>
+                            <option value="below-threshold">Below Threshold</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <label for="destinationFilter" class="filter-label">Destination</label>
+                        <select id="destinationFilter" class="filter-select">
+                            <option value="all">All Destinations</option>
+                            <!-- Will be populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <label for="sortFilter" class="filter-label">Sort By</label>
+                        <select id="sortFilter" class="filter-select">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="title-asc">Title: A-Z</option>
+                            <option value="title-desc">Title: Z-A</option>
+                            <option value="budget-high">Budget: High to Low</option>
+                            <option value="budget-low">Budget: Low to High</option>
+                            <option value="days-high">Duration: Longest</option>
+                            <option value="days-low">Duration: Shortest</option>
+                            <option value="interest-high">Interest: High to Low</option>
+                            <option value="interest-low">Interest: Low to High</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-reset-filters" id="resetFilters">
+                        <i class="fa fa-redo"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Itineraries Grid -->
+        <section class="itineraries-section">
+            <div class="section-header">
+                <h2 class="section-title">All Itineraries</h2>
+                <span class="results-count" id="resultsCount">0 itineraries found</span>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-container" id="loadingState">
+                <div class="loading-spinner">
+                    <i class="fa fa-spinner fa-spin"></i>
+                </div>
+                <p class="loading-text">Loading itineraries...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fa fa-map"></i>
+                </div>
+                <h3 class="empty-title">No Itineraries Yet</h3>
+                <p class="empty-text">Start creating amazing travel experiences for your customers</p>
+                <a href="add_trip.html" class="btn-create-first">
+                    <i class="fa fa-plus"></i> Create Your First Itinerary
+                </a>
+            </div>
+
+            <!-- No Results State -->
+            <div class="no-results-state" id="noResultsState" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fa fa-search"></i>
+                </div>
+                <h3 class="empty-title">No Results Found</h3>
+                <p class="empty-text">Try adjusting your search or filters</p>
+                <button class="btn-reset-search" onclick="document.getElementById('resetFilters').click()">
+                    <i class="fa fa-redo"></i> Clear Filters
+                </button>
+            </div>
+
+            <!-- Itineraries Grid Container -->
+            <div class="itineraries-grid" id="itinerariesGrid">
+                <!-- Cards will be dynamically inserted here -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container" id="paginationContainer" style="display: none;">
+                <button class="pagination-btn" id="prevPage" disabled>
+                    <i class="fa fa-chevron-left"></i> Previous
+                </button>
+                <div class="pagination-info">
+                    <span class="page-number">Page <span id="currentPage">1</span> of <span
+                            id="totalPages">1</span></span>
+                </div>
+                <button class="pagination-btn" id="nextPage">
+                    Next <i class="fa fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Trip Details Modal -->
+    <div id="tripModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fa fa-info-circle"></i> Itinerary Details</h2>
+                <button class="modal-close" id="closeModal">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Trip details will be loaded here -->
+            </div>
+            <div class="modal-actions" style="display: none;">
+                <!-- Buttons will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content modal-confirm">
+            <div class="modal-header modal-header-danger">
+                <h2><i class="fa fa-trash-alt"></i> Delete Itinerary</h2>
+                <button class="modal-close" onclick="document.getElementById('deleteModal').classList.remove('show')">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-message">
+                    <i class="fa fa-exclamation-triangle confirm-icon-danger"></i>
+                    <p class="confirm-text-bold">Are you sure you want to delete this itinerary?</p>
+                    <p class="confirm-details" id="deleteDetails"></p>
+                    <p class="confirm-warning">This action cannot be undone. All data including images and activities
+                        will be permanently deleted.</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-cancel"
+                        onclick="document.getElementById('deleteModal').classList.remove('show')">
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fa fa-trash"></i> Delete Permanently
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Configuration Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2><i class="fa fa-dollar-sign"></i> Open Payment Window</h2>
+                <button class="modal-close" id="closePaymentModal">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="payment-config-info">
+                    <div class="info-row">
+                        <span class="info-label">Itinerary:</span>
+                        <span class="info-value" id="paymentItineraryTitle">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Interest Count:</span>
+                        <span class="info-value">
+                            <span id="paymentInterestCount">0</span> /
+                            <span id="paymentThreshold">0</span> people
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Price per Person:</span>
+                        <span class="info-value" id="paymentPrice">RM 0</span>
+                    </div>
+                </div>
+
+                <div class="alert-info">
+                    <i class="fa fa-info-circle"></i>
+                    <p>Opening payment will notify all interested users and allow them to complete their booking.</p>
+                </div>
+
+                <form id="paymentConfigForm">
+                    <div class="form-group">
+                        <label for="paymentDeadlineDate">
+                            Payment Deadline <span class="required">*</span>
+                        </label>
+                        <input type="date" id="paymentDeadlineDate" class="form-input" required>
+                        <small>Users must complete payment by this date</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paymentDeadlineTime">
+                            Deadline Time <span class="required">*</span>
+                        </label>
+                        <input type="time" id="paymentDeadlineTime" class="form-input" value="23:59" required>
+                    </div>
+
+                    <div class="alert-warning">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>Important:</strong> Once payment is opened, interested users will be able to proceed
+                            with booking. Make sure all itinerary details are finalized.
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-cancel" id="cancelPaymentBtn">
+                            <i class="fa fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-unlock"></i> Open Payment Window
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Payment Confirmation Modal -->
+    <div id="closePaymentModal" class="modal">
+        <div class="modal-content modal-confirm">
+            <div class="modal-header modal-header-warning">
+                <h2><i class="fa fa-times-circle"></i> Close Payment Window</h2>
+                <button class="modal-close"
+                    onclick="document.getElementById('closePaymentModal').classList.remove('show')">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-message">
+                    <i class="fa fa-exclamation-triangle confirm-icon-warning"></i>
+                    <p class="confirm-text-bold">Close payment window for this itinerary?</p>
+                    <p class="confirm-details" id="closePaymentDetails"></p>
+                    <p class="confirm-warning">
+                        Users who have not completed payment will no longer be able to book this trip.
+                        This action can be reopened if needed.
+                    </p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-cancel"
+                        onclick="document.getElementById('closePaymentModal').classList.remove('show')">
+                        <i class="fa fa-times"></i> Cancel
+                    </button>
+                    <button class="btn btn-warning" id="confirmClosePaymentBtn">
+                        <i class="fa fa-times-circle"></i> Close Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reopen Booking Modal -->
+    <div class="modal" id="reopenModal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2><i class="fa fa-undo"></i> Reopen Booking Window</h2>
+                <button class="modal-close" onclick="closeReopenModal()">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-info">
+                    <i class="fa fa-info-circle"></i>
+                    <p>Reopen this itinerary to accept more bookings. You can increase capacity and set a new deadline.
+                    </p>
+                </div>
+
+                <div class="payment-config-info">
+                    <div class="info-row">
+                        <span class="info-label">Current Bookings</span>
+                        <span class="info-value" id="reopenCurrentBookings">0</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Previous Max Capacity</span>
+                        <span class="info-value" id="reopenOldMaxBookings">0</span>
+                    </div>
+                </div>
+
+                <form id="reopenForm">
+                    <div class="form-group">
+                        <label for="reopenMaxBookings">
+                            New Maximum Bookings <span class="required">*</span>
+                        </label>
+                        <input type="number" id="reopenMaxBookings" class="form-input" placeholder="Enter new capacity"
+                            min="1" required>
+                        <small>Must be at least equal to current bookings</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reopenDeadline">
+                            New Payment Deadline <span class="required">*</span>
+                        </label>
+                        <input type="date" id="reopenDeadline" class="form-input" required>
+                        <small>Deadline must be in the future</small>
+                    </div>
+                </form>
+
+                <div class="alert-warning">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Important:</strong>
+                        <p>Reopening will allow new users to book this itinerary. Make sure you have capacity to
+                            accommodate more travelers.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions reopen-modal-actions">
+                <button class="btn btn-cancel" onclick="closeReopenModal()">
+                    <i class="fa fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-primary" onclick="submitReopen()">
+                    <i class="fa fa-check"></i> Reopen Booking
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

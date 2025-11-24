@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Reports - Travel.Co Admin</title>
+
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="../Frontend/Css/admin_dashboard.css">
+
+    <!-- Your JavaScript -->
+    <script type="module" src="./JavaScript/firebase-config.js"></script>
+    <script type="module" src="./JavaScript/auth.js"></script>
+    <script type="module" src="./JavaScript/reports.js"></script>
+</head>
+
+<body>
+    <!-- Toast Message -->
+    <div id="messageToast" class="message-toast"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <!-- Logo -->
+            <div class="nav-left">
+                <div class="logo">
+                    <i class="fa fa-plane"></i> Travel.Co
+                </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="admin_dashboard.html">User Management</a></li>
+                    <li><a href="itineraryHub.html">Itinerary Hub</a></li> 
+                    <li><a href="reports.html" class="active">Business Reports</a></li>
+                    <li id="registerAdminNav" style="display: none;">
+                        <a href="admin_register.html">Register Admin</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Profile Dropdown -->
+            <div class="nav-right">
+                <div class="profile-dropdown" id="profileDropdown" style="display: none;">
+                    <div class="profile-trigger" id="profileTrigger">
+                        <div class="profile-avatar" id="profileAvatarInitials"></div>
+                        <span class="profile-name" id="profileName">Admin</span>
+                        <span class="arrow"><i class="fa fa-chevron-down"></i></span>
+                    </div>
+                    <div class="dropdown-menu">
+                        <a href="admin_profile.html" class="dropdown-item">
+                            <i class="fa fa-user dropdown-icon"></i> Profile
+                        </a>
+                        <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                            <i class="fa fa-sign-out-alt dropdown-icon"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-dashboard-main">
+        <!-- Page Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">
+                <i class="fa fa-chart-bar"></i> Business Reports & Analytics
+            </h1>
+            <button class="btn-primary" id="exportPdfBtn">
+                <i class="fa fa-file-pdf"></i> Export as PDF
+            </button>
+        </div>
+
+        <!-- Time Period Filter -->
+        <section class="dashboard-section" id="time-filter">
+            <div class="filter-bar">
+                <span class="filter-label">Select Time Period:</span>
+                <button class="filter-btn active" data-period="week">This Week</button>
+                <button class="filter-btn" data-period="month">This Month</button>
+                <button class="filter-btn" data-period="year">This Year</button>
+            </div>
+        </section>
+
+        <!-- SECTION 1: Business Overview -->
+        <section class="dashboard-section">
+            <h2 class="section-title">
+                <i class="fa fa-chart-line"></i> Business Overview
+            </h2>
+            <div class="stats-grid stats-grid-4">
+                <!-- Total Itineraries Card -->
+                <div class="stat-card blue-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-route"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">AI Itineraries Generated</span>
+                        <span class="stat-value" id="totalItinerariesCount">...</span>
+                    </div>
+                </div>
+
+                <!-- Total Bookings Card (with Growth Indicator) -->
+                <div class="stat-card green-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-ticket-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">Confirmed Bookings</span>
+                        <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: nowrap;">
+                            <span class="stat-value" id="totalBookingsCount">...</span>
+                            <span class="stat-growth" id="bookingsGrowth"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Revenue Card (with Growth Indicator) -->
+                <div class="stat-card orange-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">Total Revenue</span>
+                        <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: nowrap;">
+                            <span class="stat-value" id="totalRevenueCount">...</span>
+                            <span class="stat-growth" id="revenueGrowth"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Destination Card -->
+                <div class="stat-card red-accent">
+                    <div class="stat-icon">
+                        <i class="fa fa-map-marker-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-title">Top Destination</span>
+                        <span class="stat-value" id="topDestinationName">...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Business Trends -->
+        <section class="dashboard-section">
+            <h2 class="section-title">
+                <i class="fa fa-chart-area"></i> Business Trends
+            </h2>
+            <div class="charts-grid">
+                <!-- Revenue Over Time Chart -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Revenue Over Time</h3>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+
+                <!-- Average Booking Value Chart -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Average Booking Value</h3>
+                    <canvas id="avgBookingValueChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Trip Analytics (NEW) -->
+        <section class="dashboard-section">
+            <h2 class="section-title">
+                <i class="fa fa-globe-asia"></i> Trip Analytics
+            </h2>
+            <div class="charts-grid">
+                <!-- Top Destinations Chart -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Top Destinations</h3>
+                    <canvas id="destinationsChart"></canvas>
+                </div>
+
+                <!-- Trip Duration Distribution Chart -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Trip Duration Distribution</h3>
+                    <canvas id="tripDurationChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Booking Analytics -->
+        <section class="dashboard-section">
+            <h2 class="section-title">
+                <i class="fa fa-chart-pie"></i> Booking Analytics
+            </h2>
+            <div class="charts-grid">
+                <!-- Booking Distribution Chart -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Booking Distribution</h3>
+                    <canvas id="themesChart"></canvas>
+                </div>
+
+                <!-- Booking Trends Chart -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Booking Trends</h3>
+                    <canvas id="bookingsChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

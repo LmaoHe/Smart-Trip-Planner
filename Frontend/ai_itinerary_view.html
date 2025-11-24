@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Saved Itinerary - Travel.Co</title>
+    <link rel="stylesheet" href="./Css/ai_itinerary_view.css">
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script type="module" src="./JavaScript/ai_itinerary_view.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+
+    <!-- Header / Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo" onclick="window.location.href='home.html'">
+                    <i class="gg-airplane"></i> Travel.Co
+                </div>
+            </div>
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
+                    <li><a href="planItinerary.html">Trip Planner</a></li>
+                </ul>
+            </nav>
+            <div class="nav-right">
+                <a href="wishlist.html" class="wishlist-icon-wrapper" id="wishlistIconWrapper">
+                    <i class="fa fa-heart"></i>
+                </a>
+
+                <div class="user-profile">
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-trigger">
+                            <div class="profile-avatar" id="profileAvatarInitials"></div>
+                            <span class="profile-name" id="profileName"></span>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="profile.html" class="dropdown-item">
+                                <i class="fa fa-user dropdown-icon"></i>
+                                Profile
+                            </a>
+                            <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                                <i class="fa fa-sign-out dropdown-icon"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- LOADING SCREEN -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-container">
+            <div class="loader"></div>
+            <h2>Loading your itinerary...</h2>
+        </div>
+    </div>
+
+    <!-- ITINERARY SCREEN -->
+    <div id="itineraryScreen" class="itinerary-screen" style="display: none;">
+        <div class="container">
+            
+            <!-- TRIP HEADER -->
+            <div class="trip-header">
+                <button class="btn-back" onclick="window.location.href='profile.html'">
+                    <i class="fa fa-arrow-left"></i> Back to Profile
+                </button>
+                <div class="trip-info">
+                    <div class="trip-badge">
+                        <i class="fa fa-robot"></i> AI Generated
+                    </div>
+                    <h1 id="tripTitle">Your Itinerary</h1>
+                    <p id="tripSubtitle">3 Days in Penang, Malaysia</p>
+                </div>
+                
+                <!-- ✅ DOWNLOAD PDF BUTTON -->
+                <button class="btn btn-primary btn-download-pdf" onclick="downloadPDFWithTabsEnhanced()" style="margin-top: 1rem; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto; display: flex;">
+                    <i class="fa fa-file-pdf"></i> Download Complete PDF
+                </button>
+            </div>
+
+            <!-- FLIGHT SECTION -->
+            <div id="flightSection" class="section"></div>
+
+            <!-- DAY TABS -->
+            <div class="day-tabs" id="dayTabsContainer"></div>
+
+            <!-- ITINERARY CONTENT -->
+            <div id="itineraryContent" class="itinerary-content"></div>
+
+            <!-- HOTEL SECTION -->
+            <div id="hotelSection" class="section"></div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -5,7 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Trip Planner - Register Admin</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Your CSS -->
     <link rel="stylesheet" href="../Frontend/Css/admin_register.css">
+    
+    <!-- Your JavaScript -->
     <script type="module" src="./JavaScript/firebase-config.js"></script>
     <script type="module" src="./JavaScript/admin_register.js"></script>
 </head>
@@ -16,30 +23,33 @@
     <header class="header">
         <div class="nav-container">
             <div class="nav-left">
-                <div class="logo">✈️ Travel.Co</div>
+                <div class="logo">
+                    <i class="fa fa-plane"></i> Travel.Co
+                </div>
             </div>
             <nav class="nav-center">
                 <ul class="nav-menu">
-                    <li><a href="admin_dashboard.html" class="active">Home</a></li>
-                    <li><a href="user_management.html">Member</a></li>
-                    <li><a href="admin_register.html">Register Admin</a></li>
+                    <li><a href="admin_dashboard.html">User Management</a></li>
+                    <li><a href="itineraryHub.html">Itinerary Hub</a></li> 
+                    <li><a href="reports.html">Business Reports</a></li>
+                    <li><a href="admin_register.html" class="active">Register Admin</a></li>
                 </ul>
             </nav>
             <div class="nav-right">
                 <div class="user-profile">
-                    <div class="profile-dropdown" id="profileDropdown">
+                    <div class="profile-dropdown" id="profileDropdown" style="display: none;">
                         <div class="profile-trigger">
                             <div class="profile-avatar" id="profileAvatarInitials"></div>
                             <span class="profile-name" id="profileName"></span>
-                            <span class="arrow">▼</span>
+                            <span class="arrow"><i class="fa fa-chevron-down"></i></span>
                         </div>
                         <div class="dropdown-menu">
                             <a href="admin_profile.html" class="dropdown-item">
-                                <span class="dropdown-icon">👤</span>
+                                <i class="fa fa-user dropdown-icon"></i>
                                 Profile
                             </a>
                             <a href="#logout" class="dropdown-item logout" id="logoutButton">
-                                <span class="dropdown-icon">🚪</span>
+                                <i class="fa fa-sign-out-alt dropdown-icon"></i>
                                 Logout
                             </a>
                         </div>
@@ -58,26 +68,31 @@
                 <form id="registrationForm" novalidate>
                     <div class="form-step active" id="personalInfo">
                         <div class="form-row">
-                            <div class="form-group"> <label for="firstName">First Name</label> <input type="text"
-                                    id="firstName" placeholder="Enter first name" required>
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" placeholder="Enter first name" required>
                                 <div class="error-message" id="firstNameError"></div>
                             </div>
-                            <div class="form-group"> <label for="lastName">Last Name</label> <input type="text"
-                                    id="lastName" placeholder="Enter last name" required>
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" placeholder="Enter last name" required>
                                 <div class="error-message" id="lastNameError"></div>
                             </div>
                         </div>
-                        <div class="form-group"> <label for="email">Email Address</label> <input type="email" id="email"
-                                placeholder="Enter email address" required>
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" placeholder="Enter email address" required>
                             <div class="error-message" id="emailError"></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"> <label for="birthDate">Birth Date</label> <input type="date"
-                                    id="birthDate">
+                            <div class="form-group">
+                                <label for="birthDate">Birth Date</label>
+                                <input type="date" id="birthDate">
                                 <div class="error-message" id="birthDateError"></div>
                             </div>
-                            <div class="form-group"> <label for="gender">Gender</label> <select id="gender"
-                                    class="form-input">
+                            <div class="form-group">
+                                <label for="gender">Gender</label>
+                                <select id="gender" class="form-input">
                                     <option value="">Select...</option>
                                     <option value="male">Male</option>
                                     <option value="female">Female</option>
@@ -87,22 +102,25 @@
                                 <div class="error-message" id="genderError"></div>
                             </div>
                         </div>
-                        <div class="form-group"> <label for="phone">Phone Number</label> <input type="tel" id="phone"
-                                placeholder="Enter phone number">
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" placeholder="Enter phone number">
                             <div class="error-message" id="phoneError"></div>
                         </div>
-                        <div class="form-navigation single-button"> <button type="button" class="btn-primary"
-                                id="nextBtnStep1">Continue</button>
+                        <div class="form-navigation single-button">
+                            <button type="button" class="btn-primary" id="nextBtnStep1">Continue</button>
                         </div>
                     </div>
 
                     <div class="form-step" id="passwordSetup">
-                        <div class="form-group"> <label for="password">Password</label> <input type="password"
-                                id="password" placeholder="Create strong password" required>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" placeholder="Create strong password" required>
                             <div class="error-message" id="passwordError"></div>
                         </div>
-                        <div class="form-group"> <label for="confirmPassword">Confirm Password</label> <input
-                                type="password" id="confirmPassword" placeholder="Confirm password" required>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" placeholder="Confirm password" required>
                             <div class="error-message" id="confirmPasswordError"></div>
                         </div>
                         <div class="form-navigation">

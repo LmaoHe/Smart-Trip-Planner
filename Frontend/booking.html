@@ -25,24 +25,29 @@
                 <ul class="nav-menu">
                     <li><a href="home.html">Home</a></li>
                     <li><a href="map.html">Map</a></li>
-                    <li><a href="booking.html" class="active">Booking</a></li>
+                    <li><a href="booking.html" class="active">Self Booking</a></li>
                     <li><a href="planItinerary.html">Trip Planner</a></li>
                 </ul>
             </nav>
             <div class="nav-right">
+                <!-- Wishlist/Interests Icon -->
+                <a href="wishlist.html" class="wishlist-icon-wrapper" id="wishlistIconWrapper" title="My Interests">
+                    <i class="fa fa-heart"></i>
+                </a>
+
                 <div class="user-profile">
-                    <div class="profile-dropdown" id="profileDropdown" style="display: none;">
-                        <div class="profile-trigger" id="profileTrigger">
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-trigger">
                             <div class="profile-avatar" id="profileAvatarInitials"></div>
                             <span class="profile-name" id="profileName"></span>
                         </div>
                         <div class="dropdown-menu">
                             <a href="profile.html" class="dropdown-item">
-                                <i class="gg-profile dropdown-icon"></i>
+                                <i class="fa fa-user dropdown-icon"></i>
                                 Profile
                             </a>
                             <a href="#logout" class="dropdown-item logout" id="logoutButton">
-                                <i class="gg-enter dropdown-icon"></i>
+                                <i class="fa fa-sign-out dropdown-icon"></i>
                                 Logout
                             </a>
                         </div>
@@ -74,36 +79,186 @@
                         <i class="gg-pin input-icon"></i>
                         <select class="inline-field" id="hotelDestSearch" required>
                             <option value="" disabled selected>Enter city name</option>
-                            <optgroup label="🇲🇾 Malaysia (Asia)">
+                            <!-- ASIA -->
+                            <optgroup label="🇲🇾 Malaysia">
                                 <option value="Kuala Lumpur">Kuala Lumpur (KUL)</option>
                                 <option value="Penang">Penang (PEN)</option>
-                                <option value="Johor Bahru">Johor Bahru (JHB)</option>
-                                <option value="Kota Kinabalu">Kota Kinabalu (BKI)</option>
+                                <option value="Langkawi">Langkawi (LGK)</option>
                             </optgroup>
-                            <optgroup label="🇫🇷 France (Europe)">
+
+                            <optgroup label="🇸🇬 Singapore">
+                                <option value="Singapore">Singapore (SIN)</option>
+                            </optgroup>
+
+                            <optgroup label="🇹🇭 Thailand">
+                                <option value="Bangkok">Bangkok (BKK)</option>
+                                <option value="Phuket">Phuket (HKT)</option>
+                                <option value="Chiang Mai">Chiang Mai (CNX)</option>
+                                <option value="Krabi">Krabi (KBV)</option>
+                            </optgroup>
+
+                            <optgroup label="🇮🇩 Indonesia">
+                                <option value="Bali">Bali (DPS)</option>
+                                <option value="Jakarta">Jakarta (CGK)</option>
+                                <option value="Yogyakarta">Yogyakarta (JOG)</option>
+                            </optgroup>
+
+                            <optgroup label="🇯🇵 Japan">
+                                <option value="Tokyo">Tokyo (NRT/HND)</option>
+                                <option value="Kyoto">Kyoto (KIX - Osaka)</option>
+                                <option value="Osaka">Osaka (KIX)</option>
+                                <option value="Hiroshima">Hiroshima (HIJ)</option>
+                            </optgroup>
+
+                            <optgroup label="🇰🇷 South Korea">
+                                <option value="Seoul">Seoul (ICN)</option>
+                                <option value="Busan">Busan (PUS)</option>
+                                <option value="Jeju Island">Jeju Island (CJU)</option>
+                            </optgroup>
+
+                            <optgroup label="🇻🇳 Vietnam">
+                                <option value="Hanoi">Hanoi (HAN)</option>
+                                <option value="Ho Chi Minh City">Ho Chi Minh City (SGN)</option>
+                                <option value="Da Nang">Da Nang (DAD)</option>
+                            </optgroup>
+
+                            <optgroup label="🇰🇭 Cambodia">
+                                <option value="Siem Reap">Siem Reap (REP)</option>
+                            </optgroup>
+
+                            <!-- EUROPE -->
+                            <optgroup label="🇫🇷 France">
                                 <option value="Paris">Paris (CDG)</option>
-                                <option value="Lyon">Lyon (LYS)</option>
                                 <option value="Nice">Nice (NCE)</option>
+                                <option value="Lyon">Lyon (LYS)</option>
                                 <option value="Marseille">Marseille (MRS)</option>
                             </optgroup>
-                            <optgroup label="🇺🇸 United States (North America)">
-                                <option value="New York">New York (JFK)</option>
+
+                            <optgroup label="🇮🇹 Italy">
+                                <option value="Rome">Rome (FCO)</option>
+                                <option value="Venice">Venice (VCE)</option>
+                                <option value="Florence">Florence (FLR)</option>
+                                <option value="Milan">Milan (MXP)</option>
+                                <option value="Naples">Naples (NAP)</option>
+                            </optgroup>
+
+                            <optgroup label="🇪🇸 Spain">
+                                <option value="Barcelona">Barcelona (BCN)</option>
+                                <option value="Madrid">Madrid (MAD)</option>
+                                <option value="Seville">Seville (SVQ)</option>
+                                <option value="Valencia">Valencia (VLC)</option>
+                            </optgroup>
+
+                            <optgroup label="🇬🇧 United Kingdom">
+                                <option value="London">London (LHR)</option>
+                                <option value="Edinburgh">Edinburgh (EDI)</option>
+                                <option value="Liverpool">Liverpool (LPL)</option>
+                            </optgroup>
+
+                            <optgroup label="🇩🇪 Germany">
+                                <option value="Berlin">Berlin (BER)</option>
+                                <option value="Munich">Munich (MUC)</option>
+                                <option value="Frankfurt">Frankfurt (FRA)</option>
+                            </optgroup>
+
+                            <optgroup label="🇳🇱 Netherlands">
+                                <option value="Amsterdam">Amsterdam (AMS)</option>
+                                <option value="Rotterdam">Rotterdam (RTM)</option>
+                            </optgroup>
+
+                            <optgroup label="🇨🇭 Switzerland">
+                                <option value="Zurich">Zurich (ZRH)</option>
+                                <option value="Geneva">Geneva (GVA)</option>
+                                <option value="Interlaken">Interlaken (ZRH - Zurich)</option>
+                            </optgroup>
+
+                            <optgroup label="🇬🇷 Greece">
+                                <option value="Athens">Athens (ATH)</option>
+                                <option value="Santorini">Santorini (JTR)</option>
+                                <option value="Mykonos">Mykonos (JMK)</option>
+                            </optgroup>
+
+                            <optgroup label="🇵🇹 Portugal">
+                                <option value="Lisbon">Lisbon (LIS)</option>
+                                <option value="Porto">Porto (OPO)</option>
+                            </optgroup>
+
+                            <optgroup label="🇨🇿 Czech Republic">
+                                <option value="Prague">Prague (PRG)</option>
+                            </optgroup>
+
+                            <!-- AMERICAS -->
+                            <optgroup label="🇺🇸 United States">
+                                <option value="New York">New York (JFK/EWR)</option>
                                 <option value="Los Angeles">Los Angeles (LAX)</option>
                                 <option value="San Francisco">San Francisco (SFO)</option>
-                                <option value="Miami">Miami (MIA)</option>
                                 <option value="Las Vegas">Las Vegas (LAS)</option>
+                                <option value="Miami">Miami (MIA)</option>
+                                <option value="Orlando">Orlando (MCO)</option>
                             </optgroup>
-                            <optgroup label="🇧🇷 Brazil (South America)">
-                                <option value="Sao Paulo">São Paulo (GRU)</option>
+
+                            <optgroup label="🇨🇦 Canada">
+                                <option value="Toronto">Toronto (YYZ)</option>
+                                <option value="Vancouver">Vancouver (YVR)</option>
+                                <option value="Montreal">Montreal (YUL)</option>
+                            </optgroup>
+
+                            <optgroup label="🇧🇷 Brazil">
                                 <option value="Rio de Janeiro">Rio de Janeiro (GIG)</option>
-                                <option value="Brasilia">Brasília (BSB)</option>
-                                <option value="Salvador">Salvador (SSA)</option>
+                                <option value="São Paulo">São Paulo (GRU)</option>
                             </optgroup>
-                            <optgroup label="🇲🇽 Mexico (Central America)">
-                                <option value="Mexico City">Mexico City (MEX)</option>
+
+                            <optgroup label="🇲🇽 Mexico">
                                 <option value="Cancun">Cancun (CUN)</option>
-                                <option value="Guadalajara">Guadalajara (GDL)</option>
-                                <option value="Cabo">Cabo (SJD)</option>
+                                <option value="Mexico City">Mexico City (MEX)</option>
+                                <option value="Playa del Carmen">Playa del Carmen (CUN - Cancun)</option>
+                            </optgroup>
+
+                            <optgroup label="🇵🇪 Peru">
+                                <option value="Cusco">Cusco (CUZ)</option>
+                                <option value="Lima">Lima (LIM)</option>
+                            </optgroup>
+
+                            <optgroup label="🇦🇷 Argentina">
+                                <option value="Buenos Aires">Buenos Aires (EZE)</option>
+                            </optgroup>
+
+                            <!-- MIDDLE EAST & AFRICA -->
+                            <optgroup label="🇦🇪 UAE">
+                                <option value="Dubai">Dubai (DXB)</option>
+                                <option value="Abu Dhabi">Abu Dhabi (AUH)</option>
+                            </optgroup>
+
+                            <optgroup label="🇹🇷 Turkey">
+                                <option value="Istanbul">Istanbul (IST)</option>
+                                <option value="Cappadocia">Cappadocia (ASR/NAV)</option>
+                            </optgroup>
+
+                            <optgroup label="🇪🇬 Egypt">
+                                <option value="Cairo">Cairo (CAI)</option>
+                                <option value="Luxor">Luxor (LXR)</option>
+                                <option value="Sharm El Sheikh">Sharm El Sheikh (SSH)</option>
+                            </optgroup>
+
+                            <optgroup label="🇲🇦 Morocco">
+                                <option value="Marrakech">Marrakech (RAK)</option>
+                                <option value="Casablanca">Casablanca (CMN)</option>
+                            </optgroup>
+
+                            <optgroup label="🇿🇦 South Africa">
+                                <option value="Cape Town">Cape Town (CPT)</option>
+                            </optgroup>
+
+                            <!-- OCEANIA -->
+                            <optgroup label="🇦🇺 Australia">
+                                <option value="Sydney">Sydney (SYD)</option>
+                                <option value="Melbourne">Melbourne (MEL)</option>
+                                <option value="Gold Coast">Gold Coast (OOL)</option>
+                            </optgroup>
+
+                            <optgroup label="🇳🇿 New Zealand">
+                                <option value="Auckland">Auckland (AKL)</option>
+                                <option value="Queenstown">Queenstown (ZQN)</option>
                             </optgroup>
                         </select>
                     </div>
@@ -122,7 +277,8 @@
                             <span id="guestsInlineDisplay">1 room, 2 adults, 0 children</span>
                             <i class="gg-chevron-down"></i>
                         </button>
-                        <div class="inline-guests-menu" id="guestsInlineMenu">
+                        <div class="inline-guests-menu" id="guestsInlineMenu" data-max-rooms="5" data-max-adults="9"
+                            data-max-children="4">
                             <div class="guests-control">
                                 <span>Rooms</span>
                                 <div class="counter">
@@ -192,36 +348,184 @@
                         <i class="gg-airplane input-icon"></i>
                         <select class="inline-field" id="flightFromSearch" required>
                             <option value="" disabled selected>From (City)</option>
-                            <optgroup label="🇲🇾 Malaysia (Asia)">
+                            <!-- ASIA -->
+                            <optgroup label="Malaysia">
                                 <option value="KUL">Kuala Lumpur (KUL)</option>
                                 <option value="PEN">Penang (PEN)</option>
-                                <option value="JHB">Johor Bahru (JHB)</option>
-                                <option value="BKI">Kota Kinabalu (BKI)</option>
+                                <option value="LGK">Langkawi (LGK)</option>
                             </optgroup>
-                            <optgroup label="🇫🇷 France (Europe)">
+
+                            <optgroup label="Singapore">
+                                <option value="SIN">Singapore (SIN)</option>
+                            </optgroup>
+
+                            <optgroup label="Thailand">
+                                <option value="BKK">Bangkok (BKK)</option>
+                                <option value="HKT">Phuket (HKT)</option>
+                                <option value="CNX">Chiang Mai (CNX)</option>
+                                <option value="KBV">Krabi (KBV)</option>
+                            </optgroup>
+
+                            <optgroup label="Indonesia">
+                                <option value="DPS">Bali (DPS)</option>
+                                <option value="CGK">Jakarta (CGK)</option>
+                                <option value="JOG">Yogyakarta (JOG)</option>
+                            </optgroup>
+
+                            <optgroup label="Japan">
+                                <option value="NRT">Tokyo (NRT/HND)</option>
+                                <option value="KIX">Osaka (KIX)</option>
+                                <option value="HIJ">Hiroshima (HIJ)</option>
+                            </optgroup>
+
+                            <optgroup label="South Korea">
+                                <option value="ICN">Seoul (ICN)</option>
+                                <option value="PUS">Busan (PUS)</option>
+                                <option value="CJU">Jeju Island (CJU)</option>
+                            </optgroup>
+
+                            <optgroup label="Vietnam">
+                                <option value="HAN">Hanoi (HAN)</option>
+                                <option value="SGN">Ho Chi Minh City (SGN)</option>
+                                <option value="DAD">Da Nang (DAD)</option>
+                            </optgroup>
+
+                            <optgroup label="Cambodia">
+                                <option value="REP">Siem Reap (REP)</option>
+                            </optgroup>
+
+                            <!-- EUROPE -->
+                            <optgroup label="France">
                                 <option value="CDG">Paris (CDG)</option>
-                                <option value="LYS">Lyon (LYS)</option>
                                 <option value="NCE">Nice (NCE)</option>
+                                <option value="LYS">Lyon (LYS)</option>
                                 <option value="MRS">Marseille (MRS)</option>
                             </optgroup>
-                            <optgroup label="🇺🇸 United States (North America)">
-                                <option value="JFK">New York (JFK)</option>
+
+                            <optgroup label="Italy">
+                                <option value="FCO">Rome (FCO)</option>
+                                <option value="VCE">Venice (VCE)</option>
+                                <option value="FLR">Florence (FLR)</option>
+                                <option value="MXP">Milan (MXP)</option>
+                                <option value="NAP">Naples (NAP)</option>
+                            </optgroup>
+
+                            <optgroup label="Spain">
+                                <option value="BCN">Barcelona (BCN)</option>
+                                <option value="MAD">Madrid (MAD)</option>
+                                <option value="SVQ">Seville (SVQ)</option>
+                                <option value="VLC">Valencia (VLC)</option>
+                            </optgroup>
+
+                            <optgroup label="United Kingdom">
+                                <option value="LHR">London (LHR)</option>
+                                <option value="EDI">Edinburgh (EDI)</option>
+                                <option value="LPL">Liverpool (LPL)</option>
+                            </optgroup>
+
+                            <optgroup label="Germany">
+                                <option value="BER">Berlin (BER)</option>
+                                <option value="MUC">Munich (MUC)</option>
+                                <option value="FRA">Frankfurt (FRA)</option>
+                            </optgroup>
+
+                            <optgroup label="Netherlands">
+                                <option value="AMS">Amsterdam (AMS)</option>
+                                <option value="RTM">Rotterdam (RTM)</option>
+                            </optgroup>
+
+                            <optgroup label="Switzerland">
+                                <option value="ZRH">Zurich (ZRH)</option>
+                                <option value="GVA">Geneva (GVA)</option>
+                            </optgroup>
+
+                            <optgroup label="Greece">
+                                <option value="ATH">Athens (ATH)</option>
+                                <option value="JTR">Santorini (JTR)</option>
+                                <option value="JMK">Mykonos (JMK)</option>
+                            </optgroup>
+
+                            <optgroup label="Portugal">
+                                <option value="LIS">Lisbon (LIS)</option>
+                                <option value="OPO">Porto (OPO)</option>
+                            </optgroup>
+
+                            <optgroup label="Czech Republic">
+                                <option value="PRG">Prague (PRG)</option>
+                            </optgroup>
+
+                            <!-- AMERICAS -->
+                            <optgroup label="United States">
+                                <option value="JFK">New York (JFK/EWR)</option>
                                 <option value="LAX">Los Angeles (LAX)</option>
                                 <option value="SFO">San Francisco (SFO)</option>
-                                <option value="MIA">Miami (MIA)</option>
                                 <option value="LAS">Las Vegas (LAS)</option>
+                                <option value="MIA">Miami (MIA)</option>
+                                <option value="MCO">Orlando (MCO)</option>
                             </optgroup>
-                            <optgroup label="🇧🇷 Brazil (South America)">
-                                <option value="GRU">São Paulo (GRU)</option>
+
+                            <optgroup label="Canada">
+                                <option value="YYZ">Toronto (YYZ)</option>
+                                <option value="YVR">Vancouver (YVR)</option>
+                                <option value="YUL">Montreal (YUL)</option>
+                            </optgroup>
+
+                            <optgroup label="Brazil">
                                 <option value="GIG">Rio de Janeiro (GIG)</option>
-                                <option value="BSB">Brasília (BSB)</option>
-                                <option value="SSA">Salvador (SSA)</option>
+                                <option value="GRU">São Paulo (GRU)</option>
                             </optgroup>
-                            <optgroup label="🇲🇽 Mexico (Central America)">
-                                <option value="MEX">Mexico City (MEX)</option>
+
+                            <optgroup label="Mexico">
                                 <option value="CUN">Cancun (CUN)</option>
+                                <option value="MEX">Mexico City (MEX)</option>
                                 <option value="GDL">Guadalajara (GDL)</option>
-                                <option value="SJD">Cabo (SJD)</option>
+                            </optgroup>
+
+                            <optgroup label="Peru">
+                                <option value="CUZ">Cusco (CUZ)</option>
+                                <option value="LIM">Lima (LIM)</option>
+                            </optgroup>
+
+                            <optgroup label="Argentina">
+                                <option value="EZE">Buenos Aires (EZE)</option>
+                            </optgroup>
+
+                            <!-- MIDDLE EAST & AFRICA -->
+                            <optgroup label="UAE">
+                                <option value="DXB">Dubai (DXB)</option>
+                                <option value="AUH">Abu Dhabi (AUH)</option>
+                            </optgroup>
+
+                            <optgroup label="Turkey">
+                                <option value="IST">Istanbul (IST)</option>
+                                <option value="ASR">Cappadocia (ASR/NAV)</option>
+                            </optgroup>
+
+                            <optgroup label="Egypt">
+                                <option value="CAI">Cairo (CAI)</option>
+                                <option value="LXR">Luxor (LXR)</option>
+                                <option value="SSH">Sharm El Sheikh (SSH)</option>
+                            </optgroup>
+
+                            <optgroup label="Morocco">
+                                <option value="RAK">Marrakech (RAK)</option>
+                                <option value="CMN">Casablanca (CMN)</option>
+                            </optgroup>
+
+                            <optgroup label="South Africa">
+                                <option value="CPT">Cape Town (CPT)</option>
+                            </optgroup>
+
+                            <!-- OCEANIA -->
+                            <optgroup label="Australia">
+                                <option value="SYD">Sydney (SYD)</option>
+                                <option value="MEL">Melbourne (MEL)</option>
+                                <option value="OOL">Gold Coast (OOL)</option>
+                            </optgroup>
+
+                            <optgroup label="New Zealand">
+                                <option value="AKL">Auckland (AKL)</option>
+                                <option value="ZQN">Queenstown (ZQN)</option>
                             </optgroup>
                         </select>
                     </div>
@@ -231,36 +535,184 @@
                         <i class="gg-airplane input-icon"></i>
                         <select class="inline-field" id="flightToSearch" required>
                             <option value="" disabled selected>To (City)</option>
-                            <optgroup label="🇲🇾 Malaysia (Asia)">
+                            <!-- ASIA -->
+                            <optgroup label="Malaysia">
                                 <option value="KUL">Kuala Lumpur (KUL)</option>
                                 <option value="PEN">Penang (PEN)</option>
-                                <option value="JHB">Johor Bahru (JHB)</option>
-                                <option value="BKI">Kota Kinabalu (BKI)</option>
+                                <option value="LGK">Langkawi (LGK)</option>
                             </optgroup>
-                            <optgroup label="🇫🇷 France (Europe)">
+
+                            <optgroup label="Singapore">
+                                <option value="SIN">Singapore (SIN)</option>
+                            </optgroup>
+
+                            <optgroup label="Thailand">
+                                <option value="BKK">Bangkok (BKK)</option>
+                                <option value="HKT">Phuket (HKT)</option>
+                                <option value="CNX">Chiang Mai (CNX)</option>
+                                <option value="KBV">Krabi (KBV)</option>
+                            </optgroup>
+
+                            <optgroup label="Indonesia">
+                                <option value="DPS">Bali (DPS)</option>
+                                <option value="CGK">Jakarta (CGK)</option>
+                                <option value="JOG">Yogyakarta (JOG)</option>
+                            </optgroup>
+
+                            <optgroup label="Japan">
+                                <option value="NRT">Tokyo (NRT/HND)</option>
+                                <option value="KIX">Osaka (KIX)</option>
+                                <option value="HIJ">Hiroshima (HIJ)</option>
+                            </optgroup>
+
+                            <optgroup label="South Korea">
+                                <option value="ICN">Seoul (ICN)</option>
+                                <option value="PUS">Busan (PUS)</option>
+                                <option value="CJU">Jeju Island (CJU)</option>
+                            </optgroup>
+
+                            <optgroup label="Vietnam">
+                                <option value="HAN">Hanoi (HAN)</option>
+                                <option value="SGN">Ho Chi Minh City (SGN)</option>
+                                <option value="DAD">Da Nang (DAD)</option>
+                            </optgroup>
+
+                            <optgroup label="Cambodia">
+                                <option value="REP">Siem Reap (REP)</option>
+                            </optgroup>
+
+                            <!-- EUROPE -->
+                            <optgroup label="France">
                                 <option value="CDG">Paris (CDG)</option>
-                                <option value="LYS">Lyon (LYS)</option>
                                 <option value="NCE">Nice (NCE)</option>
+                                <option value="LYS">Lyon (LYS)</option>
                                 <option value="MRS">Marseille (MRS)</option>
                             </optgroup>
-                            <optgroup label="🇺🇸 United States (North America)">
-                                <option value="JFK">New York (JFK)</option>
+
+                            <optgroup label="Italy">
+                                <option value="FCO">Rome (FCO)</option>
+                                <option value="VCE">Venice (VCE)</option>
+                                <option value="FLR">Florence (FLR)</option>
+                                <option value="MXP">Milan (MXP)</option>
+                                <option value="NAP">Naples (NAP)</option>
+                            </optgroup>
+
+                            <optgroup label="Spain">
+                                <option value="BCN">Barcelona (BCN)</option>
+                                <option value="MAD">Madrid (MAD)</option>
+                                <option value="SVQ">Seville (SVQ)</option>
+                                <option value="VLC">Valencia (VLC)</option>
+                            </optgroup>
+
+                            <optgroup label="United Kingdom">
+                                <option value="LHR">London (LHR)</option>
+                                <option value="EDI">Edinburgh (EDI)</option>
+                                <option value="LPL">Liverpool (LPL)</option>
+                            </optgroup>
+
+                            <optgroup label="Germany">
+                                <option value="BER">Berlin (BER)</option>
+                                <option value="MUC">Munich (MUC)</option>
+                                <option value="FRA">Frankfurt (FRA)</option>
+                            </optgroup>
+
+                            <optgroup label="Netherlands">
+                                <option value="AMS">Amsterdam (AMS)</option>
+                                <option value="RTM">Rotterdam (RTM)</option>
+                            </optgroup>
+
+                            <optgroup label="Switzerland">
+                                <option value="ZRH">Zurich (ZRH)</option>
+                                <option value="GVA">Geneva (GVA)</option>
+                            </optgroup>
+
+                            <optgroup label="Greece">
+                                <option value="ATH">Athens (ATH)</option>
+                                <option value="JTR">Santorini (JTR)</option>
+                                <option value="JMK">Mykonos (JMK)</option>
+                            </optgroup>
+
+                            <optgroup label="Portugal">
+                                <option value="LIS">Lisbon (LIS)</option>
+                                <option value="OPO">Porto (OPO)</option>
+                            </optgroup>
+
+                            <optgroup label="Czech Republic">
+                                <option value="PRG">Prague (PRG)</option>
+                            </optgroup>
+
+                            <!-- AMERICAS -->
+                            <optgroup label="United States">
+                                <option value="JFK">New York (JFK/EWR)</option>
                                 <option value="LAX">Los Angeles (LAX)</option>
                                 <option value="SFO">San Francisco (SFO)</option>
-                                <option value="MIA">Miami (MIA)</option>
                                 <option value="LAS">Las Vegas (LAS)</option>
+                                <option value="MIA">Miami (MIA)</option>
+                                <option value="MCO">Orlando (MCO)</option>
                             </optgroup>
-                            <optgroup label="🇧🇷 Brazil (South America)">
-                                <option value="GRU">São Paulo (GRU)</option>
+
+                            <optgroup label="Canada">
+                                <option value="YYZ">Toronto (YYZ)</option>
+                                <option value="YVR">Vancouver (YVR)</option>
+                                <option value="YUL">Montreal (YUL)</option>
+                            </optgroup>
+
+                            <optgroup label="Brazil">
                                 <option value="GIG">Rio de Janeiro (GIG)</option>
-                                <option value="BSB">Brasília (BSB)</option>
-                                <option value="SSA">Salvador (SSA)</option>
+                                <option value="GRU">São Paulo (GRU)</option>
                             </optgroup>
-                            <optgroup label="🇲🇽 Mexico (Central America)">
-                                <option value="MEX">Mexico City (MEX)</option>
+
+                            <optgroup label="Mexico">
                                 <option value="CUN">Cancun (CUN)</option>
+                                <option value="MEX">Mexico City (MEX)</option>
                                 <option value="GDL">Guadalajara (GDL)</option>
-                                <option value="SJD">Cabo (SJD)</option>
+                            </optgroup>
+
+                            <optgroup label="Peru">
+                                <option value="CUZ">Cusco (CUZ)</option>
+                                <option value="LIM">Lima (LIM)</option>
+                            </optgroup>
+
+                            <optgroup label="Argentina">
+                                <option value="EZE">Buenos Aires (EZE)</option>
+                            </optgroup>
+
+                            <!-- MIDDLE EAST & AFRICA -->
+                            <optgroup label="UAE">
+                                <option value="DXB">Dubai (DXB)</option>
+                                <option value="AUH">Abu Dhabi (AUH)</option>
+                            </optgroup>
+
+                            <optgroup label="Turkey">
+                                <option value="IST">Istanbul (IST)</option>
+                                <option value="ASR">Cappadocia (ASR/NAV)</option>
+                            </optgroup>
+
+                            <optgroup label="Egypt">
+                                <option value="CAI">Cairo (CAI)</option>
+                                <option value="LXR">Luxor (LXR)</option>
+                                <option value="SSH">Sharm El Sheikh (SSH)</option>
+                            </optgroup>
+
+                            <optgroup label="Morocco">
+                                <option value="RAK">Marrakech (RAK)</option>
+                                <option value="CMN">Casablanca (CMN)</option>
+                            </optgroup>
+
+                            <optgroup label="South Africa">
+                                <option value="CPT">Cape Town (CPT)</option>
+                            </optgroup>
+
+                            <!-- OCEANIA -->
+                            <optgroup label="Australia">
+                                <option value="SYD">Sydney (SYD)</option>
+                                <option value="MEL">Melbourne (MEL)</option>
+                                <option value="OOL">Gold Coast (OOL)</option>
+                            </optgroup>
+
+                            <optgroup label="New Zealand">
+                                <option value="AKL">Auckland (AKL)</option>
+                                <option value="ZQN">Queenstown (ZQN)</option>
                             </optgroup>
                         </select>
                     </div>
@@ -294,7 +746,7 @@
                     <!-- Search Button -->
                     <button type="submit" class="inline-search-btn">
                         <i class="gg-search"></i>
-                        Search Flights
+                        Search
                     </button>
                 </div>
             </form>
@@ -415,14 +867,6 @@
                         </div>
                     </div>
 
-                    <!-- Airlines Filter -->
-                    <div class="filter-section">
-                        <h4 class="filter-title">Airlines</h4>
-                        <div id="airlinesFilterList">
-                            <!-- Dynamically populated -->
-                        </div>
-                    </div>
-
                     <!-- Departure Time Filter -->
                     <div class="filter-section">
                         <h4 class="filter-title">Departure Time</h4>
@@ -454,7 +898,7 @@
                 </div>
             </aside>
 
-            <!-- Results Section (UNIFIED FOR BOTH HOTEL & FLIGHT) -->
+            <!-- Results Section  -->
             <section class="results-section">
                 <!-- Results Header (shared) -->
                 <div class="results-header">
@@ -464,8 +908,6 @@
                         <select id="sortSelect" class="sort-select">
                             <!-- Hotel sort options -->
                             <option value="recommended">Recommended</option>
-                            <option value="price-low">Price: Low to High</option>
-                            <option value="price-high">Price: High to Low</option>
                             <option value="rating-high">Rating: High to Low</option>
                             <option value="rating-low">Rating: Low to High</option>
                         </select>
@@ -495,6 +937,32 @@
         </div>
     </main>
 
+    <!-- Flight Details Modal -->
+    <div id="flightModal" class="flight-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Your flight to Kuala Lumpur</h2>
+                <button class="modal-close-btn" onclick="closeFlightModal()">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be dynamically inserted here -->
+            </div>
+
+            <div class="modal-footer">
+                <div class="modal-price">
+                    <div>
+                        <span id="modalTotalPrice">RM111.36</span>
+                        <p style="font-size: 12px; color: #999; margin-top: 4px;">per person</p>
+                    </div>
+                    <button class="modal-continue-btn" onclick="bookFlight()">Book Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

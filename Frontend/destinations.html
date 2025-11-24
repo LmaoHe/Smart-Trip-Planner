@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel.Co - All Itineraries</title>
+    <link rel="stylesheet" href="../Frontend/Css/destinations.css">
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script type="module" src="./JavaScript/destinations.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+
+    <!-- Header / Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo" onclick="window.location.href='home.html'">
+                    <i class="gg-airplane"></i> Travel.Co
+                </div>
+            </div>
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
+                    <li><a href="planItinerary.html">Trip Planner</a></li>
+                </ul>
+            </nav>
+            <div class="nav-right">
+                <a href="wishlist.html" class="wishlist-icon-wrapper" id="wishlistIconWrapper">
+                    <i class="fa fa-heart"></i>
+                </a>
+                
+                <div class="user-profile">
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-trigger">
+                            <div class="profile-avatar" id="profileAvatarInitials"></div>
+                            <span class="profile-name" id="profileName"></span>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="profile.html" class="dropdown-item">
+                                <i class="fa fa-user dropdown-icon"></i>
+                                Profile
+                            </a>
+                            <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                                <i class="fa fa-sign-out dropdown-icon"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="page-header-content">
+            <h1 class="page-title">✨ Discover Amazing Itineraries</h1>
+            <p class="page-subtitle">Choose from our carefully curated travel packages</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Filter Section -->
+        <section class="filter-section">
+            <div class="filter-container">
+                <!-- Sort By -->
+                <div class="filter-group">
+                    <label for="sortBy" class="filter-label">
+                        <i class="fa-solid fa-arrow-up-down"></i> Sort By
+                    </label>
+                    <select id="sortBy" class="filter-select">
+                        <option value="newest">Newest</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="rating-high">Rating: High to Low</option>
+                        <option value="rating-low">Rating: Low to High</option>
+                    </select>
+                </div>
+
+                <!-- Filter by Country -->
+                <div class="filter-group">
+                    <label for="filterCountry" class="filter-label">
+                        <i class="fa-solid fa-globe"></i> Country
+                    </label>
+                    <select id="filterCountry" class="filter-select">
+                        <option value="">All Countries</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Filter by Rating -->
+                <div class="filter-group">
+                    <label for="filterRating" class="filter-label">
+                        <i class="fa-solid fa-star"></i> Rating
+                    </label>
+                    <select id="filterRating" class="filter-select">
+                        <option value="">All Ratings</option>
+                        <option value="4">⭐⭐⭐⭐ 4+ Stars</option>
+                        <option value="3">⭐⭐⭐ 3+ Stars</option>
+                        <option value="2">⭐⭐ 2+ Stars</option>
+                    </select>
+                </div>
+
+                <!-- Clear Filters Button -->
+                <button id="clearFiltersBtn" class="clear-filters-btn">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                </button>
+            </div>
+        </section>
+
+        <!-- Itineraries Grid -->
+        <div class="itineraries-container" id="itinerariesContainer">
+            <div class="loading">Loading itineraries...</div>
+        </div>
+    </main>
+
+    <!-- Itinerary Details Modal -->
+    <div class="itinerary-modal" id="itineraryModal">
+        <div class="itinerary-modal-content">
+            <button class="itinerary-modal-close" id="closeItinerary">&times;</button>
+
+            <div class="itinerary-modal-header">
+                <img id="modalImage" src="" alt="Itinerary Image">
+                <h2 id="modalTitle"></h2>
+                <p id="modalRating"></p>
+            </div>
+
+            <div class="itinerary-modal-body">
+                <!-- Highlights -->
+                <div class="itinerary-section">
+                    <div class="itinerary-section-title">✨ Highlights</div>
+                    <div class="highlights-list" id="highlightsList"></div>
+                </div>
+
+                <!-- Duration & Price -->
+                <div class="itinerary-section">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <strong>Duration</strong>
+                            <p id="modalDuration" style="color: #666; margin-top: 4px;"></p>
+                        </div>
+                        <div>
+                            <strong>Price per Person</strong>
+                            <p id="modalPrice"
+                                style="color: #3D9BF3; font-size: 20px; font-weight: 700; margin-top: 4px;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day-by-Day Itinerary -->
+                <div class="itinerary-section">
+                    <div class="itinerary-section-title">📅 Day-by-Day Itinerary</div>
+                    <div id="itineraryDetails"></div>
+                </div>
+
+                <!-- Includes & Not Includes -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="itinerary-section">
+                        <div class="itinerary-section-title">✓ What's Included</div>
+                        <div class="includes-list" id="includesList"></div>
+                    </div>
+                    <div class="itinerary-section">
+                        <div class="itinerary-section-title">✗ Not Included</div>
+                        <div class="includes-list" id="notIncludesList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="itinerary-modal-footer">
+                <div class="itinerary-price-display" id="footerPrice"></div>
+                <!-- Add to Wishlist button -->
+                <button class="btn-add-to-wishlist" id="addToWishlistBtn">
+                    <i class="fa fa-heart"></i> Add to Wishlist
+                </button>
+                <button class="btn-close" id="closeModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-title">Travel.Co</h3>
+                <p class="footer-desc">Making travel planning simple and enjoyable for everyone.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#careers">Careers</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#help">Help Center</a></li>
+                    <li><a href="#faq">FAQs</a></li>
+                    <li><a href="#terms">Terms of Service</a></li>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Travel.Co. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+
+</html>

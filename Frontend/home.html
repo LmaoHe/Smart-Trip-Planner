@@ -7,11 +7,14 @@
     <title>Travel.Co - Plan Your Dream Adventure</title>
     <link rel="stylesheet" href="../Frontend/Css/home.css">
     <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="module" src="./JavaScript/firebase-config.js"></script>
     <script type="module" src="./JavaScript/home.js"></script>
 </head>
 
 <body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+
     <!-- Header / Navigation -->
     <header class="header">
         <div class="nav-container">
@@ -22,11 +25,15 @@
                 <ul class="nav-menu">
                     <li><a href="home.html" class="active">Home</a></li>
                     <li><a href="map.html">Map</a></li>
-                    <li><a href="booking.html">Booking</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
                     <li><a href="planItinerary.html">Trip Planner</a></li>
                 </ul>
             </nav>
             <div class="nav-right">
+                <a href="wishlist.html" class="wishlist-icon-wrapper" id="wishlistIconWrapper">
+                    <i class="fa fa-heart"></i>
+                </a>
+
                 <div class="user-profile">
                     <div class="profile-dropdown" id="profileDropdown">
                         <div class="profile-trigger">
@@ -35,11 +42,11 @@
                         </div>
                         <div class="dropdown-menu">
                             <a href="profile.html" class="dropdown-item">
-                                <i class="gg-profile dropdown-icon"></i>
+                                <i class="fa fa-user dropdown-icon"></i>
                                 Profile
                             </a>
                             <a href="#logout" class="dropdown-item logout" id="logoutButton">
-                                <i class="gg-enter dropdown-icon"></i>
+                                <i class="fa fa-sign-out dropdown-icon"></i>
                                 Logout
                             </a>
                         </div>
@@ -65,167 +72,33 @@
     <!-- Main Content -->
     <main class="main-content">
 
-        <!-- Popular Destinations -->
+        <!-- Featured Itineraries Section -->
         <section class="destinations-section">
             <div class="section-header">
-                <h2 class="section-title">Popular Destinations</h2>
-                <p class="section-subtitle">Pre-planned itineraries ready for your adventure</p>
+                <h2 class="section-title">✨ Featured Itineraries</h2>
+                <p class="section-subtitle">Expertly curated travel packages ready to book</p>
             </div>
 
-            <div class="destinations-grid">
-                <!-- Destination Card 1 -->
-                <div class="destination-card" onclick="viewDestination('tokyo')">
-                    <div class="destination-image"
-                        style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600') center/cover;">
-                        <span class="destination-badge">Popular</span>
-                    </div>
-                    <div class="destination-info">
-                        <div class="destination-header">
-                            <h3 class="destination-name">Tokyo, Japan</h3>
-                            <div class="destination-rating">
-                                <i class="gg-star"></i> 4.9
-                            </div>
-                        </div>
-                        <p class="destination-desc">7-day cultural experience • Modern meets traditional • Cherry
-                            blossoms & tech</p>
-                        <div class="destination-footer">
-                            <div class="destination-meta">
-                                <span class="meta-item"><i class="gg-calendar-dates"></i> 7 Days</span>
-                                <span class="meta-item"><i class="gg-user"></i> 2-4 People</span>
-                            </div>
-                            <button class="destination-btn"
-                                onclick="event.stopPropagation(); viewDestination('tokyo')">View Itinerary</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Destination Card 2 -->
-                <div class="destination-card" onclick="viewDestination('paris')">
-                    <div class="destination-image"
-                        style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600') center/cover;">
-                        <span class="destination-badge trending">Trending</span>
-                    </div>
-                    <div class="destination-info">
-                        <div class="destination-header">
-                            <h3 class="destination-name">Paris, France</h3>
-                            <div class="destination-rating">
-                                <i class="gg-star"></i> 4.8
-                            </div>
-                        </div>
-                        <p class="destination-desc">5-day romantic escape • Eiffel Tower • Museums & cafés</p>
-                        <div class="destination-footer">
-                            <div class="destination-meta">
-                                <span class="meta-item"><i class="gg-calendar-dates"></i> 5 Days</span>
-                                <span class="meta-item"><i class="gg-user"></i> 2 People</span>
-                            </div>
-                            <button class="destination-btn"
-                                onclick="event.stopPropagation(); viewDestination('paris')">View Itinerary</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Destination Card 3 -->
-                <div class="destination-card" onclick="viewDestination('bali')">
-                    <div class="destination-image"
-                        style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=600') center/cover;">
-                        <span class="destination-badge hot">Hot Deal</span>
-                    </div>
-                    <div class="destination-info">
-                        <div class="destination-header">
-                            <h3 class="destination-name">Bali, Indonesia</h3>
-                            <div class="destination-rating">
-                                <i class="gg-star"></i> 4.9
-                            </div>
-                        </div>
-                        <p class="destination-desc">10-day tropical paradise • Beach resorts • Temples & rice terraces
-                        </p>
-                        <div class="destination-footer">
-                            <div class="destination-meta">
-                                <span class="meta-item"><i class="gg-calendar-dates"></i> 10 Days</span>
-                                <span class="meta-item"><i class="gg-user"></i> 2-6 People</span>
-                            </div>
-                            <button class="destination-btn"
-                                onclick="event.stopPropagation(); viewDestination('bali')">View Itinerary</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Destination Card 4 -->
-                <div class="destination-card" onclick="viewDestination('santorini')">
-                    <div class="destination-image"
-                        style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=600') center/cover;">
-                    </div>
-                    <div class="destination-info">
-                        <div class="destination-header">
-                            <h3 class="destination-name">Santorini, Greece</h3>
-                            <div class="destination-rating">
-                                <i class="gg-star"></i> 4.7
-                            </div>
-                        </div>
-                        <p class="destination-desc">6-day island retreat • Sunset views • Wine tasting & beaches</p>
-                        <div class="destination-footer">
-                            <div class="destination-meta">
-                                <span class="meta-item"><i class="gg-calendar-dates"></i> 6 Days</span>
-                                <span class="meta-item"><i class="gg-user"></i> 2 People</span>
-                            </div>
-                            <button class="destination-btn"
-                                onclick="event.stopPropagation(); viewDestination('santorini')">View Itinerary</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Destination Card 5 -->
-                <div class="destination-card" onclick="viewDestination('swiss-alps')">
-                    <div class="destination-image"
-                        style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600') center/cover;">
-                    </div>
-                    <div class="destination-info">
-                        <div class="destination-header">
-                            <h3 class="destination-name">Swiss Alps</h3>
-                            <div class="destination-rating">
-                                <i class="gg-star"></i> 4.9
-                            </div>
-                        </div>
-                        <p class="destination-desc">8-day mountain adventure • Skiing & hiking • Scenic train routes</p>
-                        <div class="destination-footer">
-                            <div class="destination-meta">
-                                <span class="meta-item"><i class="gg-calendar-dates"></i> 8 Days</span>
-                                <span class="meta-item"><i class="gg-user"></i> 2-4 People</span>
-                            </div>
-                            <button class="destination-btn"
-                                onclick="event.stopPropagation(); viewDestination('swiss-alps')">View Itinerary</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Destination Card 6 -->
-                <div class="destination-card" onclick="viewDestination('dubai')">
-                    <div class="destination-image"
-                        style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=600') center/cover;">
-                    </div>
-                    <div class="destination-info">
-                        <div class="destination-header">
-                            <h3 class="destination-name">Dubai, UAE</h3>
-                            <div class="destination-rating">
-                                <i class="gg-star"></i> 4.8
-                            </div>
-                        </div>
-                        <p class="destination-desc">5-day luxury experience • Skyscrapers • Desert safari & shopping</p>
-                        <div class="destination-footer">
-                            <div class="destination-meta">
-                                <span class="meta-item"><i class="gg-calendar-dates"></i> 5 Days</span>
-                                <span class="meta-item"><i class="gg-user"></i> 2-4 People</span>
-                            </div>
-                            <button class="destination-btn"
-                                onclick="event.stopPropagation(); viewDestination('dubai')">View Itinerary</button>
-                        </div>
-                    </div>
+            <!-- Grid for displaying itineraries -->
+            <div class="destinations-grid" id="itinerariesGrid">
+                <!-- Populated by JavaScript (see instructions below) -->
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <p>Loading amazing itineraries...</p>
                 </div>
             </div>
 
+            <!-- Error Message (hidden by default) -->
+            <div class="error-container" id="errorContainer" style="display: none;">
+                <p>❌ Unable to load itineraries. Please try again later.</p>
+            </div>
+
+            <!-- View All Button -->
             <div class="view-more-container">
-                <button class="view-more-btn" onclick="window.location.href='destinations.html'">View All Destinations
-                    <i class="gg-arrow-right"></i></button>
+                <button class="view-more-btn" onclick="window.location.href='destinations.html'">
+                    View All Itineraries
+                    <i class="gg-arrow-right"></i>
+                </button>
             </div>
         </section>
 

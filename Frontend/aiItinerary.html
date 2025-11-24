@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Itinerary - Travel.Co</title>
+    <link rel="stylesheet" href="./Css/aiItnerary.css">
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script type="module" src="./JavaScript/aiItinerary.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+
+    <!-- Header / Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo"><i class="gg-airplane"></i> Travel.Co</div>
+            </div>
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
+                    <li><a href="planItinerary.html">Trip Planner</a></li>
+                </ul>
+            </nav>
+            <div class="nav-right">
+                <a href="wishlist.html" class="wishlist-icon-wrapper" id="wishlistIconWrapper">
+                    <i class="fa fa-heart"></i>
+                </a>
+
+                <div class="user-profile">
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-trigger">
+                            <div class="profile-avatar" id="profileAvatarInitials"></div>
+                            <span class="profile-name" id="profileName"></span>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="profile.html" class="dropdown-item">
+                                <i class="fa fa-user dropdown-icon"></i>
+                                Profile
+                            </a>
+                            <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                                <i class="fa fa-sign-out dropdown-icon"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- LOADING SCREEN -->
+    <div id="loadingScreen" class="loading-screen active">
+        <div class="loading-container">
+            <div class="ai-chat-bubble">
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            <h2 id="loadingText">🤔 Planning your perfect trip...</h2>
+            <p id="loadingSubtext">Searching for flights and attractions</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+
+            <div class="loading-steps">
+                <div class="step">
+                    <i class="fa fa-plane"></i>
+                    <span>Flight</span>
+                </div>
+                <div class="step">
+                    <i class="fa fa-map-marker"></i>
+                    <span>Attractions</span>
+                </div>
+                <div class="step">
+                    <i class="fa fa-hotel"></i>
+                    <span>Hotels</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ITINERARY SCREEN -->
+    <div id="itineraryScreen" class="itinerary-screen">
+        <!-- MAIN CONTAINER: LEFT ITINERARY + RIGHT MAP -->
+        <div class="itinerary-layout">
+
+            <!-- LEFT SIDE: ACTIVITIES & HOTELS -->
+            <div class="itinerary-left">
+
+                <!-- TRIP HEADER WITH ACTION BUTTONS -->
+                <div class="trip-header">
+                    <h1 id="tripTitle">Your Perfect Trip</h1>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 12px; margin-top: 16px;">
+                        <button id="saveItineraryBtn" class="btn btn-primary" onclick="saveItinerary()"
+                            style="flex: 1;">
+                            <i class="fa fa-save"></i> Save Itinerary
+                        </button>
+                        <button id="regenerateBtn" class="btn btn-secondary" onclick="regenerateItinerary()"
+                            style="flex: 1;">
+                            <i class="fa fa-refresh"></i> Regenerate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DAY TABS -->
+                <div class="day-tabs" id="dayTabsContainer"></div>
+
+                <!-- ACTIVITIES CONTENT -->
+                <div class="activities-content"></div>
+
+                <!-- UNSCHEDULED SECTION -->
+                <div id="unscheduled-section" class="unscheduled-section" style="display: none;">
+                    <div id="unscheduledActivitiesContainer"></div>
+                </div>
+
+                <!-- HOTEL RECOMMENDATIONS -->
+                <div class="hotels-section" style="display: none;">
+                    <div class="hotels-header">
+                        <h3><i class="fa fa-hotel"></i> You might want to stay in</h3>
+                    </div>
+                    <div id="hotelsContainer" class="hotels-list"></div>
+                </div>
+
+                <!-- ADD RESIZE HANDLE -->
+                <div class="resize-handle" id="resizeHandle"></div>
+            </div>
+
+            <!-- RIGHT SIDE: MAP -->
+            <div class="itinerary-right">
+                <div id="routeMap" class="route-map"></div>
+
+                <!-- MAP CONTROLS -->
+                <div class="map-controls">
+                    <button class="map-control-btn" onclick="zoomIn()" title="Zoom In">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                    <button class="map-control-btn" onclick="zoomOut()" title="Zoom Out">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ERROR CONTAINER -->
+    <div id="errorContainer" class="error-container" style="display: none;">
+        <i class="fa fa-exclamation-circle" style="font-size: 64px; color: #E74C3C; margin-bottom: 20px;"></i>
+        <h2>Oops! Something went wrong</h2>
+        <p id="errorMessage">An error occurred while generating your itinerary.</p>
+        <button class="btn btn-primary" onclick="window.location.reload()">
+            <i class="fa fa-redo"></i> Try Again
+        </button>
+    </div>
+
+</body>
+
+</html>

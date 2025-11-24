@@ -1,6 +1,6 @@
 class ImageService {
     constructor() {
-        this.pexelsKey = 'OV4tqB4rfP59GgqIMWLXJqJkzCXhL9ky8xgXLi9Wtq5fbgroDqxnrPpo'; // Add your Pexels key
+        this.pexelsKey = 'OV4tqB4rfP59GgqIMWLXJqJkzCXhL9ky8xgXLi9Wtq5fbgroDqxnrPpo';
         this.baseUrl = 'https://api.pexels.com/v1';
         this.cache = new Map();
     }

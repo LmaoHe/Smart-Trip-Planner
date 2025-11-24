@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Management - Travel.Co Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="./Css/booking_management.css">
+    <script type="module" src="./JavaScript/firebase-config.js"></script>
+    <script type="module" src="./JavaScript/auth.js"></script>
+    <script type="module" src="./JavaScript/booking_management.js"></script>
+</head>
+
+<body>
+    <!-- Toast Message -->
+    <div id="messageToast" class="message-toast"></div>
+
+    <!-- Header (same as itinerary hub) -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo">
+                    <i class="fa fa-plane"></i> Travel.Co
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <!-- Back Button -->
+        <div class="back-section">
+            <button class="btn-back" onclick="window.history.back()">
+                <i class="fa fa-arrow-left"></i> Back
+            </button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1 class="page-title">
+                    <i class="fa fa-receipt"></i> <span id="itineraryTitle">Booking Management</span>
+                </h1>
+                <p class="page-subtitle" id="itinerarySubtitle">View and manage all bookings for this itinerary</p>
+            </div>
+        </div>
+
+        <!-- Booking Stats -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card blue-accent">
+                    <div class="stat-icon"><i class="fa fa-users"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-title">Total Bookings</span>
+                        <span class="stat-value" id="totalBookings">0</span>
+                    </div>
+                </div>
+                <div class="stat-card green-accent">
+                    <div class="stat-icon"><i class="fa fa-check-circle"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-title">Confirmed</span>
+                        <span class="stat-value" id="confirmedBookings">0</span>
+                    </div>
+                </div>
+                <div class="stat-card orange-accent">
+                    <div class="stat-icon"><i class="fa fa-dollar-sign"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-title">Total Revenue</span>
+                        <span class="stat-value" id="totalRevenue">RM 0</span>
+                    </div>
+                </div>
+                <div class="stat-card purple-accent">
+                    <div class="stat-icon"><i class="fa fa-chart-line"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-title">Capacity</span>
+                        <span class="stat-value" id="capacityStatus">0/0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bookings Table -->
+        <section class="bookings-section">
+            <div class="section-header">
+                <h2 class="section-title">All Bookings</h2>
+                <div class="header-actions">
+                    <button class="btn-export" id="exportBtn">
+                        <i class="fa fa-download"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-container" id="loadingState">
+                <div class="loading-spinner"><i class="fa fa-spinner fa-spin"></i></div>
+                <p class="loading-text">Loading bookings...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon"><i class="fa fa-receipt"></i></div>
+                <h3 class="empty-title">No Bookings Yet</h3>
+                <p class="empty-text">No one has booked this itinerary yet</p>
+            </div>
+
+            <!-- Bookings Table -->
+            <div class="table-container" id="bookingsTable" style="display: none;">
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Customer Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>People</th>
+                            <th>Total Price</th>
+                            <th>Payment Method</th>
+                            <th>Booking Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsTableBody">
+                        <!-- Bookings will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+</body>
+
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Trip Itinerary - Smart Trip Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="./Css/add_trip.css">
+    <script type="module" src="./JavaScript/firebase-config.js"></script>
+    <script type="module" src="./JavaScript/auth.js"></script>
+    <script type="module" src="./JavaScript/add_trips.js"></script>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <!-- Logo -->
+            <div class="nav-left">
+                <div class="logo">
+                    <i class="fa fa-plane"></i> Travel.Co
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Create New Trip Itinerary</h1>
+            <p>Fill in the details below to create a comprehensive travel itinerary</p>
+        </div>
+
+        <form id="addTripForm" enctype="multipart/form-data" novalidate>
+
+            <!-- SECTION 1: Basic Information -->
+            <section class="form-section" id="basic-info-section">
+                <h2>1. Basic Information</h2>
+
+                <div class="form-group">
+                    <label for="itinerary-title">Itinerary Title <span class="required">*</span></label>
+                    <input type="text" id="itinerary-title" name="itinerary-title" required
+                        placeholder="e.g., 5D4N Penang Heritage & Food Trail">
+                    <div id="itinerary-title-error" class="error-message" style="display: none;"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="country">Country <span class="required">*</span></label>
+                        <select id="country" name="country" required>
+                            <option value="">Select Country</option>
+                            <option value="Malaysia">Malaysia</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Thailand">Thailand</option>
+                            <option value="Indonesia">Indonesia</option>
+                            <option value="Japan">Japan</option>
+                            <option value="South Korea">South Korea</option>
+                            <option value="Vietnam">Vietnam</option>
+                            <option value="Cambodia">Cambodia</option>
+                            <option value="France">France</option>
+                            <option value="Italy">Italy</option>
+                            <option value="Spain">Spain</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Germany">Germany</option>
+                            <option value="Netherlands">Netherlands</option>
+                            <option value="Switzerland">Switzerland</option>
+                            <option value="Greece">Greece</option>
+                            <option value="Portugal">Portugal</option>
+                            <option value="Czech Republic">Czech Republic</option>
+                            <option value="United States">United States</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Brazil">Brazil</option>
+                            <option value="Mexico">Mexico</option>
+                            <option value="Peru">Peru</option>
+                            <option value="Argentina">Argentina</option>
+                            <option value="United Arab Emirates">United Arab Emirates</option>
+                            <option value="Turkey">Turkey</option>
+                            <option value="Egypt">Egypt</option>
+                            <option value="Morocco">Morocco</option>
+                            <option value="South Africa">South Africa</option>
+                            <option value="Australia">Australia</option>
+                            <option value="New Zealand">New Zealand</option>
+                        </select>
+                        <div id="country-error" class="error-message" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city">City <span class="required">*</span></label>
+                        <select id="city" name="city" required disabled>
+                            <option value="">Select country first</option>
+                        </select>
+                        <div id="city-error" class="error-message" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="days">Days <span class="required">*</span></label>
+                        <input type="number" id="days" name="days" min="1" required placeholder="2">
+                        <div id="days-error" class="error-message" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nights">Nights <span class="required">*</span></label>
+                        <input type="number" id="nights" name="nights" min="0" required placeholder="1">
+                        <div id="nights-error" class="error-message" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fixed-price">Trip Price (RM) <span class="required">*</span></label>
+                        <input type="number" id="fixed-price" name="fixed-price" min="0" step="0.01" required
+                            placeholder="e.g., 1500.00">
+                        <div id="fixed-price-error" class="error-message" style="display:none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Suitable For (Optional)</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="suitable-for" value="couples">
+                                <span>Couples</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="suitable-for" value="families">
+                                <span>Families</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="suitable-for" value="solo">
+                                <span>Solo</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="suitable-for" value="friends">
+                                <span>Friends</span>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- SECTION 2: Cover Photo & Gallery -->
+            <section class="form-section" id="photos-section">
+                <h2>2. Cover Photo & Gallery</h2>
+
+                <div class="form-group">
+                    <label for="cover-image">Cover Image <span class="required">*</span></label>
+                    <input type="file" id="cover-image" name="cover-image" accept="image/*" required>
+                    <small>This will be the main image displayed on the itinerary card</small>
+                    <div id="cover-preview" class="image-preview"></div>
+                    <div id="cover-image-error" class="error-message" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="gallery-images">Additional Gallery Images (Optional)</label>
+                    <input type="file" id="gallery-images" name="gallery-images" accept="image/*" multiple>
+                    <small>Upload multiple images to be shown in the detail view</small>
+                    <div id="gallery-preview" class="image-preview-grid"></div>
+                    <div id="gallery-images-error" class="error-message" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: Overview & Description -->
+            <section class="form-section" id="overview-section">
+                <h2>3. Overview & Description</h2>
+
+                <div class="form-group">
+                    <label for="short-summary">Short Summary <span class="required">*</span></label>
+                    <textarea id="short-summary" name="short-summary" rows="2" required
+                        placeholder="A brief one-line description (max 150 characters)" maxlength="150"></textarea>
+                    <small class="char-count">0 / 150 characters</small>
+                    <div id="short-summary-error" class="error-message" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="detailed-description">Detailed Description <span class="required">*</span></label>
+                    <textarea id="detailed-description" name="detailed-description" rows="6" required
+                        placeholder="Provide a comprehensive description of the trip, what makes it special, and what travelers can expect..."></textarea>
+                    <div id="detailed-description-error" class="error-message" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Highlights <span class="required">*</span> (Minimum 3-5 items)</label>
+                    <div id="highlights-container">
+                        <div class="highlight-item">
+                            <input type="text" name="highlight" placeholder="e.g., Visit UNESCO World Heritage Sites"
+                                required>
+                            <button type="button" class="btn-remove-highlight" disabled>Remove</button>
+                        </div>
+                        <div class="highlight-item">
+                            <input type="text" name="highlight" placeholder="e.g., Sample authentic street food"
+                                required>
+                            <button type="button" class="btn-remove-highlight">Remove</button>
+                        </div>
+                        <div class="highlight-item">
+                            <input type="text" name="highlight" placeholder="e.g., Explore vibrant street art">
+                            <button type="button" class="btn-remove-highlight">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" id="add-highlight-btn" class="btn-add">+ Add Highlight</button>
+                    <div id="highlights-error" class="error-message" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: Trip Inclusions & Exclusions -->
+            <section class="form-section" id="inclusions-section">
+                <h2>4. What's Included & Excluded</h2>
+
+                <div class="form-group">
+                    <label>What's Included <span class="required">*</span> (Minimum 3 items)</label>
+                    <small>List what travelers will receive as part of the package</small>
+                    <div id="includes-container">
+                        <div class="include-item">
+                            <input type="text" name="include" placeholder="e.g., Professional tour guide" required>
+                            <button type="button" class="btn-remove-include" disabled>Remove</button>
+                        </div>
+                        <div class="include-item">
+                            <input type="text" name="include" placeholder="e.g., All entrance fees" required>
+                            <button type="button" class="btn-remove-include">Remove</button>
+                        </div>
+                        <div class="include-item">
+                            <input type="text" name="include" placeholder="e.g., Transportation between locations"
+                                required>
+                            <button type="button" class="btn-remove-include">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" id="add-include-btn" class="btn-add">+ Add Item</button>
+                    <div id="includes-error" class="error-message" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>What's NOT Included <span class="required">*</span> (Minimum 2 items)</label>
+                    <small>List what travelers need to pay for separately</small>
+                    <div id="excludes-container">
+                        <div class="exclude-item">
+                            <input type="text" name="exclude" placeholder="e.g., Personal expenses" required>
+                            <button type="button" class="btn-remove-exclude" disabled>Remove</button>
+                        </div>
+                        <div class="exclude-item">
+                            <input type="text" name="exclude" placeholder="e.g., Travel insurance" required>
+                            <button type="button" class="btn-remove-exclude">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" id="add-exclude-btn" class="btn-add">+ Add Item</button>
+                    <div id="excludes-error" class="error-message" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: Booking & Payment Settings -->
+            <section class="form-section" id="booking-section">
+                <h2>5. Booking & Payment Settings</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="max-people">Maximum People per Trip <span class="required">*</span></label>
+                        <input type="number" id="max-people" name="max-people" min="1" required placeholder="e.g., 20">
+                        <small>Maximum number of travelers allowed for this trip</small>
+                        <div id="max-people-error" class="error-message" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interest-threshold">Interest Threshold <span class="required">*</span></label>
+                        <input type="number" id="interest-threshold" name="interest-threshold" min="1" required
+                            placeholder="e.g., 10">
+                        <small>Minimum number of interested people before payment is enabled</small>
+                        <div id="interest-threshold-error" class="error-message" style="display: none;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 6: Hotel Accommodation -->
+            <section class="form-section" id="hotel-section">
+                <h2>6. Hotel Accommodation</h2>
+                <p class="section-description">Specify the hotel included in this package tour</p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hotel-name">Hotel Name <span class="required">*</span></label>
+                        <input type="text" id="hotel-name" name="hotel-name" required
+                            placeholder="e.g., Eastern & Oriental Hotel">
+                        <div id="hotel-name-error" class="error-message" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hotel-category">Category <span class="required">*</span></label>
+                        <select id="hotel-category" name="hotel-category" required>
+                            <option value="">Select Category</option>
+                            <option value="budget">Budget</option>
+                            <option value="mid-range">Mid-Range</option>
+                            <option value="luxury">Luxury</option>
+                        </select>
+                        <div id="hotel-category-error" class="error-message" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hotel-room-type">Room Type <span class="required">*</span></label>
+                        <input type="text" id="hotel-room-type" name="hotel-room-type" required
+                            placeholder="e.g., Deluxe Room">
+                        <div id="hotel-room-type-error" class="error-message" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hotel-rating">Star Rating <span class="required">*</span></label>
+                        <select id="hotel-rating" name="hotel-rating" required>
+                            <option value="">Select Rating</option>
+                            <option value="2.5">2.5 Stars</option>
+                            <option value="3.0">3 Stars</option>
+                            <option value="3.5">3.5 Stars</option>
+                            <option value="4.0">4 Stars</option>
+                            <option value="4.5">4.5 Stars</option>
+                            <option value="5.0">5 Stars</option>
+                        </select>
+                        <div id="hotel-rating-error" class="error-message" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="hotel-location">Location/Address <span class="required">*</span></label>
+                    <input type="text" id="hotel-location" name="hotel-location" required
+                        placeholder="e.g., Georgetown, Penang">
+                    <div id="hotel-location-error" class="error-message" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="hotel-description">Hotel Description</label>
+                    <textarea id="hotel-description" name="hotel-description" rows="3"
+                        placeholder="Brief description of the hotel and its amenities..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="hotel-image">Hotel Image (Optional)</label>
+                    <input type="file" id="hotel-image" name="hotel-image" accept="image/*">
+                    <div id="hotel-image-preview" class="image-preview"></div>
+                </div>
+            </section>
+
+            <!-- SECTION 7: Day-by-Day Itinerary -->
+            <section class="form-section" id="itinerary-section">
+                <h2>7. Day-by-Day Breakdown</h2>
+                <p class="section-description">Create a detailed plan for each day of the trip</p>
+                <div id="days-error-message" class="error-message" style="display: none;"></div>
+
+                <div id="days-container">
+                    <!-- Day 1 Template -->
+                    <div class="day-block" data-day="1">
+                        <div class="day-header">
+                            <h3>Day 1</h3>
+                            <button type="button" class="btn-remove-day" disabled>Remove Day</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="day-1-title">Day Title <span class="required">*</span></label>
+                            <input type="text" id="day-1-title" name="day-1-title" required
+                                placeholder="e.g., Arrival & Explore Georgetown">
+                            <div id="day-1-title-error" class="error-message" style="display: none;"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="day-1-description">Day Description <span class="required">*</span></label>
+                            <textarea id="day-1-description" name="day-1-description" rows="3" required
+                                placeholder="Brief overview of what happens on this day..."></textarea>
+                            <div id="day-1-description-error" class="error-message" style="display: none;"></div>
+                        </div>
+
+                        <div class="activities-container">
+                            <h4>Activities</h4>
+                            <div id="day-1-activities-error" class="error-message" style="display: none;"></div>
+
+                            <!-- Activity 1 -->
+                            <div class="activity-block">
+                                <div class="activity-header">
+                                    <span>Activity 1</span>
+                                    <button type="button" class="btn-remove-activity" disabled>Remove</button>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Activity Name <span class="required">*</span></label>
+                                    <input type="text" name="day-1-activity-name" required
+                                        placeholder="e.g., Visit Fort Cornwallis">
+                                    <div id="day-1-activity-1-name-error" class="error-message" style="display: none;">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Category <span class="required">*</span></label>
+                                    <select name="day-1-activity-category" required>
+                                        <option value="">Select Category</option>
+                                        <option value="food">Food</option>
+                                        <option value="attraction">Attraction</option>
+                                        <option value="shopping">Shopping</option>
+                                        <option value="nature">Nature</option>
+                                        <option value="culture">Culture</option>
+                                        <option value="adventure">Adventure</option>
+                                        <option value="relaxation">Relaxation</option>
+                                        <option value="transportation">Transportation</option>
+                                    </select>
+                                    <div id="day-1-activity-1-category-error" class="error-message"
+                                        style="display: none;"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Time (Optional)</label>
+                                    <input type="time" name="day-1-activity-time" placeholder="e.g., 09:00 AM">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea name="day-1-activity-description" rows="2"
+                                        placeholder="Brief description of the activity..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Activity Image (Optional)</label>
+                                    <input type="file" name="day-1-activity-image" accept="image/*">
+                                    <div id="day-1-activity-1-image-error" class="error-message" style="display: none;">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Estimated Cost (RM) - Optional</label>
+                                    <input type="number" name="day-1-activity-cost" min="0" step="0.01"
+                                        placeholder="e.g., 50.00">
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn-add-activity" data-day="1">+ Add Activity</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="add-day-btn" class="btn-add-major">+ Add Day</button>
+            </section>
+
+            <!-- SECTION 8: Tags & Metadata -->
+            <section class="form-section" id="tags-section">
+                <h2>8. Tags & Metadata</h2>
+
+                <div class="form-group">
+                    <label>Tags <span class="required">*</span></label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="tags" value="cultural">
+                            <span>Cultural</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="tags" value="nature">
+                            <span>Nature</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="tags" value="cityscape">
+                            <span>Cityscape</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="tags" value="historical">
+                            <span>Historical</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="tags" value="adventure">
+                            <span>Adventure</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="tags" value="beach">
+                            <span>Beach</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="tags" value="food">
+                            <span>Food & Culinary</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="tags" value="shopping">
+                            <span>Shopping</span>
+                        </label>
+                    </div>
+                    <div id="tags-error" class="error-message" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="season-suitability">Best Visited In (Optional)</label>
+                    <select id="season-suitability" name="season-suitability">
+                        <option value="">Select Season</option>
+                        <option value="all-year">All Year Round</option>
+                        <option value="spring">Spring (Mar-May)</option>
+                        <option value="summer">Summer (Jun-Aug)</option>
+                        <option value="autumn">Autumn (Sep-Nov)</option>
+                        <option value="winter">Winter (Dec-Feb)</option>
+                        <option value="dry-season">Dry Season</option>
+                        <option value="monsoon">Avoid Monsoon Season</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Form Actions -->
+            <section class="form-actions">
+                <div id="form-error" class="error-message" style="display: none;"></div>
+                <button type="button" id="save-draft-btn" class="btn-secondary">Save as Draft</button>
+                <button type="submit" id="submit-btn" class="btn-primary">Create Itinerary</button>
+                <button type="button" id="cancel-btn" class="btn-cancel">Cancel</button>
+            </section>
+
+        </form>
+    </div>
+
+</body>
+
+</html>

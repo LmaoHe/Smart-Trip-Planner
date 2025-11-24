@@ -25,7 +25,7 @@
                 <ul class="nav-menu">
                     <li><a href="home.html">Home</a></li>
                     <li><a href="map.html">Map</a></li>
-                    <li><a href="booking.html" class="active">Booking</a></li>
+                    <li><a href="booking.html" class="active">Self Booking</a></li>
                     <li><a href="planItinerary.html">Trip Planner</a></li>
                 </ul>
             </nav>
@@ -81,7 +81,26 @@
             </div>
         </section>
 
-        <!-- ✅ AVAILABLE ROOMS SECTION -->
+        <!-- LOCATION MAP SECTION (EMBED API) -->
+        <section class="location-map-section" id="locationMapSection" style="display: none;">
+            <h2><i class="fa fa-map-marker-alt"></i> Hotel Location</h2>
+            <p class="subtitle">See where your hotel is located</p>
+
+
+            <div class="map-container-simple">
+                <!-- Dynamic iFrame - Full width map -->
+                <iframe id="hotelMapEmbed" class="hotel-map" style="border:0; border-radius: 12px;" allowfullscreen=""
+                    loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+
+                <!-- Directions button only -->
+                <a href="#" id="getDirectionsBtn" class="directions-btn" target="_blank">
+                    <i class="fa fa-directions"></i> Get Directions
+                </a>
+            </div>
+        </section>
+
+        <!-- AVAILABLE ROOMS SECTION -->
         <section class="available-rooms-section" id="availableRoomsSection" style="display: none;">
             <h2><i class="fa fa-home"></i> Available Rooms</h2>
             <p class="subtitle">Select your preferred room type</p>

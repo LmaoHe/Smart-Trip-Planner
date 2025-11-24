@@ -5,24 +5,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile - Travel.Co</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../Frontend/Css/profile.css">
     <script type="module" src="./JavaScript/firebase-config.js"></script>
+    <script type="module" src="./JavaScript/profile.js"></script>
 </head>
 
 <body>
     <div id="messageToast" class="message-toast" style="display: none;"></div>
+
     <header class="header">
         <div class="nav-container">
             <div class="nav-left">
-                <div class="logo">✈️ Travel.Co</div>
+                <div class="logo">
+                    <i class="fa fa-plane"></i> Travel.Co
+                </div>
             </div>
             <nav class="nav-center">
                 <ul class="nav-menu">
-                    <li><a href="admin_dashboard.html" class="active">Home</a></li>
-                    <li><a href="user_management.html">Member</a></li>
-                    <li><a href="admin_register.html">Register Admin</a></li>
+                    <li><a href="admin_dashboard.html">User Management</a></li>
+                    <li><a href="itineraryHub.html">Itinerary Hub</a></li> 
+                    <li><a href="reports.html">Business Reports</a></li>
+                    <li id="registerAdminNav" style="display: none;">
+                        <a href="admin_register.html">Register Admin</a>
+                    </li>
                 </ul>
             </nav>
+
             <div class="nav-right">
                 <div class="user-profile">
                 </div>
@@ -35,42 +44,56 @@
             <div class="profile-header-content">
                 <div class="profile-image-section">
                     <div class="profile-image" id="profilePageAvatar"></div>
-                    <button class="upload-btn" id="changePhotoButton">Change Photo</button>
+                    <button class="upload-btn" id="changePhotoButton">
+                        <i class="fa fa-camera"></i> Change Photo
+                    </button>
                     <input type="file" id="photoUploadInput" accept="image/*" style="display: none;">
                 </div>
                 <div class="profile-info">
                     <h1 class="profile-name" id="profilePageName">Loading...</h1>
                     <p class="profile-title"></p>
                     <p class="profile-location">
-                        ✈️ Admin since <span id="memberSince"></span>
+                        <i class="fa fa-calendar-alt"></i> Admin since <span id="memberSince"></span>
                     </p>
-                    <div class="profile-stats"> </div>
+                    <div class="profile-stats"></div>
                 </div>
             </div>
         </section>
 
         <section class="card-section">
-            <h2 class="section-title">👤 Personal Information</h2>
+            <h2 class="section-title">
+                <i class="fa fa-user"></i> Personal Information
+            </h2>
             <form class="profile-form" id="profileForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="firstName">First Name</label>
+                        <label for="firstName">
+                            <i class="fa fa-id-card"></i> First Name
+                        </label>
                         <input type="text" id="firstName" class="form-input" value="">
                         <div class="error-message" id="firstNameError"></div>
                     </div>
                     <div class="form-group">
-                        <label for="lastName">Last Name</label>
+                        <label for="lastName">
+                            <i class="fa fa-id-card"></i> Last Name
+                        </label>
                         <input type="text" id="lastName" class="form-input" value="">
                         <div class="error-message" id="lastNameError"></div>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="birthDate">Date of Birth</label>
+                        <label for="birthDate">
+                            <i class="fa fa-birthday-cake"></i> Date of Birth
+                        </label>
                         <input type="date" id="birthDate" class="form-input" value="">
                         <div class="error-message" id="birthDateError"></div>
                     </div>
-                    <div class="form-group"> <label for="gender">Gender</label> <select id="gender" class="form-input">
+                    <div class="form-group">
+                        <label for="gender">
+                            <i class="fa fa-venus-mars"></i> Gender
+                        </label>
+                        <select id="gender" class="form-input">
                             <option value="">Select...</option>
                             <option value="male">Male</option>
                             <option value="female">Female</option>
@@ -82,27 +105,33 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="phone">Phone Number</label>
+                        <label for="phone">
+                            <i class="fa fa-phone"></i> Phone Number
+                        </label>
                         <input type="tel" id="phone" class="form-input" value="">
                         <div class="error-message" id="phoneError"></div>
                     </div>
                     <div class="form-group">
-                        <label for="email">Email Address</label>
+                        <label for="email">
+                            <i class="fa fa-envelope"></i> Email Address
+                        </label>
                         <input type="email" id="email" class="form-input" value="" readonly
                             style="background-color: #eee; cursor: not-allowed;">
-                        <small>Email cannot be changed here.</small>
+                        <small><i class="fa fa-lock"></i> Email cannot be changed here.</small>
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn-primary" id="saveChangesBtn">Save Changes</button>
-                    <button type="button" class="btn-secondary" id="cancelChangesBtn">Cancel</button>
+                    <button type="submit" class="btn-primary" id="saveChangesBtn">
+                        <i class="fa fa-save"></i> Save Changes
+                    </button>
+                    <button type="button" class="btn-secondary" id="cancelChangesBtn">
+                        <i class="fa fa-times"></i> Cancel
+                    </button>
                 </div>
                 <div id="saveStatus" class="status-message" style="display: none;"></div>
             </form>
         </section>
     </main>
-
-    <script type="module" src="./JavaScript/profile.js"></script>
 </body>
 
 </html>

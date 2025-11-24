@@ -1,28 +1,34 @@
 # ==================== IMPORTS ====================
 import firebase_admin
 from firebase_admin import credentials, auth, firestore, storage
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 import base64
+import random
 import datetime
 import traceback
 import requests 
 from services.xotelo_service import xotelo_service
+from services.itinerary_service import get_all_itineraries, get_itinerary_by_id
 import os
 from dotenv import load_dotenv
 from amadeus import Client, ResponseError
+from recommender.api_recommender import ItineraryRecommender
 
 
 # ==================== LOAD ENVIRONMENT ====================
 load_dotenv()
-
+recommender = ItineraryRecommender()
 
 # ==================== API CONFIGURATION ====================
 RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 # Hotels.com Provider API
 HOTELS_COM_HOST = 'hotels-com-provider.p.rapidapi.com'
 HOTELS_COM_BASE_URL = 'https://hotels-com-provider.p.rapidapi.com'
+
+OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
 
 # Validate API key
 if not RAPIDAPI_KEY:
@@ -47,28 +53,45 @@ CORS(app, resources={
     }
 })
 
-
 # ==================== INITIALIZE FIREBASE ====================
 print("Attempting Firebase Admin SDK initialization...")
 cred = credentials.Certificate('serviceAccountKey.json')
 STORAGE_BUCKET = 'smart-trip-planner-1c0a9.firebasestorage.app'
 
 try:
-    if not firebase_admin._apps:
-        firebase_admin.initialize_app(cred, {'storageBucket': STORAGE_BUCKET})
-        print("✓ Firebase Admin SDK initialized successfully.")
-    else:
-        print("✓ Firebase Admin SDK already initialized.")
+    # ✅ DELETE existing app if it exists
+    if firebase_admin._apps:
+        print("⚠️  Deleting existing Firebase app...")
+        firebase_admin.delete_app(firebase_admin.get_app())
+    
+    # ✅ Initialize fresh with storage bucket
+    firebase_admin.initialize_app(cred, {'storageBucket': STORAGE_BUCKET})
+    print("✓ Firebase Admin SDK initialized successfully.")
     
     db = firestore.client()
     bucket = storage.bucket()
     print("✓ Firestore and Storage clients created.")
     
+except FileNotFoundError:
+    print("!!! ERROR: serviceAccountKey.json not found!")
+    print("Please download it from Firebase Console > Project Settings > Service Accounts")
+    db = None
+    bucket = None
 except Exception as e:
     print(f"!!! CRITICAL ERROR initializing Firebase Admin SDK: {e}")
+    import traceback
+    traceback.print_exc()
     db = None
     bucket = None
 
+# Validate initialization
+if db is None or bucket is None:
+    print("\n" + "!"*60)
+    print("⚠️  WARNING: Firebase not properly initialized!")
+    print("Database operations will fail.")
+    print("!"*60 + "\n")
+else:
+    print("✅ Firebase fully initialized and ready")
 
 # ==================== INITIALIZE AMADEUS ====================
 amadeus = Client(
@@ -98,7 +121,33 @@ def get_start_date(period='week'):
         return now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
     else:
         return now_utc - datetime.timedelta(days=7)
-
+    
+# ==================== GET API KEY ENDPOINT ====================
+@app.route('/api/config/google-maps-key', methods=['GET', 'OPTIONS'])
+def get_google_maps_key():
+    """Get Google Maps API key for frontend use"""
+    
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin', '*'))
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,OPTIONS')
+        return response, 200
+    
+    try:
+        if not GOOGLE_API_KEY:
+            print("❌ Google API key not configured in .env")
+            return jsonify({'success': False, 'error': 'Google API key not configured'}), 500
+        
+        print(f"✅ Google Maps API key sent to frontend: {GOOGLE_API_KEY[:10]}...")
+        return jsonify({
+            'success': True,
+            'key': GOOGLE_API_KEY
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error getting API key: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ==================== ROUTES START HERE ====================
 @app.route('/create-profile', methods=['POST'])
@@ -171,120 +220,101 @@ def create_profile():
         print(f"An unexpected error occurred in create_profile: {e}")
         return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
-@app.route('/create-admin', methods=['POST'])
-def create_admin():
-    if db is None:
-        return jsonify({"status": "error", "message": "Server configuration error."}), 500
-
-    try:
-        id_token = request.headers.get('Authorization').split('Bearer ')[1]
-        decoded_token = auth.verify_id_token(id_token)
-        caller_uid = decoded_token['uid']
-
-        caller_doc = db.collection('users').document(caller_uid).get()
-        if not caller_doc.exists:
-            return jsonify({"status": "error", "message": "Caller not found."}), 403
-
-        caller_data = caller_doc.to_dict()
-        caller_role = caller_data.get('role', '').lower()
-
-        if caller_role != 'superadmin':
-            print(f"FORBIDDEN: User {caller_uid} (role: {caller_role}) tried to create admin.")
-            return jsonify({"status": "error", "message": "Forbidden: Insufficient permissions."}), 403
-
-        print(f"Superadmin request verified for user {caller_uid}.")
-
-        data = request.json
-        new_email = data.get('email')
-        new_password = data.get('password')
-        new_firstName = data.get('firstName')
-        new_lastName = data.get('lastName')
-
-        if not all([new_email, new_password, new_firstName, new_lastName]):
-            return jsonify({"status": "error", "message": "Missing required fields (email, password, name)."}), 400
-        if len(new_password) < 8:
-            return jsonify({"status": "error", "message": "Password must be at least 8 characters."}), 400
-
-        try:
-            new_user_record = auth.create_user(
-                email=new_email,
-                password=new_password,
-                display_name=f"{new_firstName} {new_lastName}"
-            )
-            new_uid = new_user_record.uid
-            print(f"Successfully created new admin in Auth. UID: {new_uid}")
-        except auth.EmailAlreadyExistsError:
-            return jsonify({"status": "error", "message": "Email already in use."}), 409
-        except Exception as e:
-            print(f"Error creating auth user: {e}")
-            return jsonify({"status": "error", "message": f"Error creating auth user: {e}"}), 500
-            
-        profile_data = {
-            'firstName': new_firstName,
-            'lastName': new_lastName,
-            'birthDate': data.get('birthDate'), 
-            'gender': data.get('gender'),      
-            'phone': data.get('phone'),     
-            'email': new_email,
-            'role': 'admin', 
-            'createdAt': firestore.SERVER_TIMESTAMP,
-            'profilePhotoURL': None
-        }
-
-        db.collection('users').document(new_uid).set(profile_data)
-
-        print("Successfully created new admin profile in Firestore.")
-        return jsonify({"status": "success", "message": "Admin account created successfully.", "userId": new_uid}), 201
-
-    except auth.InvalidIdTokenError as e:
-        print(f"Error: Invalid ID Token - {e}")
-        return jsonify({"status": "error", "message": "Invalid credentials or token expired."}), 401
-    except Exception as e:
-        print(f"An unexpected error occurred in create_admin: {e}")
-        traceback.print_exc() 
-        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
-
-@app.route('/update-profile', methods=['POST'])
+@app.route('/update-profile', methods=['POST', 'OPTIONS'])
 def update_profile():
+    """Update user profile information."""
+    
+    print("\n" + "="*70)
+    print("📝 UPDATE PROFILE REQUEST RECEIVED")
+    print("="*70)
+    
+    if request.method == 'OPTIONS':
+        print("✅ CORS preflight handled")
+        return '', 204
+    
     if db is None:
-        print("!!! ERROR: Firestore client (db) not initialized.")
-        return jsonify({"status": "error", "message": "Server configuration error."}), 500
+        print("❌ CRITICAL: Firestore client (db) is None!")
+        return jsonify({"message": "Database not initialized"}), 500
 
     try:
-        id_token = request.headers.get('Authorization').split('Bearer ')[1]
-        decoded_token = auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
-        print(f"Verified token for user UID: {uid} attempting profile update.")
+        # 1. Get and verify auth header
+        auth_header = request.headers.get('Authorization')
+        print(f"1️⃣ Auth header present: {bool(auth_header)}")
+        
+        if not auth_header or not auth_header.startswith('Bearer '):
+            print("❌ Invalid auth header format")
+            return jsonify({"message": "Invalid authorization header"}), 401
 
-        data = request.json
+        token = auth_header.split('Bearer ')[1]
+        print(f"2️⃣ Token extracted: {token[:20]}...")
+        
+        # 2. Verify token
+        try:
+            decoded = auth.verify_id_token(token)
+            uid = decoded['uid']
+            print(f"3️⃣ ✅ Token verified for UID: {uid}")
+        except Exception as token_error:
+            print(f"❌ Token verification failed: {str(token_error)}")
+            return jsonify({"message": f"Token error: {str(token_error)}"}), 401
+
+        # 3. Get request data
+        try:
+            data = request.get_json()
+            print(f"4️⃣ Request JSON received: {data}")
+        except Exception as json_error:
+            print(f"❌ JSON parse error: {str(json_error)}")
+            return jsonify({"message": f"Invalid JSON: {str(json_error)}"}), 400
+
         if not data:
-            return jsonify({"status": "error", "message": "No data provided for update."}), 400
+            print("❌ No JSON data in request")
+            return jsonify({"message": "No data provided"}), 400
 
-        update_data = {}
-        allowed_fields = ['firstName', 'lastName', 'birthDate', 'gender', 'phone']
-        for field in allowed_fields:
-            if field in data:
-                if isinstance(data[field], str):
-                    update_data[field] = data[field].strip()
-                else:
-                    update_data[field] = data[field]
+        # 4. Prepare update data
+        try:
+            update_data = {
+                'firstName': str(data.get('firstName', '')).strip(),
+                'lastName': str(data.get('lastName', '')).strip(),
+                'birthDate': str(data.get('birthDate', '')).strip(),
+                'gender': str(data.get('gender', '')).strip(),
+                'phone': str(data.get('phone', '')).strip(),
+                'updatedAt': firestore.SERVER_TIMESTAMP
+            }
+            print(f"5️⃣ Update payload prepared: {update_data}")
+        except Exception as prep_error:
+            print(f"❌ Data preparation error: {str(prep_error)}")
+            return jsonify({"message": f"Data prep error: {str(prep_error)}"}), 400
 
-        if not update_data:
-            return jsonify({"status": "error", "message": "No valid fields provided for update."}), 400
-        print(f"Data prepared for update for user {uid}: {update_data}")
+        # 5. Firestore update
+        try:
+            user_ref = db.collection('users').document(uid)
+            print(f"6️⃣ Updating document at: /users/{uid}")
+            
+            user_ref.update(update_data)
+            print(f"7️⃣ ✅ UPDATE SUCCESSFUL!")
+            print("="*70 + "\n")
+            
+            return jsonify({
+                'message': 'Profile updated successfully',
+                'status': 'success'
+            }), 200
+            
+        except Exception as firestore_error:
+            print(f"❌ Firestore error: {str(firestore_error)}")
+            print(f"   Type: {type(firestore_error).__name__}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({"message": f"Firestore error: {str(firestore_error)}"}), 500
 
-        doc_ref = db.collection('users').document(uid)
-        doc_ref.update(update_data)
-
-        print(f"Successfully updated profile for user {uid}.")
-        return jsonify({"status": "success", "message": "Profile updated successfully."}), 200
-
-    except auth.InvalidIdTokenError as e:
-        print(f"Error: Invalid ID Token during update - {e}")
-        return jsonify({"status": "error", "message": "Invalid credentials or token expired."}), 401
-    except Exception as e:
-        print(f"An unexpected error occurred in update_profile: {e}")
-        return jsonify({"status": "error", "message": "An internal server error occurred during update."}), 500
+    except Exception as error:
+        print(f"❌ UNEXPECTED ERROR: {str(error)}")
+        print(f"   Type: {type(error).__name__}")
+        import traceback
+        traceback.print_exc()
+        print("="*70 + "\n")
+        return jsonify({
+            'message': f"Server error: {str(error)}",
+            'error_type': type(error).__name__
+        }), 500
 
 @app.route('/update-profile-picture', methods=['POST'])
 def update_profile_picture():
@@ -873,6 +903,46 @@ def search_flights():
             'error': str(error)
         }), 400
         
+    except ResponseError as error:
+        print("\n" + "="*60)
+        print("❌ AMADEUS API ERROR")
+        print("="*60)
+        
+        # ✅ Extract detailed error information
+        try:
+            error_code = error.response.status_code
+            error_body = error.response.body
+            print(f"Status Code: {error_code}")
+            print(f"Response Body: {error_body}")
+            
+            # Try to get specific error message
+            if hasattr(error.response, 'result'):
+                error_data = error.response.result
+                if 'errors' in error_data:
+                    for err in error_data['errors']:
+                        print(f"  - {err.get('title', 'Unknown')}: {err.get('detail', 'No details')}")
+                        print(f"    Code: {err.get('code', 'N/A')}")
+                        print(f"    Source: {err.get('source', {})}")
+        except Exception as parse_error:
+            print(f"Could not parse error details: {parse_error}")
+        
+        print(f"Full Error Object: {error}")
+        print("="*60 + "\n")
+        
+        # Return detailed error to frontend
+        error_message = str(error)
+        try:
+            if hasattr(error.response, 'result') and 'errors' in error.response.result:
+                first_error = error.response.result['errors'][0]
+                error_message = f"{first_error.get('title', 'API Error')}: {first_error.get('detail', str(error))}"
+        except:
+            pass
+        
+        return jsonify({
+            'success': False,
+            'error': error_message
+        }), 400
+        
     except Exception as e:
         print("\n" + "="*60)
         print("❌ FLIGHT SEARCH ERROR")
@@ -936,6 +1006,666 @@ def airport_search():
             'error': str(e)
         }), 500
 
+# ==================== GOOGLE PLACES API ENDPOINTS ========== 
+CATEGORY_MAPPING = {
+    'cafe': 'cafe',
+    'coffee': 'cafe',
+    'museum': 'museum',
+    'attraction': 'tourist_attraction',
+    'point_of_interest': 'tourist_attraction',
+    'park': 'park',
+    'gym': 'gym',
+    'fitness': 'gym',
+    'shopping': 'shopping_mall',
+    'shopping_mall': 'shopping_mall',
+    'all': ''  
+}
+
+@app.route('/api/places/nearby', methods=['GET'])
+def search_nearby():
+    """Search for nearby places using Google Places API."""
+    lat = request.args.get('lat')
+    lng = request.args.get('lng')
+    radius = request.args.get('radius', 5000)
+    place_type = request.args.get('type', 'all')
+    
+    if not lat or not lng or not GOOGLE_API_KEY:
+        return jsonify({'error': 'Missing parameters or API key'}), 400
+    
+    try:
+        print(f"🔍 Nearby search: type={place_type}, lat={lat}, lng={lng}, radius={radius}")
+        
+        # ✅ MAP category to Google Places API type
+        google_type = CATEGORY_MAPPING.get(place_type.lower(), place_type)
+        print(f"📍 Mapped {place_type} → {google_type}")
+        
+        url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+        params = {
+            'location': f'{lat},{lng}',
+            'radius': radius,
+            'key': GOOGLE_API_KEY
+        }
+        
+        # ✅ Only add type if not 'all'
+        if google_type:
+            params['type'] = google_type
+            print(f"✅ Using type: {google_type}")
+        else:
+            print(f"✅ No type filter (searching all places)")
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        print(f"📋 Google response status: {data.get('status')}")
+        print(f"📊 Got {len(data.get('results', []))} results from Google")
+        
+        # ✅ PROCESS THE RESPONSE
+        if 'results' in data and data['results']:
+            processed_results = []
+            
+            for idx, place in enumerate(data['results']):
+                place_id = place.get('place_id')
+                
+                formatted_address = place.get('formatted_address')
+                vicinity = place.get('vicinity', '')
+                place_name = place.get('name', 'Unknown')
+                
+                # ✅ Build address from available fields
+                if formatted_address:
+                    final_address = formatted_address
+                    print(f"✅ [{idx}] Got formatted_address: {final_address}")
+                elif vicinity:
+                    final_address = f"{place_name}, {vicinity}"
+                    print(f"✅ [{idx}] Using vicinity: {final_address}")
+                else:
+                    final_address = place_name
+                    print(f"⚠️ [{idx}] Only name available: {final_address}")
+                
+                processed_results.append({
+                    'name': place_name,
+                    'formatted_address': final_address, 
+                    'geometry': place.get('geometry'),
+                    'rating': place.get('rating'),
+                    'types': place.get('types', []),
+                    'place_id': place_id,
+                    'formatted_phone_number': place.get('formatted_phone_number'),
+                    'photos': place.get('photos', [])
+                })
+            
+            data['results'] = processed_results
+            print(f"✅ Processed {len(processed_results)} results with addresses")
+            
+            if processed_results:
+                first = processed_results[0]
+                print(f"📍 First: {first['name']} → {first['formatted_address']}")
+        else:
+            print(f"⚠️ No results in data")
+        
+        return jsonify(data)
+    except Exception as error:
+        print(f"❌ Nearby search error: {error}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(error)}), 500
+
+@app.route('/api/places/textsearch', methods=['GET'])
+def text_search():
+    """Search for places using text query."""
+    query = request.args.get('query')
+    lat = request.args.get('location', '').split(',')[0] if 'location' in request.args else None
+    lng = request.args.get('location', '').split(',')[1] if 'location' in request.args else None
+    radius = request.args.get('radius', 50000)
+    
+    if not query or not GOOGLE_API_KEY:
+        return jsonify({'error': 'Missing query or API key'}), 400
+    
+    try:
+        url = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
+        params = {
+            'query': query,
+            'key': GOOGLE_API_KEY
+        }
+        
+        # ✅ ADD location if provided
+        if lat and lng:
+            params['location'] = f'{lat},{lng}'
+            params['radius'] = radius
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        # ✅ PROCESS THE RESPONSE - Extract only needed fields
+        if 'results' in data:
+            processed_results = []
+            for place in data['results']:
+                processed_results.append({
+                    'name': place.get('name'),
+                    'formatted_address': place.get('formatted_address', 'No address'), 
+                    'geometry': place.get('geometry'),
+                    'rating': place.get('rating'),
+                    'types': place.get('types', []),
+                    'place_id': place.get('place_id'),
+                    'formatted_phone_number': place.get('formatted_phone_number'),
+                    'photos': place.get('photos', [])
+                })
+            
+            data['results'] = processed_results
+            print(f"✅ Text search returned {len(processed_results)} results")
+            print(f"📍 First result: {processed_results[0] if processed_results else 'None'}")
+        
+        return jsonify(data)
+    except Exception as error:
+        print(f"❌ Text search error: {error}")
+        return jsonify({'error': str(error)}), 500
+
+# ===== CITY COORDINATES (FOR FALLBACK) =====
+CITY_COORDINATES = {
+    # Malaysia
+    'Kuala Lumpur': (3.1390, 101.6869),
+    'Penang': (5.3544, 100.3047),
+    
+    # France
+    'Paris': (48.8566, 2.3522),
+    'Lyon': (45.7640, 4.8357),
+    'Marseille': (43.2965, 5.3698),
+    
+    # United States
+    'New York': (40.7128, -74.0060),
+    'Los Angeles': (34.0522, -118.2437),
+    
+    # Brazil
+    'Rio de Janeiro': (-22.9068, -43.1729),
+    'Salvador': (-12.9714, -38.5014),
+    
+    # Mexico
+    'Mexico City': (19.4326, -99.1332),
+    'Guadalajara': (20.6595, -103.2494),
+}
+
+# ===== WEATHER API ENDPOINT =====
+@app.route('/api/get-weather', methods=['POST'])
+def get_weather():
+    """Get weather forecast using OpenWeatherMap 5-day forecast"""
+    try:
+        if not OPENWEATHER_API_KEY:
+            return jsonify({
+                'success': False,
+                'error': 'OpenWeatherMap API key not configured'
+            }), 500
+        
+        data = request.json
+        city = data.get('city', 'Kuala Lumpur')
+        country = data.get('country', 'Malaysia')
+        date_str = data.get('date')
+        
+        print(f"🌡️ Getting weather for {city}, {country} on {date_str}")
+        
+        # ✅ Get coordinates first (geocoding)
+        geo_url = "https://api.openweathermap.org/geo/1.0/direct"
+        geo_params = {
+            "q": f"{city},{country}",
+            "limit": 1,
+            "appid": OPENWEATHER_API_KEY
+        }
+        
+        geo_response = requests.get(geo_url, params=geo_params)
+        geo_data = geo_response.json()
+        
+        if not geo_data:
+            print(f"❌ City not found: {city}")
+            # Fallback to predefined coordinates
+            if city in CITY_COORDINATES:
+                lat, lon = CITY_COORDINATES[city]
+                print(f"📍 Using default coordinates for {city}: {lat}, {lon}")
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'City not found'
+                }), 404
+        else:
+            lat = geo_data[0]['lat']
+            lon = geo_data[0]['lon']
+        
+        print(f"📍 Coordinates: {lat}, {lon}")
+        
+        # ✅ Get 5-day forecast (free tier supports 3-hour intervals for 5 days)
+        forecast_url = "https://api.openweathermap.org/data/2.5/forecast"
+        forecast_params = {
+            "lat": lat,
+            "lon": lon,
+            "appid": OPENWEATHER_API_KEY,
+            "units": "metric" 
+        }
+        
+        forecast_response = requests.get(forecast_url, params=forecast_params)
+        forecast_data = forecast_response.json()
+        
+        if forecast_response.status_code != 200:
+            print(f"❌ OpenWeatherMap API error: {forecast_data}")
+            return jsonify({
+                'success': False,
+                'error': 'Could not fetch weather'
+            }), 500
+        
+        # ✅ Find weather for the requested date (closest match around noon)
+        target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        target_time = datetime.strptime(f"{date_str} 12:00", "%Y-%m-%d %H:%M")
+        
+        print(f"🔍 Looking for forecast around {target_time}")
+        
+        best_match = None
+        min_diff = float('inf')
+        
+        for forecast in forecast_data['list']:
+            forecast_time = datetime.fromtimestamp(forecast['dt'])
+            time_diff = abs((forecast_time - target_time).total_seconds())
+            
+            # Find the forecast closest to noon on the requested date
+            if time_diff < min_diff and forecast_time.date() == target_date:
+                min_diff = time_diff
+                best_match = forecast
+        
+        if not best_match:
+            # If exact date not found, get first available forecast
+            print("⚠️ Exact date not in forecast, using first available")
+            best_match = forecast_data['list'][0]
+        
+        # ✅ Extract weather information
+        weather_info = {
+            'temp': round(best_match['main']['temp']),
+            'temp_min': round(best_match['main']['temp_min']),
+            'temp_max': round(best_match['main']['temp_max']),
+            'feels_like': round(best_match['main']['feels_like']),
+            'humidity': best_match['main']['humidity'],
+            'wind_speed': round(best_match['wind']['speed'], 1),
+            'description': best_match['weather'][0]['description'],
+            'condition': best_match['weather'][0]['main'],
+            'icon': best_match['weather'][0]['icon'],
+            'date': datetime.fromtimestamp(best_match['dt']).strftime('%Y-%m-%d %H:%M')
+        }
+        
+        print(f"✅ Weather: {weather_info['temp']}°C, {weather_info['description']}")
+        
+        return jsonify({
+            'success': True,
+            'weather': weather_info
+        })
+        
+    except Exception as e:
+        print(f"❌ Error getting weather: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# ===== ROUTES API ENDPOINT =====
+@app.route('/api/get-route', methods=['POST'])
+def get_route():
+    """Get route between two places using Google Routes API or fallback to Directions API"""
+    try:
+        if not GOOGLE_API_KEY:
+            return jsonify({
+                'success': False,
+                'error': 'Google Places API key not configured'
+            }), 500
+        
+        data = request.json
+        origin = data.get('origin')
+        destination = data.get('destination')
+        day = data.get('day', 1)
+        
+        print(f"🗺️ Getting route from {origin} to {destination}")
+        
+        # ✅ Use Google Directions API (simpler, free tier available)
+        directions_url = "https://maps.googleapis.com/maps/api/directions/json"
+        directions_params = {
+            "origin": origin,
+            "destination": destination,
+            "key": GOOGLE_API_KEY,
+            "mode": "driving"
+        }
+        
+        response = requests.get(directions_url, params=directions_params)
+        directions_data = response.json()
+        
+        if response.status_code != 200 or directions_data.get('status') != 'OK':
+            print(f"❌ Google Directions API error: {directions_data.get('status')}")
+            return jsonify({
+                'success': False,
+                'error': f"Could not find route: {directions_data.get('status')}"
+            }), 400
+        
+        route = directions_data['routes'][0]
+        leg = route['legs'][0]
+        
+        # Extract route information
+        route_info = {
+            'distanceMeters': leg['distance']['value'],
+            'duration': leg['duration']['value'],
+            'startAddress': leg['start_address'],
+            'endAddress': leg['end_address'],
+            'steps': [
+                {
+                    'instruction': step['html_instructions'].replace('<b>', '').replace('</b>', '').replace('<div', '<span').replace('</div>', '</span>'),
+                    'distance': step['distance']['value'],
+                    'duration': step['duration']['value']
+                }
+                for step in leg['steps']
+            ],
+            'polyline': route['overview_polyline']['points']
+        }
+        
+        distance_km = route_info['distanceMeters'] / 1000
+        duration_min = route_info['duration'] / 60
+        
+        print(f"✅ Route found: {distance_km:.1f}km, {duration_min:.0f}min")
+        
+        return jsonify({
+            'success': True,
+            'route': route_info
+        })
+        
+    except Exception as e:
+        print(f"❌ Error getting route: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# ===== PLACE DETAILS ENDPOINT (POST) =====
+@app.route('/api/place-details', methods=['POST'])
+def place_details_post():
+    """Get place information via POST (for frontend compatibility)"""
+    try:
+        if not GOOGLE_API_KEY:
+            return jsonify({'success': False, 'error': 'Google API key not configured'}), 500
+        
+        data = request.json
+        place_id = data.get('place_id')
+        place_name = data.get('place_name')
+        
+        print(f"🔍 Getting details for: {place_name}")
+        
+        # If no place_id, search by name first
+        if not place_id or place_id == '':
+            places_search_url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+            search_params = {
+                "query": place_name,
+                "key": GOOGLE_API_KEY
+            }
+            
+            search_response = requests.get(places_search_url, params=search_params)
+            search_data = search_response.json()
+            
+            if search_data.get('results'):
+                place_id = search_data['results'][0]['place_id']
+                print(f"✅ Found place ID: {place_id}")
+            else:
+                return jsonify({'success': False, 'error': 'Place not found'}), 404
+        
+        # Get detailed place information
+        place_details_url = "https://maps.googleapis.com/maps/api/place/details/json"
+        details_params = {
+            "place_id": place_id,
+            "fields": "name,formatted_address,rating,user_ratings_total,international_phone_number,website,opening_hours,photos",
+            "key": GOOGLE_API_KEY
+        }
+        
+        details_response = requests.get(place_details_url, params=details_params)
+        details_data = details_response.json()
+        
+        if details_data.get('status') != 'OK':
+            return jsonify({'success': False, 'error': 'Could not fetch details'}), 400
+        
+        place_detail = details_data['result']
+        
+        # Extract photos
+        photos = []
+        if place_detail.get('photos'):
+            for photo in place_detail['photos'][:3]:
+                photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference={photo['photo_reference']}&key={GOOGLE_API_KEY}"
+                photos.append(photo_url)
+        
+        place_details = {
+            'name': place_detail.get('name', 'N/A'),
+            'address': place_detail.get('formatted_address', 'N/A'),
+            'rating': place_detail.get('rating', 'N/A'),
+            'reviews': place_detail.get('user_ratings_total', 0),
+            'phone': place_detail.get('international_phone_number', 'N/A'),
+            'website': place_detail.get('website', 'N/A'),
+            'photos': photos
+        }
+        
+        print(f"✅ Place details retrieved")
+        
+        return jsonify({'success': True, 'details': place_details})
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+@app.route('/api/places/details', methods=['GET'])
+def get_place_details():
+    """Get detailed information about a place."""
+    place_id = request.args.get('place_id')
+    
+    if not place_id or not GOOGLE_API_KEY:
+        return jsonify({'error': 'Missing place_id or API key'}), 400
+    
+    try:
+        url = 'https://maps.googleapis.com/maps/api/place/details/json'
+        params = {
+            'place_id': place_id,
+            'fields': 'name,rating,photos,reviews,formatted_address,formatted_phone_number,opening_hours,website,price_level,url',
+            'key': GOOGLE_API_KEY
+        }
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        result = data.get('result', {})
+        return jsonify({
+            'name': result.get('name'),
+            'rating': result.get('rating'),
+            'reviews_count': len(result.get('reviews', [])),
+            'reviews': result.get('reviews', [])[:5],
+            'photos': result.get('photos', []),
+            'phone': result.get('formatted_phone_number'),
+            'website': result.get('website'),
+            'address': result.get('formatted_address'),
+            'hours': result.get('opening_hours'),
+            'price_level': result.get('price_level'),
+            'maps_url': result.get('url')
+        })
+    except Exception as error:
+        print(f"❌ Details error: {error}")
+        return jsonify({'error': str(error)}), 500
+
+@app.route('/api/places/photo', methods=['GET'])
+def get_place_photo():
+    """Get photo URL for a place - returns a proper redirect."""
+    photo_reference = request.args.get('photo_reference')
+    maxwidth = request.args.get('maxwidth', 400)
+    
+    if not photo_reference or not GOOGLE_API_KEY:
+        return jsonify({'error': 'Missing photo_reference or API key'}), 400
+    
+    try:
+        photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth={maxwidth}&photo_reference={photo_reference}&key={GOOGLE_API_KEY}"
+        
+        print(f"✅ Redirecting to Google photo: {photo_url}")
+        
+        # Return a direct redirect so the browser can load it
+        return redirect(photo_url)
+        
+    except Exception as error:
+        print(f"❌ Photo error: {error}")
+        return jsonify({'error': str(error)}), 500
+
+# ==================== ITINERARY ENDPOINTS ====================
+@app.route('/api/itineraries', methods=['GET'])
+def get_itineraries():
+    """Get all preloaded itineraries."""
+    try:
+        itineraries = get_all_itineraries()
+        print(f"✅ Returning {len(itineraries)} itineraries")
+        return jsonify({
+            'status': 'success',
+            'itineraries': itineraries
+        })
+    except Exception as error:
+        print(f"❌ Error getting itineraries: {error}")
+        return jsonify({'error': str(error)}), 500
+
+@app.route('/api/itineraries/<itinerary_id>', methods=['GET'])
+def get_itinerary_details(itinerary_id):
+    """Get details for a specific itinerary."""
+    try:
+        itinerary = get_itinerary_by_id(itinerary_id)
+        
+        if not itinerary:
+            return jsonify({'error': 'Itinerary not found'}), 404
+        
+        print(f"✅ Returning itinerary: {itinerary['title']}")
+        return jsonify({
+            'status': 'success',
+            'itinerary': itinerary
+        })
+    except Exception as error:
+        print(f"❌ Error getting itinerary details: {error}")
+        return jsonify({'error': str(error)}), 500
+
+# ==================== TRAVEL STYLE TO CATEGORY MAPPING ====================
+TRAVEL_STYLE_TO_CATEGORIES = {
+    'cultural': ['museum', 'art_gallery', 'library', 'theater'],
+    'nature': ['park', 'campground', 'hiking_area', 'natural_feature'],
+    'cityscape': ['shopping_mall', 'night_club', 'bar', 'restaurant', 'cafe'],
+    'historical': [
+        'archaeological_site', 'castle', 'fortress', 'historical_landmark',
+        'church', 'synagogue', 'hindu_temple', 'mosque'
+    ]
+}
+
+TRAVELER_TYPE_CATEGORIES = {
+    'family': ['park', 'tourist_attraction', 'museum', 'shopping_mall', 'restaurant', 'cafe'],
+    'couple': ['restaurant', 'cafe', 'bar', 'theater', 'art_gallery', 'historical_landmark'],
+    'solo': ['museum', 'library', 'cafe', 'art_gallery', 'historical_landmark', 'hiking_area'],
+    'friends': ['restaurant', 'bar', 'night_club', 'shopping_mall', 'tourist_attraction', 'park']
+}
+
+# ==================== ITINERARY RECOMMENDATIONS ROUTES ====================
+@app.route('/api/itinerary/recommendations', methods=['POST', 'OPTIONS'])
+def get_itinerary_recommendations():
+    """Get activity recommendations using trained ML model"""
+    
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin', '*'))
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+        return response, 200
+    
+    try:
+        print("\n" + "="*60)
+        print("🎯 ITINERARY RECOMMENDATIONS REQUEST")
+        print("="*60)
+        
+        data = request.get_json()
+
+        city = data.get('city') or data.get('destination')
+        country = data.get('country')
+        
+        travel_styles = data.get('travelStyles', data.get('interests', []))
+        with_whom = data.get('withWhom', 'solo')
+        nights = data.get('nights', 3)
+        
+        # Validate required fields
+        if not city or not country:
+            return jsonify({
+                'success': False,
+                'error': 'City and country are required'
+            }), 400
+        
+        print(f"📍 City: {city}")
+        print(f"🌍 Country: {country}")
+        print(f"🎨 Travel Styles: {travel_styles}")
+        print(f"👥 With Whom: {with_whom}")
+        print(f"🌙 Nights: {nights}")
+        
+        selected_categories = []
+        
+        if travel_styles and len(travel_styles) > 0:
+            print(f"\n🔄 Mapping travel styles to categories...")
+            for style in travel_styles:
+                categories = TRAVEL_STYLE_TO_CATEGORIES.get(style, [])
+                selected_categories.extend(categories)
+                print(f"   {style} → {categories}")
+
+        traveler_categories = TRAVELER_TYPE_CATEGORIES.get(with_whom, [])
+        all_categories = list(set(selected_categories + traveler_categories))
+
+        if not all_categories:
+            all_categories = ['restaurant', 'tourist_attraction', 'museum', 'park']
+            print(f"⚠️ No preferences provided, using defaults: {all_categories}")
+        
+        print(f"\n📦 Final categories to search: {all_categories}")
+        
+        # ✅ Call recommender
+        recommendations = recommender.get_recommendations(
+            city=city,
+            country=country,
+            categories=all_categories,
+            traveler_type=with_whom,
+            nights=nights
+        )
+        
+        print(f"\n✅ Got {len(recommendations)} recommendations")
+        print("="*60 + "\n")
+        
+        return jsonify({
+            'success': True,
+            'activities': recommendations,
+            'count': len(recommendations)
+        }), 200
+        
+    except Exception as e:
+        print("\n" + "="*60)
+        print("❌ ERROR IN RECOMMENDATIONS")
+        print("="*60)
+        print(f"Error: {str(e)}")
+        traceback.print_exc()
+        print("="*60 + "\n")
+        
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def format_activity(activity):
+    """Format activity with all required fields including full place details"""
+    formatted = {
+        'name': activity.get('name', ''),
+        'category': activity.get('category', ''),
+        'time': activity.get('time', ''),
+        'rating': float(activity.get('rating', 4.0)),
+        'reviews': activity.get('reviews', 0),
+        'place_id': activity.get('place_id', ''),
+        'photo_reference': activity.get('photo_reference', ''),
+        'photos': activity.get('photos', []),
+        'address': activity.get('address', ''),
+        'latitude': activity.get('latitude'),
+        'longitude': activity.get('longitude'),
+        'is_activity': True
+    }
+    
+    if activity.get('place_id'):
+        formatted['phone'] = activity.get('phone', '')
+        formatted['website'] = activity.get('website', '')
+        formatted['opening_hours'] = activity.get('opening_hours', {})
+        formatted['price_level'] = activity.get('price_level', '')
+    
+    return formatted
+
 # ===== HEALTH CHECK =====
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -950,7 +1680,6 @@ def health_check():
         'rapidapi_configured': RAPIDAPI_KEY is not None,
         'amadeus_configured': os.getenv('AMADEUS_API_KEY') is not None 
     }), 200
-
 
 # --- Run the App ---
 if __name__ == '__main__':

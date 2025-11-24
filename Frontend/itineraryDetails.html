@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itinerary Details - Travel.Co</title>
+    <link rel="stylesheet" href="./Css/itinerary_details.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script type="module" src="./JavaScript/itinerary_details.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+
+    <!-- Header / Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo" onclick="window.location.href='home.html'">
+                    <i class="gg-airplane"></i> Travel.Co
+                </div>
+            </div>
+            <nav class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
+                    <li><a href="planItinerary.html">Trip Planner</a></li>
+                </ul>
+            </nav>
+            <div class="nav-right">
+                <a href="wishlist.html" class="wishlist-icon-wrapper" id="wishlistIconWrapper">
+                    <i class="fa fa-heart"></i>
+                </a>
+
+                <div class="user-profile">
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-trigger">
+                            <div class="profile-avatar" id="profileAvatarInitials"></div>
+                            <span class="profile-name" id="profileName"></span>
+                        </div>
+                        <div class="dropdown-menu">
+                            <a href="profile.html" class="dropdown-item">
+                                <i class="fa fa-user dropdown-icon"></i>
+                                Profile
+                            </a>
+                            <a href="#logout" class="dropdown-item logout" id="logoutButton">
+                                <i class="fa fa-sign-out dropdown-icon"></i>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Gallery Section -->
+    <section class="gallery-section">
+        <div class="main-gallery">
+            <img id="mainGalleryImage" src="" alt="Itinerary" class="main-image">
+
+            <!-- Back Button -->
+            <button class="gallery-back-btn" onclick="window.history.back()">
+                <i class="fa fa-chevron-left"></i>
+                <span class="back-text">Back</span>
+            </button>
+
+            <!-- Navigation Buttons -->
+            <button class="gallery-nav-btn prev" id="prevGalleryBtn">
+                <i class="fa fa-chevron-left"></i>
+            </button>
+            <button class="gallery-nav-btn next" id="nextGalleryBtn">
+                <i class="fa fa-chevron-right"></i>
+            </button>
+
+            <!-- Gallery Label -->
+            <div class="gallery-label">
+                <i class="fa fa-camera"></i> GALLERY
+            </div>
+        </div>
+
+        <div class="gallery-thumbnails">
+            <div id="galleryThumbnails"></div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="itinerary-header">
+            <div class="header-title-row">
+                <h1 id="itineraryTitle" class="itinerary-title-large">Loading...</h1>
+                <div class="header-actions">
+                    <button class="btn-primary btn-express" id="actionBtn">
+                        <i class="fa fa-thumbs-up"></i> Express Interest
+                    </button>
+                </div>
+            </div>
+
+            <span class="publish-badge" id="approvalStatusBanner" style="display:none;"></span>
+
+            <div class="meta-info-grid">
+                <div class="meta-item">
+                    <i class="fa fa-map-marker-alt"></i>
+                    <span id="metaLocation">Loading...</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fa fa-clock"></i>
+                    <span id="itineraryDuration">-</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fa fa-users"></i>
+                    <span id="minPeople">-</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fa fa-compass"></i>
+                    <span id="tourType">-</span>
+                </div>
+                <div class="meta-item interest-count-meta">
+                    <i class="fa fa-users"></i>
+                    <span id="interestCount">0 people</span>
+                </div>
+            </div>
+
+            <div class="meta-tags" id="tagsList"></div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-navigation">
+            <button class="tab-button active" data-tab="description">Description</button>
+            <button class="tab-button" data-tab="itinerary">Schedule</button>
+            <button class="tab-button" data-tab="pricing">Pricing & Accommodation</button>
+            <button class="tab-button" data-tab="reviews">
+                Reviews <span id="reviewCount" class="review-count">0</span>
+            </button>
+        </div>
+
+        <div class="tabs-content">
+            <!-- Description Tab -->
+            <div class="tab-content active" data-tab="description">
+                <section class="content-section">
+                    <h2>Overview</h2>
+                    <p id="itineraryDescription">Loading description...</p>
+
+                    <!-- Trip Information Cards -->
+                    <div class="trip-info-cards">
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <i class="fa fa-calendar-alt"></i>
+                            </div>
+                            <div class="info-card-content">
+                                <h4>Best Season</h4>
+                                <p id="bestSeason">Year-round</p>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <i class="fa fa-user-friends"></i>
+                            </div>
+                            <div class="info-card-content">
+                                <h4>Suitable For</h4>
+                                <p id="suitableFor">All travelers</p>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-icon">
+                                <i class="fa fa-coins"></i>
+                            </div>
+                            <div class="info-card-content">
+                                <h4>Price per Person</h4>
+                                <p id="pricePerPerson" class="price-highlight">RM800</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2>Highlights</h2>
+                    <div class="highlights-list" id="highlightsList"></div>
+                </section>
+
+                <section class="content-section">
+                    <h2>What's Included / Not Included</h2>
+                    <div class="included-excluded-grid">
+                        <div class="included-column">
+                            <h3>Included</h3>
+                            <div id="includesList"></div>
+                        </div>
+                        <div class="excluded-column">
+                            <h3>Not Included</h3>
+                            <div id="notIncludesList"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Itinerary Details -->
+            <div class="tab-content" data-tab="itinerary">
+                <section class="content-section">
+                    <h2>Day by Day Schedule</h2>
+                    <div id="itineraryDetails"></div>
+                </section>
+            </div>
+
+            <!-- Pricing & Accommodation Tab -->
+            <div class="tab-content" data-tab="pricing">
+                <!-- Trip Pricing Section -->
+                <section class="content-section">
+                    <h2>Trip Pricing</h2>
+                    <div class="pricing-container">
+                        <div class="pricing-summary">
+                            <div class="pricing-card featured">
+                                <div class="pricing-header">
+                                    <div class="pricing-icon">
+                                        <i class="fa fa-suitcase"></i>
+                                    </div>
+                                    <div>
+                                        <h3>Complete Package</h3>
+                                        <p>Per person price</p>
+                                    </div>
+                                </div>
+                                <div class="pricing-amount">
+                                    <span class="currency">RM</span>
+                                    <span class="price" id="packagePrice">800</span>
+                                </div>
+                                <div class="pricing-details">
+                                    <div class="pricing-item">
+                                        <i class="fa fa-check-circle"></i>
+                                        <span><span id="tripDays">3</span> Days / <span id="tripNights">2</span>
+                                            Nights</span>
+                                    </div>
+                                    <div class="pricing-item">
+                                        <i class="fa fa-check-circle"></i>
+                                        <span>Price per night: <strong id="pricePerNight">RM400</strong></span>
+                                    </div>
+                                    <div class="pricing-item">
+                                        <i class="fa fa-check-circle"></i>
+                                        <span>Max <span id="maxBookings">20</span> people</span>
+                                    </div>
+                                    <div class="pricing-item">
+                                        <i class="fa fa-check-circle"></i>
+                                        <span>Current bookings: <span id="currentBookings">0</span>/<span
+                                                id="maxBookings2">20</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trip Highlights in Pricing -->
+                        <div class="pricing-includes">
+                            <h3><i class="fa fa-star"></i> What's Included</h3>
+                            <ul id="pricingHighlights">
+                                <li><i class="fa fa-check"></i> All scheduled activities and tours</li>
+                                <li><i class="fa fa-check"></i> Professional tour guide</li>
+                                <li><i class="fa fa-check"></i> Transportation between locations</li>
+                                <li><i class="fa fa-check"></i> Entrance fees to attractions</li>
+                            </ul>
+                        </div>
+
+                        <div class="pricing-note">
+                            <i class="fa fa-info-circle"></i>
+                            <div>
+                                <strong>💰 Best Price Guarantee:</strong> We offer the best rates in the market. If you
+                                find a lower price elsewhere, we'll match it! Prices are subject to availability and may
+                                vary during peak seasons.
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Hotel Accommodation Section -->
+                <section class="content-section">
+                    <h2>Package Accommodation</h2>
+                    <p style="margin-bottom: 24px; color: #6B7280; line-height: 1.6;">
+                        Your accommodation is <strong>included</strong> in the package price. All guests will stay at
+                        the same hotel to ensure seamless group coordination and pickups throughout the tour.
+                    </p>
+
+                    <div class="hotel-pricing-table">
+                        <table class="pricing-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Hotel Name</th>
+                                    <th>Room Type</th>
+                                    <th>Status</th>
+                                    <th>Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hotelTableBody">
+                                <!-- Will be populated by JavaScript -->
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 20px; color: var(--text-gray);">
+                                        Loading hotel information...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="hotel-note">
+                        <i class="fa fa-info-circle"></i>
+                        <div>
+                            <strong>Group Accommodation:</strong> All travelers will be accommodated at the designated
+                            hotel to facilitate easy group pickups, shared activities, and a cohesive tour experience.
+                            Room arrangements are based on double occupancy unless otherwise specified.
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div class="tab-content" data-tab="reviews">
+                <section class="content-section">
+                    <div class="rating-overview">
+                        <div class="rating-summary">
+                            <div class="average-rating">
+                                <span class="big-rating" id="averageRating">0.0</span>
+                                <div class="stars" id="averageStars"></div>
+                                <span class="total-reviews" id="totalReviews">No reviews yet</span>
+                            </div>
+                            <div class="rating-breakdown" id="ratingBreakdown"></div>
+                        </div>
+                        <div class="review-filter">
+                            <label>Filter by rating:</label>
+                            <select onchange="filterReviews(this.value)">
+                                <option value="all">All ratings</option>
+                                <option value="5">5 stars</option>
+                                <option value="4">4 stars</option>
+                                <option value="3">3 stars</option>
+                                <option value="2">2 stars</option>
+                                <option value="1">1 star</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Write a Review Button -->
+                    <button class="btn-primary write-review-btn" id="toggleReviewFormBtn">
+                        <i class="fa fa-pen"></i> Write a Review
+                    </button>
+
+                    <!-- Inline Review Form (Hidden by Default) -->
+                    <div id="reviewFormContainer" class="review-form-container" style="display: none;">
+                        <div class="review-form-card">
+                            <h3 id="reviewFormTitle">Write Your Review</h3>
+                            <p class="form-subtitle">Share your experience and help others discover this amazing trip!
+                            </p>
+
+                            <form id="reviewForm">
+                                <!-- Star Rating -->
+                                <div class="form-group">
+                                    <label>
+                                        How would you rate this trip?
+                                    </label>
+                                    <div class="star-rating-wrapper">
+                                        <div id="starRatingInput">
+                                            <i data-rating="1" class="fa fa-star"></i>
+                                            <i data-rating="2" class="fa fa-star"></i>
+                                            <i data-rating="3" class="fa fa-star"></i>
+                                            <i data-rating="4" class="fa fa-star"></i>
+                                            <i data-rating="5" class="fa fa-star"></i>
+                                        </div>
+                                        <div class="rating-helper-text">
+                                            <i class="fa fa-info-circle"></i>
+                                            <span>Click a star to rate (1 = Poor, 5 = Excellent)</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="ratingValue" value="0">
+                                </div>
+
+                                <!-- Review Text -->
+                                <div class="form-group">
+                                    <label>
+                                        Share your experience
+                                    </label>
+                                    <div class="textarea-wrapper">
+                                        <textarea id="reviewText"
+                                            placeholder="Tell us about your trip... What did you love? What could be improved? Any tips for future travelers?"
+                                            required maxlength="1000"></textarea>
+                                        <span class="char-counter">0/1000</span>
+                                    </div>
+                                </div>
+
+                                <!-- Photo Upload -->
+                                <div class="form-group">
+                                    <label>
+                                        Add Photos (Optional)
+                                    </label>
+                                    <div class="file-upload-wrapper">
+                                        <label for="reviewPhotos" class="file-upload-label">
+                                            <i class="fa fa-camera"></i>
+                                            <div class="file-upload-text">
+                                                <strong>Click to upload photos</strong>
+                                                <span>JPG, PNG or GIF (Max 5 photos)</span>
+                                            </div>
+                                        </label>
+                                        <input type="file" id="reviewPhotos" accept="image/*" multiple>
+                                        <small>
+                                            <i class="fa fa-lightbulb"></i>
+                                            Photos help others see what makes this trip special!
+                                        </small>
+                                    </div>
+
+                                    <div id="photoPreview"></div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="form-actions">
+                                    <button type="submit" id="submitReviewBtn" class="btn-primary">
+                                        <i class="fa fa-paper-plane"></i> Submit Review
+                                    </button>
+                                    <button type="button" class="btn-secondary" id="cancelReviewBtn">
+                                        <i class="fa fa-times"></i> Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Reviews List -->
+                    <div class="reviews-list" id="reviewsList"></div>
+                </section>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

@@ -7,12 +7,14 @@
     <title>User Profile - Travel.Co</title>
     <link rel="stylesheet" href="../Frontend/Css/profile.css">
     <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="module" src="./JavaScript/firebase-config.js"></script>
     <script type="module" src="./JavaScript/profile.js"></script>
 </head>
 
 <body>
     <div id="messageToast" class="message-toast" style="display: none;"></div>
+
     <header class="header">
         <div class="nav-container">
             <div class="logo">
@@ -22,11 +24,15 @@
                 <ul class="nav-menu">
                     <li><a href="home.html">Home</a></li>
                     <li><a href="map.html">Map</a></li>
-                    <li><a href="booking.html">Booking</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
                     <li><a href="planItinerary.html">Trip Planner</a></li>
                 </ul>
             </nav>
-            <div class="user-profile">
+            <div class="nav-right">
+                <!-- Wishlist/Interests Icon -->
+                <a href="wishlist.html" class="wishlist-icon-wrapper" id="wishlistIconWrapper" title="My Interests">
+                    <i class="fa fa-heart"></i>
+                </a>
             </div>
         </div>
     </header>
@@ -45,7 +51,7 @@
                     <p class="profile-location">
                         <i class="gg-user"></i> Member since <span id="memberSince"></span>
                     </p>
-                    <div class="profile-stats"> </div>
+                    <div class="profile-stats"></div>
                 </div>
             </div>
         </section>
@@ -128,7 +134,7 @@
                     <p class="subtitle">Hotels you've booked</p>
                 </div>
                 <div id="hotelsContainer">
-                    <!-- Hotel bookings will be loaded here by JavaScript -->
+                    <!-- Hotel bookings will be loaded here -->
                 </div>
             </div>
 
@@ -139,13 +145,7 @@
                     <p class="subtitle">Flights you've booked</p>
                 </div>
                 <div id="flightsContainer">
-                    <!-- Flight bookings will be loaded here by JavaScript -->
-                    <div class="empty-state">
-                        <i class="fa-solid fa-plane-slash"></i>
-                        <h3>No Flight Bookings Yet</h3>
-                        <p>You haven't booked any flights. Start planning your next adventure!</p>
-                        <a href="booking.html" class="btn-primary">Browse Flights</a>
-                    </div>
+                    <!-- Flight bookings will be loaded here -->
                 </div>
             </div>
 
@@ -155,10 +155,8 @@
                     <h3>My Itineraries</h3>
                     <p class="subtitle">Your saved trip plans</p>
                 </div>
-                <div id="itinerariesGrid" class="itineraries-grid">
-                    <div class="loading-itineraries">
-                        <p>Loading your itineraries...</p>
-                    </div>
+                <div id="itinerariesGrid">
+                    <!-- Itinerary bookings will be loaded here -->
                 </div>
             </div>
         </section>
@@ -191,6 +189,32 @@
         </div>
     </div>
 
+    <!-- Delete Itinerary Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-icon warning">
+                <i class="fa-solid fa-trash"></i>
+            </div>
+            <h2 class="modal-title">Delete Itinerary?</h2>
+            <p class="modal-message">
+                Are you sure you want to permanently delete this itinerary? This action cannot be undone.
+            </p>
+            <div class="modal-booking-info">
+                <div class="modal-info-item">
+                    <span class="info-label">Booking ID:</span>
+                    <span class="info-value" id="deleteModalBookingId">#TRV123456</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="deleteModalCancelBtn">
+                    No, Keep It
+                </button>
+                <button class="modal-btn modal-btn-confirm" id="deleteModalConfirmBtn">
+                    Yes, Delete Forever
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

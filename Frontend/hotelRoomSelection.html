@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Room - Travel.Co</title>
+    <link rel="stylesheet" href="../Frontend/Css/hotelDetails.css">
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/all.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="module" src="./JavaScript/firebase-config.js"></script>
+    <script type="module" src="./JavaScript/auth.js"></script>
+    <script type="module" src="./JavaScript/hotelRoomSelection.js"></script>
+</head>
+
+<body>
+    <div id="messageToast" class="message-toast" style="display: none;"></div>
+
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="gg-airplane"></i> Travel.Co
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="booking.html">Self Booking</a></li>
+                    <li><a href="planItinerary.html">Trip Planner</a></li>
+                </ul>
+            </nav>
+            <div class="profile-dropdown" id="profileDropdown" style="display: none;">
+                <div class="profile-trigger">
+                    <div class="profile-avatar" id="profileAvatarInitials">U</div>
+                    <span class="profile-name" id="profileName">User</span>
+                </div>
+                <div class="dropdown-menu">
+                    <a href="profile.html" class="dropdown-item">
+                        <i class="gg-profile dropdown-icon"></i>
+                        Profile
+                    </a>
+                    <a href="#" class="dropdown-item logout" id="logoutButton">
+                        <i class="gg-enter dropdown-icon"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Back Button -->
+        <div class="back-nav">
+            <button class="back-btn" id="backToSearchBtn">
+                <i class="gg-chevron-left"></i> <span id="backBtnText">Back to Search</span>
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading package details...</p>
+        </div>
+
+        <!-- Package Flight Summary with Editable Passengers -->
+        <section class="package-flight-summary" id="packageFlightSummary" style="display: none;">
+            <div class="package-banner">
+                <i class="fa fa-box"></i> <span>Travel Package Booking</span>
+            </div>
+
+            <div class="flight-summary-card">
+                <div class="card-header">
+                    <h3><i class="fa fa-plane"></i> Your Flight</h3>
+                    <span class="included-badge">
+                        <i class="fa fa-check-circle"></i> Included in Package
+                    </span>
+                </div>
+                <div id="flightSummaryContent" class="flight-summary-content">
+                    <!-- Flight details will be inserted by JS -->
+                </div>
+
+                <!-- ✅ Passenger Editor Section -->
+                <div class="passenger-editor-section" id="passengerEditorSection" style="display: none;">
+                    <div class="passenger-editor-header">
+                        <h4><i class="fa fa-users"></i> Number of Passengers</h4>
+                        <p class="passenger-note">2 passengers = 1 room. Adjust travelers for your package.</p>
+                    </div>
+                    <div class="passenger-controls">
+                        <button class="passenger-btn minus" id="decreasePassengers" aria-label="Decrease passengers">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                        <div class="passenger-display">
+                            <span class="passenger-count" id="passengerCount">1</span>
+                            <span class="passenger-label">Passenger(s)</span>
+                        </div>
+                        <button class="passenger-btn plus" id="increasePassengers" aria-label="Increase passengers">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="passenger-price-update">
+                        <span class="price-per-person-label">Flight price per person:</span>
+                        <span class="price-per-person-value" id="pricePerPersonValue">MYR 0.00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hero Section -->
+        <section class="hero-section" id="heroSection" style="display: none;">
+            <div class="hero-image-container">
+                <img id="hotelImage" src="" alt="Hotel" class="hero-image">
+            </div>
+            <div class="hero-info">
+                <h1 class="hotel-name" id="hotelName">Hotel Name</h1>
+                <div class="rating-section" id="ratingSection"></div>
+                <div class="location-section">
+                    <i class="gg-pin"></i>
+                    <span id="hotelLocation">Location</span>
+                </div>
+                <div class="mentions-section" id="mentionsSection"></div>
+                <!-- Package info badges -->
+                <div class="package-info-badges" id="packageInfoBadges" style="display: none;">
+                    <div class="info-badge">
+                        <i class="fa fa-calendar"></i>
+                        <span id="checkInOutDates"></span>
+                    </div>
+                    <div class="info-badge">
+                        <i class="fa fa-moon"></i>
+                        <span id="nightsCount"></span>
+                    </div>
+                    <div class="info-badge">
+                        <i class="fa fa-user"></i>
+                        <span id="guestsCount"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LOCATION MAP SECTION (EMBED API) -->
+        <section class="location-map-section" id="locationMapSection" style="display: none;">
+            <h2><i class="fa fa-map-marker-alt"></i> Hotel Location</h2>
+            <p class="subtitle">See where your hotel is located</p>
+
+            <div class="map-container-simple">
+                <!-- Dynamic iFrame - Full width map -->
+                <iframe id="hotelMapEmbed" class="hotel-map" style="border:0; border-radius: 12px;" allowfullscreen=""
+                    loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+
+                <!-- Directions button only -->
+                <a href="#" id="getDirectionsBtn" class="directions-btn" target="_blank">
+                    <i class="fa fa-directions"></i> Get Directions
+                </a>
+            </div>
+        </section>
+
+        <!-- AVAILABLE ROOMS SECTION -->
+        <section class="available-rooms-section" id="availableRoomsSection" style="display: none;">
+            <h2><i class="fa fa-home"></i> Available Rooms</h2>
+            <p class="subtitle">Select your preferred room type for your package</p>
+
+            <!-- Package pricing note -->
+            <div class="pricing-note" id="pricingNote" style="display: none;">
+                <i class="fa fa-info-circle"></i>
+                <span>Final package price = Flight + Selected Room + Service Charges</span>
+            </div>
+
+            <div id="roomsGrid" class="rooms-grid">
+                <!-- Room cards will be inserted here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Package Summary Footer -->
+        <section class="package-summary-footer" id="packageSummaryFooter" style="display: none;">
+            <div class="summary-container">
+                <div class="summary-left">
+                    <h3><i class="fa fa-calculator"></i> Package Summary</h3>
+                    <div class="summary-items">
+                        <div class="summary-item">
+                            <span><i class="fa fa-plane"></i> Flight (<span id="passengerCountSummary">1</span>
+                                passenger(s))</span>
+                            <span id="flightPriceFooter">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span><i class="fa fa-hotel"></i> Hotel (Selected Room)</span>
+                            <span id="hotelPriceFooter">Select room above</span>
+                        </div>
+                        <div class="summary-item total">
+                            <span><i class="fa fa-tag"></i> Estimated Total</span>
+                            <span id="totalPriceFooter">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="summary-right">
+                    <button class="btn-proceed-checkout" id="proceedCheckoutBtn" disabled>
+                        Proceed to Checkout <i class="fa fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+</body>
+
+</html>
