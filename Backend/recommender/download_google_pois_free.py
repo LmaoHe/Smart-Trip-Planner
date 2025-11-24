@@ -4,7 +4,7 @@ import os
 import time
 
 # ========== CONFIGURATION ==========
-GOOGLE_API_KEY = "AIzaSyB9SzXURbINHtza20B1ZQWYBvzf6IS1Kls"
+GOOGLE_API_KEY = ""
 
 LOCATIONS = {
     # ASIA
