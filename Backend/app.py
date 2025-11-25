@@ -150,76 +150,6 @@ def get_google_maps_key():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ==================== ROUTES START HERE ====================
-@app.route('/create-profile', methods=['POST'])
-def create_profile():
-    photo_url = None
-
-    if db is None or bucket is None:
-        print("!!! ERROR: Firebase services (db or bucket) not initialized.")
-        return jsonify({"status": "error", "message": "Server configuration error."}), 500
-
-    try:
-        id_token = request.headers.get('Authorization').split('Bearer ')[1]
-        data = request.json
-        print(f"Received data keys: {list(data.keys())}")
-
-        decoded_token = auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
-        print(f"Verified token for user UID: {uid}")
-
-        profile_pic_data_url = data.get('profilePicDataURL')
-        if profile_pic_data_url and profile_pic_data_url.startswith('data:image'):
-            try:
-                print("Processing profile picture upload...")
-                header, encoded = profile_pic_data_url.split(",", 1)
-                image_data = base64.b64decode(encoded)
-                content_type = header.split(";")[0].split(":")[1]
-                if not content_type.startswith('image/'):
-                    raise ValueError("Invalid image data URL format.")
-
-                file_name = f"users/{uid}/profile.png"
-                blob = bucket.blob(file_name)
-                blob.upload_from_string(image_data, content_type=content_type)
-                blob.make_public()
-                photo_url = blob.public_url
-                print(f"Image uploaded successfully: {photo_url}")
-            except Exception as upload_error:
-                print(f"!!! WARNING: Image upload failed for user {uid}: {upload_error}")
-                photo_url = None
-        else:
-            print("No profile picture provided or data URL format invalid.")
-
-        profile_data = {
-            'firstName': data.get('firstName'),
-            'lastName': data.get('lastName'),
-            'birthDate': data.get('birthDate'),
-            'gender': data.get('gender'),
-            'phone': data.get('phone'),
-            'email': data.get('email'),
-            'role': 'traveler',
-            'createdAt': firestore.SERVER_TIMESTAMP,
-            'profilePhotoURL': photo_url
-        }
-
-        doc_ref = db.collection('users').document(uid)
-        doc_ref.set(profile_data)
-
-        print("Successfully created profile in Firestore.")
-        return jsonify({
-            "status": "success", "message": "User profile created.",
-            "userId": uid, "photoURL": photo_url
-        }), 201
-
-    except auth.InvalidIdTokenError as e:
-        print(f"Error: Invalid ID Token - {e}")
-        return jsonify({"status": "error", "message": "Invalid credentials or token expired."}), 401
-    except ValueError as e:
-        print(f"Value Error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 400
-    except Exception as e:
-        print(f"An unexpected error occurred in create_profile: {e}")
-        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
-
 @app.route('/update-profile', methods=['POST', 'OPTIONS'])
 def update_profile():
     """Update user profile information."""
@@ -373,6 +303,117 @@ def update_profile_picture():
     except Exception as e:
         print(f"An unexpected error occurred in update_profile_picture: {e}")
         return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
+
+# ==================== ADMIN CREATION ROUTE ====================
+@app.route('/create-admin', methods=['POST', 'OPTIONS'])
+def create_admin():
+    """
+    Superadmin-only endpoint to create a new admin user.
+    Uses Firebase Admin SDK to create user without affecting frontend auth state.
+    """
+    
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin', '*'))
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+        return response, 200
+    
+    if db is None:
+        print("!!! ERROR: Firestore not initialized.")
+        return jsonify({"status": "error", "message": "Server configuration error."}), 500
+    
+    try:
+        # 1. Verify the caller's token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"status": "error", "message": "Missing authorization header."}), 401
+        
+        id_token = auth_header.split('Bearer ')[1]
+        decoded_token = auth.verify_id_token(id_token)
+        superadmin_uid = decoded_token['uid']
+        
+        print(f"Admin creation request from UID: {superadmin_uid}")
+        
+        # 2. Verify the caller is a superadmin
+        superadmin_doc = db.collection('users').document(superadmin_uid).get()
+        if not superadmin_doc.exists:
+            return jsonify({"status": "error", "message": "Caller profile not found."}), 403
+        
+        superadmin_role = superadmin_doc.to_dict().get('role', '').lower()
+        if superadmin_role != 'superadmin':
+            print(f"⚠️  Access denied: User role is '{superadmin_role}', not 'superadmin'")
+            return jsonify({"status": "error", "message": "Unauthorized. Only superadmins can create admins."}), 403
+        
+        # 3. Get new admin data from request
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({"status": "error", "message": "Email and password are required."}), 400
+        
+        print(f"Creating new admin with email: {email}")
+        
+        # 4. Create the admin user using Firebase Admin SDK
+        # (This does NOT affect the frontend auth state)
+        try:
+            new_admin = auth.create_user(
+                email=email,
+                password=password,
+                email_verified=False
+            )
+            print(f"✅ Admin user created in Auth: {new_admin.uid}")
+        except auth.EmailAlreadyExistsError:
+            return jsonify({"status": "error", "message": "Email already in use."}), 400
+        except Exception as create_error:
+            print(f"❌ Error creating auth user: {create_error}")
+            return jsonify({"status": "error", "message": f"Failed to create user: {str(create_error)}"}), 500
+        
+        # 5. Create Firestore profile for the new admin
+        try:
+            profile_data = {
+                'firstName': data.get('firstName', ''),
+                'lastName': data.get('lastName', ''),
+                'birthDate': data.get('birthDate', ''),
+                'gender': data.get('gender', ''),
+                'phone': data.get('phone', ''),
+                'email': email,
+                'role': 'admin',
+                'createdAt': firestore.SERVER_TIMESTAMP,
+                'createdBy': superadmin_uid,
+                'profilePhotoURL': None
+            }
+            
+            db.collection('users').document(new_admin.uid).set(profile_data)
+            print(f"✅ Admin profile created in Firestore: {new_admin.uid}")
+            
+        except Exception as firestore_error:
+            # Rollback: Delete the auth user if Firestore creation fails
+            print(f"❌ Firestore creation failed, rolling back auth user: {firestore_error}")
+            try:
+                auth.delete_user(new_admin.uid)
+                print("✅ Rolled back auth user")
+            except Exception as delete_error:
+                print(f"⚠️  Rollback failed: {delete_error}")
+            
+            return jsonify({"status": "error", "message": "Failed to create admin profile."}), 500
+        
+        # 6. Success
+        return jsonify({
+            "status": "success",
+            "message": "Admin account created successfully.",
+            "adminUid": new_admin.uid
+        }), 201
+        
+    except auth.InvalidIdTokenError as e:
+        print(f"Error: Invalid ID Token - {e}")
+        return jsonify({"status": "error", "message": "Invalid credentials or token expired."}), 401
+    except Exception as e:
+        print(f"Unexpected error in create_admin: {e}")
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
+
 
 @app.route('/get-all-users', methods=['GET'])
 def get_all_users():

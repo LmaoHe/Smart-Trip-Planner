@@ -226,10 +226,10 @@ function calculateDuration(booking) {
     return null;
 }
 
-// ===== FETCH BUSINESS STATS  =====
+// ===== FETCH BUSINESS STATS =====
 async function fetchBusinessStats(period) {
     console.log('📊 FETCHING BUSINESS REPORTS:', period);
-
+    
     // Show loading state
     const loadingCards = ['totalItinerariesCount', 'totalBookingsCount', 'totalRevenueCount', 'topDestinationName'];
     loadingCards.forEach(id => {
@@ -268,37 +268,30 @@ async function fetchBusinessStats(period) {
             bookingsOverTime: {},
             avgBookingValueOverTime: {},
             destinationCounts: {},
-            tripDurationCounts: {
-                '1-2 days': 0,
-                '3-4 days': 0,
-                '5-7 days': 0,
-                '8-14 days': 0,
-                '15+ days': 0
-            },
+            tripDurationCounts: { '1-2 days': 0, '3-4 days': 0, '5-7 days': 0, '8-14 days': 0, '15+ days': 0 },
             sourceCounts: {
                 'AI-Generated Itineraries': 0,
                 'Paid Itinerary Bookings': 0,
-                'Package Bookings': 0,
                 'Hotel Bookings': 0,
                 'Flight Bookings': 0
             },
             topDestination: ''
         };
-
-        const previousStats = {
-            totalBookings: 0,
-            totalRevenue: 0
-        };
+        const previousStats = { totalBookings: 0, totalRevenue: 0 };
 
         // 1. FETCH PRELOADED ITINERARIES
-        console.log('📚 Fetching preloaded itineraries catalog...');
+        console.log('Fetching preloaded itineraries catalog...');
         const itinerariesRef = collection(db, 'itineraries');
         const itinerariesSnapshot = await getDocs(itinerariesRef);
         stats.totalItineraries = itinerariesSnapshot.size;
 
-        itinerariesSnapshot.forEach((docSnap) => {
+        itinerariesSnapshot.forEach(docSnap => {
             const itinerary = docSnap.data();
-            const destination = itinerary.city || 'Unknown';
+            
+            // ✅ FIX 1: Correct destination extraction
+            const destination = itinerary.destination?.city || 
+                              itinerary.city || 
+                              'Unknown';
             stats.destinationCounts[destination] = (stats.destinationCounts[destination] || 0) + 1;
 
             // Duration tracking
@@ -314,30 +307,23 @@ async function fetchBusinessStats(period) {
             }
 
             if (duration && duration > 0) {
-                if (duration <= 2) {
-                    stats.tripDurationCounts['1-2 days']++;
-                } else if (duration <= 4) {
-                    stats.tripDurationCounts['3-4 days']++;
-                } else if (duration <= 7) {
-                    stats.tripDurationCounts['5-7 days']++;
-                } else if (duration <= 14) {
-                    stats.tripDurationCounts['8-14 days']++;
-                } else {
-                    stats.tripDurationCounts['15+ days']++;
-                }
+                if (duration <= 2) stats.tripDurationCounts['1-2 days']++;
+                else if (duration <= 4) stats.tripDurationCounts['3-4 days']++;
+                else if (duration <= 7) stats.tripDurationCounts['5-7 days']++;
+                else if (duration <= 14) stats.tripDurationCounts['8-14 days']++;
+                else stats.tripDurationCounts['15+ days']++;
             }
         });
 
         console.log(`✅ Preloaded itineraries: ${stats.totalItineraries}`);
 
-        // 2. FETCH BOOKINGS FROM ALL USERS (✅ UPDATED FOR SINGLE DOCUMENTS)
-        console.log('👥 Fetching bookings from all users...');
+        // 2. FETCH BOOKINGS FROM ALL USERS
+        console.log('Fetching bookings from all users...');
         const usersRef = collection(db, 'users');
         const usersSnapshot = await getDocs(usersRef);
 
         let flightCount = 0;
         let hotelCount = 0;
-        let packageCount = 0;
         let itineraryBookingCount = 0;
         let aiItineraryCount = 0;
 
@@ -351,21 +337,27 @@ async function fetchBusinessStats(period) {
                 const bookingType = booking.bookingType;
                 const status = booking.status;
                 const createdAt = booking.createdAt;
-
                 let bookingDate = null;
+
                 if (createdAt && createdAt.toDate) {
                     bookingDate = createdAt.toDate();
                 }
 
-                // HANDLE ITINERARY BOOKINGS (SINGLE DOCUMENT)
+                // ===== HANDLE ITINERARY BOOKINGS =====
                 if (bookingType === 'itinerary' && status === 'confirmed') {
                     const isAIGenerated = booking.isAIGenerated === true || booking.source === 'ai-generated';
-
+                    
                     // AI-Generated Itineraries
                     if (isAIGenerated) {
                         if (bookingDate && bookingDate >= startDate && bookingDate <= now) {
                             aiItineraryCount++;
-                            const dest = booking.itineraryCity || booking.city || 'Unknown';
+                            
+                            // ✅ FIX 2: Better destination extraction for AI itineraries
+                            const dest = booking.destination?.city || 
+                                       booking.itineraryCity || 
+                                       booking.city || 
+                                       booking.location ||
+                                       'Unknown';
                             stats.destinationCounts[dest] = (stats.destinationCounts[dest] || 0) + 1;
                         }
                     }
@@ -383,7 +375,12 @@ async function fetchBusinessStats(period) {
                             stats.bookingsOverTime[dateKey] = (stats.bookingsOverTime[dateKey] || 0) + 1;
                             stats.revenueOverTime[dateKey] = (stats.revenueOverTime[dateKey] || 0) + totalPrice;
 
-                            const dest = booking.itineraryCity || booking.city || 'Unknown';
+                            // ✅ FIX 3: Multiple fallbacks for destination
+                            const dest = booking.destination?.city || 
+                                       booking.itineraryCity || 
+                                       booking.city || 
+                                       booking.location ||
+                                       'Unknown';
                             stats.destinationCounts[dest] = (stats.destinationCounts[dest] || 0) + 1;
 
                             // Duration tracking
@@ -397,17 +394,11 @@ async function fetchBusinessStats(period) {
                             }
 
                             if (duration && duration > 0) {
-                                if (duration <= 2) {
-                                    stats.tripDurationCounts['1-2 days']++;
-                                } else if (duration <= 4) {
-                                    stats.tripDurationCounts['3-4 days']++;
-                                } else if (duration <= 7) {
-                                    stats.tripDurationCounts['5-7 days']++;
-                                } else if (duration <= 14) {
-                                    stats.tripDurationCounts['8-14 days']++;
-                                } else {
-                                    stats.tripDurationCounts['15+ days']++;
-                                }
+                                if (duration <= 2) stats.tripDurationCounts['1-2 days']++;
+                                else if (duration <= 4) stats.tripDurationCounts['3-4 days']++;
+                                else if (duration <= 7) stats.tripDurationCounts['5-7 days']++;
+                                else if (duration <= 14) stats.tripDurationCounts['8-14 days']++;
+                                else stats.tripDurationCounts['15+ days']++;
                             }
                         }
 
@@ -419,47 +410,41 @@ async function fetchBusinessStats(period) {
                     }
                 }
 
-                // HANDLE PACKAGE BOOKINGS
+                // ===== HANDLE PACKAGE BOOKINGS =====
                 else if (bookingType === 'package' && status === 'confirmed') {
                     const serviceCharge = booking.serviceCharge || booking.pricing?.serviceCharge || 0;
 
                     // Current period
                     if (bookingDate && bookingDate >= startDate && bookingDate <= now) {
-                        packageCount++;
-                        stats.totalBookings++;
                         stats.totalRevenue += serviceCharge;
 
                         const dateKey = bookingDate.toISOString().split('T')[0];
-                        stats.bookingsOverTime[dateKey] = (stats.bookingsOverTime[dateKey] || 0) + 1;
                         stats.revenueOverTime[dateKey] = (stats.revenueOverTime[dateKey] || 0) + serviceCharge;
 
-                        const dest = booking.packageSummary?.destination || 'Unknown';
+                        const dest = booking.packageSummary?.destination || 
+                                   booking.packageSummary?.city ||
+                                   booking.destination?.city ||
+                                   booking.city ||
+                                   'Unknown';
                         stats.destinationCounts[dest] = (stats.destinationCounts[dest] || 0) + 1;
 
                         const nights = booking.packageSummary?.nights;
                         if (nights && nights > 0) {
-                            if (nights <= 2) {
-                                stats.tripDurationCounts['1-2 days']++;
-                            } else if (nights <= 4) {
-                                stats.tripDurationCounts['3-4 days']++;
-                            } else if (nights <= 7) {
-                                stats.tripDurationCounts['5-7 days']++;
-                            } else if (nights <= 14) {
-                                stats.tripDurationCounts['8-14 days']++;
-                            } else {
-                                stats.tripDurationCounts['15+ days']++;
-                            }
+                            if (nights <= 2) stats.tripDurationCounts['1-2 days']++;
+                            else if (nights <= 4) stats.tripDurationCounts['3-4 days']++;
+                            else if (nights <= 7) stats.tripDurationCounts['5-7 days']++;
+                            else if (nights <= 14) stats.tripDurationCounts['8-14 days']++;
+                            else stats.tripDurationCounts['15+ days']++;
                         }
                     }
 
                     // Previous period
                     if (bookingDate && bookingDate >= previousStartDate && bookingDate < previousEndDate) {
-                        previousStats.totalBookings++;
                         previousStats.totalRevenue += serviceCharge;
                     }
                 }
 
-                // HANDLE FLIGHT BOOKINGS
+                // ===== HANDLE FLIGHT BOOKINGS =====
                 else if (bookingType === 'flight' && status === 'confirmed') {
                     const serviceCharge = booking.serviceCharge || booking.pricing?.serviceCharge || 0;
 
@@ -473,19 +458,23 @@ async function fetchBusinessStats(period) {
                         stats.bookingsOverTime[dateKey] = (stats.bookingsOverTime[dateKey] || 0) + 1;
                         stats.revenueOverTime[dateKey] = (stats.revenueOverTime[dateKey] || 0) + serviceCharge;
 
-                        const airportCode = booking.flightDetails?.outbound?.toAirport || "Unknown";
+                        // ✅ FIX 5: Flight destination with airport code mapping
+                        const airportCode = booking.flightDetails?.outbound?.toAirport || 
+                                          booking.destination?.airport ||
+                                          booking.toAirport ||
+                                          'Unknown';
                         const dest = getAirportCity(airportCode);
                         stats.destinationCounts[dest] = (stats.destinationCounts[dest] || 0) + 1;
                     }
 
-                    // Previous period (if you track it)
-                    if (bookingDate && bookingDate >= previousStartDate && bookingDate < startDate) {
+                    // Previous period
+                    if (bookingDate && bookingDate >= previousStartDate && bookingDate < previousEndDate) {
                         previousStats.totalBookings++;
                         previousStats.totalRevenue += serviceCharge;
                     }
                 }
 
-                // HANDLE HOTEL BOOKINGS
+                // ===== HANDLE HOTEL BOOKINGS =====
                 else if (bookingType === 'hotel' && status === 'confirmed') {
                     const serviceCharge = booking.serviceCharge || booking.pricing?.serviceCharge || 0;
 
@@ -499,22 +488,21 @@ async function fetchBusinessStats(period) {
                         stats.bookingsOverTime[dateKey] = (stats.bookingsOverTime[dateKey] || 0) + 1;
                         stats.revenueOverTime[dateKey] = (stats.revenueOverTime[dateKey] || 0) + serviceCharge;
 
-                        const dest = booking.hotelLocation || 'Unknown';
+                        // ✅ FIX 6: Hotel destination fallbacks
+                        const dest = booking.hotelLocation || 
+                                   booking.destination?.city ||
+                                   booking.city ||
+                                   booking.location ||
+                                   'Unknown';
                         stats.destinationCounts[dest] = (stats.destinationCounts[dest] || 0) + 1;
 
                         const nights = booking.nights;
                         if (nights && nights > 0) {
-                            if (nights <= 2) {
-                                stats.tripDurationCounts['1-2 days']++;
-                            } else if (nights <= 4) {
-                                stats.tripDurationCounts['3-4 days']++;
-                            } else if (nights <= 7) {
-                                stats.tripDurationCounts['5-7 days']++;
-                            } else if (nights <= 14) {
-                                stats.tripDurationCounts['8-14 days']++;
-                            } else {
-                                stats.tripDurationCounts['15+ days']++;
-                            }
+                            if (nights <= 2) stats.tripDurationCounts['1-2 days']++;
+                            else if (nights <= 4) stats.tripDurationCounts['3-4 days']++;
+                            else if (nights <= 7) stats.tripDurationCounts['5-7 days']++;
+                            else if (nights <= 14) stats.tripDurationCounts['8-14 days']++;
+                            else stats.tripDurationCounts['15+ days']++;
                         }
                     }
 
@@ -530,7 +518,6 @@ async function fetchBusinessStats(period) {
         // Update source counts
         stats.sourceCounts['AI-Generated Itineraries'] = aiItineraryCount;
         stats.sourceCounts['Paid Itinerary Bookings'] = itineraryBookingCount;
-        stats.sourceCounts['Package Bookings'] = packageCount;
         stats.sourceCounts['Flight Bookings'] = flightCount;
         stats.sourceCounts['Hotel Bookings'] = hotelCount;
 
@@ -541,11 +528,20 @@ async function fetchBusinessStats(period) {
             stats.avgBookingValueOverTime[dateKey] = revenue / bookings;
         });
 
-        // Get top destination
-        if (Object.keys(stats.destinationCounts).length > 0) {
-            const topDest = Object.entries(stats.destinationCounts)
-                .sort((a, b) => b[1] - a[1])[0];
-            stats.topDestination = topDest[0];
+        // ✅ FIX 7: Remove "Unknown" from top destination if other cities exist
+        if (Object.keys(stats.destinationCounts).length > 1) {
+            // Filter out "Unknown" if there are other destinations
+            const validDestinations = Object.entries(stats.destinationCounts)
+                .filter(([dest]) => dest !== 'Unknown');
+            
+            if (validDestinations.length > 0) {
+                const topDest = validDestinations.sort((a, b) => b[1] - a[1])[0];
+                stats.topDestination = topDest[0];
+            } else {
+                stats.topDestination = 'Unknown';
+            }
+        } else if (Object.keys(stats.destinationCounts).length === 1) {
+            stats.topDestination = Object.keys(stats.destinationCounts)[0];
         } else {
             stats.topDestination = 'N/A';
         }
@@ -558,15 +554,15 @@ async function fetchBusinessStats(period) {
         console.log(`Current Period - Bookings: ${stats.totalBookings}, Revenue: RM${stats.totalRevenue.toLocaleString()}`);
         console.log(`Previous Period - Bookings: ${previousStats.totalBookings}, Revenue: RM${previousStats.totalRevenue.toLocaleString()}`);
         console.log(`Growth - Bookings: ${stats.bookingsGrowth}%, Revenue: ${stats.revenueGrowth}%`);
-        console.log(`AI Itineraries: ${aiItineraryCount}, Paid Itineraries: ${itineraryBookingCount}, Packages: ${packageCount}`);
+        console.log(`AI Itineraries: ${aiItineraryCount}, Paid Itineraries: ${itineraryBookingCount}`);
 
         currentStats = stats;
         updateDashboardUI(stats);
 
     } catch (error) {
-        console.error('Error fetching business stats:', error);
+        console.error('❌ Error fetching business stats:', error);
         showToast(`Error loading stats: ${error.message}`, true);
-
+        
         loadingCards.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.textContent = 'Error';

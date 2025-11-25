@@ -1,11 +1,11 @@
 import { db, auth } from './firebase-config.js';
-import { 
-    doc, 
+import {
+    doc,
     getDoc,
-    setDoc, 
-    collection, 
+    setDoc,
+    collection,
     serverTimestamp,
-    writeBatch 
+    writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -29,7 +29,7 @@ let bookingDetails = {
 // ===== INITIALIZE =====
 document.addEventListener('DOMContentLoaded', () => {
     const storedPackage = sessionStorage.getItem('packageCheckout');
-    
+
     if (!storedPackage) {
         showToast('No package data found. Redirecting...', true);
         setTimeout(() => {
@@ -37,29 +37,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000);
         return;
     }
-    
+
     packageData = JSON.parse(storedPackage);
     console.log('📦 Package data loaded:', packageData);
-    
+
     // Get total passengers from package data
     totalPassengers = packageData.flight?.passengers || 1;
     console.log(`👥 Total passengers: ${totalPassengers}`);
-    
+
     // Display package summary
     displayPackageSummary();
-    
+
     // Setup navigation
     setupNavigation();
-    
+
     // Setup payment method toggle
     setupPaymentMethodToggle();
-    
+
     // Setup card formatting
     setupCardFormatting();
-    
+
     // Show initial step
     showStep(1);
-    
+
     // Wait for auth state before auto-filling
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== DISPLAY PACKAGE SUMMARY =====
 function displayPackageSummary() {
     const { flight, hotel } = packageData;
-    
+
     // Flight section
     if (flight) {
         // Outbound flight - using YOUR actual HTML IDs
@@ -84,21 +84,21 @@ function displayPackageSummary() {
         const summaryOutboundDate = document.getElementById('summaryOutboundDate');
         const summaryPassengers = document.getElementById('summaryPassengers');
         const summaryClass = document.getElementById('summaryClass');
-        
+
         if (summaryOutboundFrom) summaryOutboundFrom.textContent = flight.fromAirport;
         if (summaryOutboundTo) summaryOutboundTo.textContent = flight.toAirport;
         if (summaryOutboundTime) summaryOutboundTime.textContent = `${flight.departure} - ${flight.arrival}`;
         if (summaryOutboundDate) summaryOutboundDate.textContent = formatDate(flight.departureDate);
         if (summaryPassengers) summaryPassengers.textContent = flight.passengers;
         if (summaryClass) summaryClass.textContent = flight.class || 'Economy';
-        
+
         // Return flight
         if (flight.hasReturn && flight.returnFlight) {
             const summaryReturnFrom = document.getElementById('summaryReturnFrom');
             const summaryReturnTo = document.getElementById('summaryReturnTo');
             const summaryReturnTime = document.getElementById('summaryReturnTime');
             const summaryReturnDate = document.getElementById('summaryReturnDate');
-            
+
             if (summaryReturnFrom) summaryReturnFrom.textContent = flight.toAirport;
             if (summaryReturnTo) summaryReturnTo.textContent = flight.fromAirport;
             if (summaryReturnTime) summaryReturnTime.textContent = `${flight.returnFlight.departure} - ${flight.returnFlight.arrival}`;
@@ -108,7 +108,7 @@ function displayPackageSummary() {
             if (returnSection) returnSection.style.display = 'none';
         }
     }
-    
+
     // Hotel section
     if (hotel) {
         const summaryHotelImage = document.getElementById('summaryHotelImage');
@@ -121,7 +121,7 @@ function displayPackageSummary() {
         const summaryRooms = document.getElementById('summaryRooms');
         const summaryCheckIn = document.getElementById('summaryCheckIn');
         const summaryCheckOut = document.getElementById('summaryCheckOut');
-        
+
         if (summaryHotelImage) summaryHotelImage.src = hotel.hotelImage || '';
         if (summaryHotelName) summaryHotelName.textContent = hotel.hotelName;
         if (summaryRating) summaryRating.textContent = `⭐ ${hotel.hotelRating}`;
@@ -133,7 +133,7 @@ function displayPackageSummary() {
         if (summaryCheckIn) summaryCheckIn.textContent = formatDate(hotel.checkIn);
         if (summaryCheckOut) summaryCheckOut.textContent = formatDate(hotel.checkOut);
     }
-    
+
     updateTotalPrice();
 }
 
@@ -141,23 +141,23 @@ function displayPackageSummary() {
 function generatePassengerForms() {
     console.log('🔍 generatePassengerForms() called');
     console.log('👥 totalPassengers:', totalPassengers);
-    
+
     const container = document.getElementById('passengersContainer');
-    
+
     if (!container) {
         console.error('❌ Passengers container NOT FOUND in DOM');
         return;
     }
-    
+
     console.log('✅ Container found:', container);
-    
+
     const today = new Date();
     const todayString = today.toISOString().split('T')[0];
-    
+
     container.innerHTML = '';
-    
+
     console.log(`✅ Generating ${totalPassengers} passenger passport forms...`);
-    
+
     for (let i = 0; i < totalPassengers; i++) {
         const isLeadPassenger = i === 0;
         const passengerSection = document.createElement('div');
@@ -190,7 +190,6 @@ function generatePassengerForms() {
                     <div class="form-group">
                         <label for="passenger${i}PassportExpiry">Passport Expiry *</label>
                         <input type="date" id="passenger${i}PassportExpiry" class="form-input passenger-auth-input" data-passenger="${i}" min="${todayString}" required>
-                        <small class="form-hint">Must be valid for at least 6 months</small>
                         <span id="passenger${i}PassportExpiryError" class="error-message" style="display: none;"></span>
                     </div>
                     <div class="form-group">
@@ -204,15 +203,15 @@ function generatePassengerForms() {
         container.appendChild(passengerSection);
         console.log(`✅ Added passenger ${i + 1} card to container`);
     }
-    
+
     // Auto-fill lead passenger (Passenger 0) with data from Step 1
     setTimeout(() => {
         const firstName = bookingDetails.leadPassenger?.firstName || document.getElementById('firstName')?.value || '';
         const lastName = bookingDetails.leadPassenger?.lastName || document.getElementById('lastName')?.value || '';
-        
+
         const passenger0FirstName = document.getElementById('passenger0FirstName');
         const passenger0LastName = document.getElementById('passenger0LastName');
-        
+
         if (passenger0FirstName && firstName) {
             passenger0FirstName.value = firstName;
             console.log('✅ Auto-filled Passenger 1 first name:', firstName);
@@ -222,15 +221,15 @@ function generatePassengerForms() {
             console.log('✅ Auto-filled Passenger 1 last name:', lastName);
         }
     }, 100);
-    
+
     // Update passenger count display
     const countDisplay = document.getElementById('passengerCountDisplay');
     if (countDisplay) {
         countDisplay.textContent = totalPassengers;
     }
-    
+
     setupPassengerInputListeners();
-    
+
     console.log(`✅ Generated ${totalPassengers} passenger forms successfully`);
 }
 
@@ -262,9 +261,9 @@ function setupPassengerInputListeners() {
 // ===== VALIDATE ALL PASSENGER PASSPORTS =====
 function validatePassengerPassports() {
     let allValid = true;
-    
+
     console.log(`🔍 Validating ${totalPassengers} passenger passports...`);
-    
+
     for (let i = 0; i < totalPassengers; i++) {
         const isValid = validateSinglePassengerPassport(i);
         if (!isValid) {
@@ -274,17 +273,17 @@ function validatePassengerPassports() {
             console.log(`✅ Passenger ${i + 1} validated`);
         }
     }
-    
+
     if (!allValid) {
         showToast('Please fill in all passenger details correctly', true);
     }
-    
+
     return allValid;
 }
 
 function validateSinglePassengerPassport(passengerIndex) {
     let isValid = true;
-    
+
     // First name
     const firstName = document.getElementById(`passenger${passengerIndex}FirstName`)?.value.trim();
     if (!firstName || !/^[a-zA-Z\s'-]{2,}$/.test(firstName)) {
@@ -293,7 +292,7 @@ function validateSinglePassengerPassport(passengerIndex) {
     } else {
         hideError(`passenger${passengerIndex}FirstNameError`);
     }
-    
+
     // Last name
     const lastName = document.getElementById(`passenger${passengerIndex}LastName`)?.value.trim();
     if (!lastName || !/^[a-zA-Z\s'-]{2,}$/.test(lastName)) {
@@ -302,7 +301,7 @@ function validateSinglePassengerPassport(passengerIndex) {
     } else {
         hideError(`passenger${passengerIndex}LastNameError`);
     }
-    
+
     // Passport number
     const passportNumber = document.getElementById(`passenger${passengerIndex}PassportNumber`)?.value.trim();
     if (!passportNumber || !/^[A-Za-z0-9]{6,15}$/.test(passportNumber)) {
@@ -311,7 +310,7 @@ function validateSinglePassengerPassport(passengerIndex) {
     } else {
         hideError(`passenger${passengerIndex}PassportNumberError`);
     }
-    
+
     // Passport expiry
     const passportExpiry = document.getElementById(`passenger${passengerIndex}PassportExpiry`)?.value;
     if (!passportExpiry) {
@@ -323,19 +322,21 @@ function validateSinglePassengerPassport(passengerIndex) {
         today.setHours(0, 0, 0, 0);
 
         if (expiryDate < today) {
-            showError(`passenger${passengerIndex}PassportExpiryError`, 'Passport expiry date cannot be in the past');
+            showError(`passenger${passengerIndex}PassportExpiryError`, 'Passport has already expired');
             isValid = false;
         } else {
             const sixMonthsFromNow = new Date();
             sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
 
             if (expiryDate < sixMonthsFromNow) {
-                console.warn(`⚠️ Passenger ${passengerIndex + 1}: Passport expires within 6 months`);
+                showError(`passenger${passengerIndex}PassportExpiryError`, 'Passport must be valid for at least 6 months');
+                isValid = false;
+            } else {
+                hideError(`passenger${passengerIndex}PassportExpiryError`);
             }
-            hideError(`passenger${passengerIndex}PassportExpiryError`);
         }
     }
-    
+
     // Nationality
     const nationality = document.getElementById(`passenger${passengerIndex}Nationality`)?.value.trim();
     if (!nationality) {
@@ -344,7 +345,7 @@ function validateSinglePassengerPassport(passengerIndex) {
     } else {
         hideError(`passenger${passengerIndex}NationalityError`);
     }
-    
+
     return isValid;
 }
 
@@ -352,9 +353,9 @@ function validateSinglePassengerPassport(passengerIndex) {
 // ===== COLLECT ALL PASSENGER DATA =====
 function collectPassengerData() {
     const passengers = [];
-    
+
     console.log(`📝 Collecting data for ${totalPassengers} passengers...`);
-    
+
     for (let i = 0; i < totalPassengers; i++) {
         const passengerData = {
             passengerNumber: i + 1,
@@ -364,11 +365,11 @@ function collectPassengerData() {
             passportExpiry: document.getElementById(`passenger${i}PassportExpiry`)?.value,
             nationality: document.getElementById(`passenger${i}Nationality`)?.value.trim()
         };
-        
+
         passengers.push(passengerData);
         console.log(`✅ Passenger ${i + 1}:`, passengerData.firstName, passengerData.lastName);
     }
-    
+
     return passengers;
 }
 
@@ -376,17 +377,17 @@ function collectPassengerData() {
 // ===== UPDATE TOTAL PRICE =====
 function updateTotalPrice() {
     const { flight, hotel } = packageData;
-    
+
     const flightPrice = flight.price.total || 0;
     const hotelPrice = hotel.roomPricePerNight * hotel.nights * hotel.rooms;
     const subtotal = flightPrice + hotelPrice + baggageCost;
     const serviceCharge = subtotal * 0.10;
     const total = subtotal + serviceCharge;
-    
+
     document.getElementById('priceFlightTotal').textContent = `MYR ${flightPrice.toFixed(2)}`;
     document.getElementById('priceRoomsNights').textContent = `${hotel.rooms} room(s) × ${hotel.nights} night(s)`;
     document.getElementById('priceHotelTotal').textContent = `MYR ${hotelPrice.toFixed(2)}`;
-    
+
     // Show/hide baggage row
     const baggageRow = document.getElementById('baggagePriceRow');
     if (baggageCost > 0) {
@@ -395,7 +396,7 @@ function updateTotalPrice() {
     } else {
         baggageRow.style.display = 'none';
     }
-    
+
     document.getElementById('serviceChargeDisplay').textContent = `MYR ${serviceCharge.toFixed(2)}`;
     document.getElementById('priceTotal').textContent = `MYR ${total.toFixed(2)}`;
 }
@@ -404,10 +405,10 @@ function updateTotalPrice() {
 // ===== BAGGAGE CALCULATION =====
 function initializeBaggageListeners() {
     const baggageOptions = document.querySelectorAll('.baggage-option');
-    
+
     baggageOptions.forEach(option => {
         const radio = option.querySelector('input[type="radio"]');
-        
+
         if (radio) {
             // Make entire card clickable
             option.addEventListener('click', (e) => {
@@ -416,28 +417,28 @@ function initializeBaggageListeners() {
                     radio.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
-            
+
             // Handle radio change
             radio.addEventListener('change', (e) => {
                 if (e.target.checked) {
                     const price = parseFloat(e.target.dataset.price) || 0;
-                    
+
                     // Calculate total baggage cost (price × total passengers)
                     baggageCost = price * totalPassengers;
-                    
+
                     console.log('✓ Baggage selected:', {
                         type: e.target.value,
                         pricePerPerson: price,
                         totalPassengers: totalPassengers,
                         totalCost: baggageCost
                     });
-                    
+
                     updateTotalPrice();
                 }
             });
         }
     });
-    
+
     console.log('✓ Baggage selection listeners setup');
 }
 
@@ -451,7 +452,7 @@ function setupNavigation() {
             window.location.href = 'hotelRoomSelection.html';
         });
     }
-    
+
     // Lead Passenger → Passengers Passports
     const nextToPassengersBtn = document.getElementById('nextToPassengers');
     if (nextToPassengersBtn) {
@@ -462,7 +463,7 @@ function setupNavigation() {
             }
         });
     }
-    
+
     // Passengers → Baggage
     const nextToBaggageBtn = document.getElementById('nextToBaggage');
     if (nextToBaggageBtn) {
@@ -473,7 +474,7 @@ function setupNavigation() {
             }
         });
     }
-    
+
     // Baggage → Payment
     const nextToPaymentBtn = document.getElementById('nextToPayment');
     if (nextToPaymentBtn) {
@@ -482,23 +483,23 @@ function setupNavigation() {
             goToStep(2);
         });
     }
-    
+
     // Back buttons
     const backToLeadPassengerBtn = document.getElementById('backToLeadPassenger');
     if (backToLeadPassengerBtn) {
         backToLeadPassengerBtn.addEventListener('click', () => goToStep(1));
     }
-    
+
     const backToPassengersBtn = document.getElementById('backToPassengers');
     if (backToPassengersBtn) {
         backToPassengersBtn.addEventListener('click', () => goToStep('passengers'));
     }
-    
+
     const backToBaggageBtn = document.getElementById('backToBaggage');
     if (backToBaggageBtn) {
         backToBaggageBtn.addEventListener('click', () => goToStep('baggage'));
     }
-    
+
     // Confirm booking
     const confirmBookingBtn = document.getElementById('confirmBooking');
     if (confirmBookingBtn) {
@@ -514,41 +515,41 @@ function setupNavigation() {
 // ===== VALIDATION =====
 function validateStep1() {
     let isValid = true;
-    
+
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim();
     const phone = document.getElementById('phone').value.trim();
-    
+
     hideError('firstNameError');
     hideError('lastNameError');
     hideError('emailError');
     hideError('phoneError');
-    
+
     if (!firstName || !/^[a-zA-Z\s'-]{2,}$/.test(firstName)) {
         showError('firstNameError', 'Enter a valid first name (letters only)');
         isValid = false;
     }
-    
+
     if (!lastName || !/^[a-zA-Z\s'-]{2,}$/.test(lastName)) {
         showError('lastNameError', 'Enter a valid last name (letters only)');
         isValid = false;
     }
-    
+
     if (!email || !isValidEmail(email)) {
         showError('emailError', 'Enter a valid email address');
         isValid = false;
     }
-    
+
     if (!phone || !/^[0-9+\-\s()]{7,}$/.test(phone)) {
         showError('phoneError', 'Enter a valid phone number');
         isValid = false;
     }
-    
+
     if (!isValid) {
         showToast('Please fill in all required fields correctly', true);
     }
-    
+
     return isValid;
 }
 
@@ -556,34 +557,34 @@ function validateStep1() {
 function validatePayment() {
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     let isValid = true;
-    
+
     if (paymentMethod === 'card') {
         const cardName = document.getElementById('cardName').value.trim();
         const cardNumber = document.getElementById('cardNumber').value.trim().replace(/\s/g, '');
         const cardExpiry = document.getElementById('cardExpiry').value.trim();
         const cardCVV = document.getElementById('cardCVV').value.trim();
-        
+
         if (!cardName) {
             showError('cardNameError', 'Card holder name is required');
             isValid = false;
         } else {
             hideError('cardNameError');
         }
-        
+
         if (!cardNumber || cardNumber.length < 13) {
             showError('cardNumberError', 'Valid card number is required');
             isValid = false;
         } else {
             hideError('cardNumberError');
         }
-        
+
         if (!cardExpiry || !isValidExpiry(cardExpiry)) {
             showError('cardExpiryError', 'Valid expiry date is required (MM/YY)');
             isValid = false;
         } else {
             hideError('cardExpiryError');
         }
-        
+
         if (!cardCVV || cardCVV.length < 3) {
             showError('cardCVVError', 'Valid CVV is required');
             isValid = false;
@@ -591,7 +592,7 @@ function validatePayment() {
             hideError('cardCVVError');
         }
     }
-    
+
     const agreeTerms = document.getElementById('agreeTerms').checked;
     if (!agreeTerms) {
         showError('agreeTermsError', 'You must agree to the terms and conditions');
@@ -599,7 +600,7 @@ function validatePayment() {
     } else {
         hideError('agreeTermsError');
     }
-    
+
     return isValid;
 }
 
@@ -612,7 +613,7 @@ function saveStep1Data() {
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim()
     };
-    
+
     console.log('✓ Step 1 - Lead passenger data saved');
 }
 
@@ -633,7 +634,7 @@ function setupPaymentMethodToggle() {
     const paymentMethods = document.querySelectorAll('input[name="paymentMethod"]');
     const cardContent = document.getElementById('cardPaymentContent');
     const digitalContent = document.getElementById('digitalPaymentContent');
-    
+
     paymentMethods.forEach(method => {
         method.addEventListener('change', (e) => {
             if (e.target.value === 'card') {
@@ -654,31 +655,31 @@ async function autoFillUserInfo() {
         console.log('❌ No current user');
         return;
     }
-    
+
     console.log('✅ Attempting to auto-fill lead passenger...');
-    
+
     try {
         const userDocRef = doc(db, 'users', auth.currentUser.uid);
         const userDoc = await getDoc(userDocRef);
-        
+
         if (userDoc.exists()) {
             const userData = userDoc.data();
             console.log('✅ User data found:', userData);
-            
+
             const firstNameField = document.getElementById('firstName');
             const lastNameField = document.getElementById('lastName');
             const emailField = document.getElementById('email');
             const phoneField = document.getElementById('phone');
-            
+
             if (firstNameField) firstNameField.value = userData.firstName || '';
             if (lastNameField) lastNameField.value = userData.lastName || '';
             if (emailField) emailField.value = userData.email || auth.currentUser.email || '';
             if (phoneField) phoneField.value = userData.phone || '';
-            
+
             console.log('✅ Form fields pre-filled successfully');
         } else {
             console.log('⚠️ User document not found in Firestore');
-            
+
             const emailField = document.getElementById('email');
             if (emailField && auth.currentUser.email) {
                 emailField.value = auth.currentUser.email;
@@ -696,49 +697,49 @@ async function processBooking() {
         showToast('Please log in to complete booking', true);
         return;
     }
-    
+
     showLoading();
-    
+
     try {
         const userId = auth.currentUser.uid;
         const { flight, hotel, packageInfo } = packageData;
-        
+
         const packageBookingId = `PKG${Date.now()}`;
         const flightBookingId = `FLT${Date.now()}`;
         const hotelBookingId = `TRV${Date.now()}`;
-        
+
         const firstName = bookingDetails.leadPassenger.firstName;
         const lastName = bookingDetails.leadPassenger.lastName;
         const email = bookingDetails.leadPassenger.email;
         const phone = bookingDetails.leadPassenger.phone;
-        
+
         const passengersData = bookingDetails.passengers;
-        
+
         const selectedBaggage = document.querySelector('input[name="baggage"]:checked');
         const baggageWeight = selectedBaggage ? selectedBaggage.value : null;
         const baggagePrice = selectedBaggage ? parseFloat(selectedBaggage.dataset.price) : 0;
-        
+
         const smoking = document.querySelector('input[name="smoking"]:checked')?.value || 'non-smoking';
         const bedType = document.querySelector('input[name="bed"]:checked')?.value || 'large';
         const specialRequests = document.getElementById('requests')?.value.trim() || '';
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'card';
-        
+
         const flightPrice = flight.price.total || 0;
         const hotelPrice = hotel.roomPrice * hotel.nights * hotel.rooms;
         const subtotal = flightPrice + hotelPrice + baggageCost;
         const serviceCharge = subtotal * 0.10;
         const totalPrice = subtotal + serviceCharge;
-        
+
         const destination = packageInfo?.city || hotel?.hotelLocation || 'Unknown';
-        
+
         const batch = writeBatch(db);
-        
+
         // Flight booking
         const flightRef = doc(db, 'users', userId, 'bookings', flightBookingId);
         batch.set(flightRef, {
             bookingId: flightBookingId,
             bookingType: 'flight',
-            
+
             flightDetails: {
                 outbound: {
                     airline: flight.airline || 'N/A',
@@ -763,7 +764,7 @@ async function processBooking() {
                     stops: []
                 } : null
             },
-            
+
             leadPassenger: {
                 firstName: passengersData[0].firstName,
                 lastName: passengersData[0].lastName,
@@ -773,93 +774,93 @@ async function processBooking() {
                 passportExpiry: passengersData[0].passportExpiry,
                 nationality: passengersData[0].nationality
             },
-            
+
             passengers: passengersData,
             totalPassengers: totalPassengers,
-            
+
             pricing: {
                 pricePerPerson: flightPrice / totalPassengers,
                 baseFareTotal: flightPrice,
                 baggageCost: baggageCost,
                 totalPrice: flightPrice + baggageCost
             },
-            
+
             baggageDetails: {
                 weight: baggageWeight,
                 pricePerPerson: baggagePrice,
                 totalPrice: baggageCost
             },
-            
+
             status: 'confirmed',
             packageBookingId: packageBookingId,
             createdAt: serverTimestamp()
         });
-        
+
         // Hotel booking
         const hotelRef = doc(db, 'users', userId, 'bookings', hotelBookingId);
         batch.set(hotelRef, {
             bookingId: hotelBookingId,
             bookingType: 'hotel',
-            
+
             firstName: firstName,
             lastName: lastName,
             email: email,
             phone: phone,
-            
+
             hotelName: hotel.hotelName,
             hotelImage: hotel.hotelImage || '',
             hotelLocation: hotel.hotelLocation,
-            
+
             roomName: hotel.roomName,
             roomImage: hotel.roomImage || '',
-            
+
             checkIn: hotel.checkIn,
             checkOut: hotel.checkOut,
             nights: hotel.nights,
-            
+
             rooms: hotel.rooms,
             guests: hotel.totalGuests,
             adults: hotel.adults || totalPassengers,
             children: hotel.children || 0,
             totalGuests: hotel.totalGuests,
-            
+
             smoking: smoking,
             bedPreference: bedType,
             specialRequests: specialRequests,
-            
+
             pricePerNight: hotel.roomPrice,
             subtotal: hotelPrice,
             totalPrice: hotelPrice,
             currency: 'MYR',
-            
+
             paymentMethod: paymentMethod,
             status: 'confirmed',
-            
+
             packageBookingId: packageBookingId,
             createdAt: serverTimestamp()
         });
-        
+
         // Package booking
         const packageRef = doc(db, 'users', userId, 'bookings', packageBookingId);
         batch.set(packageRef, {
             bookingId: packageBookingId,
             bookingType: 'package',
-            
+
             firstName: firstName,
             lastName: lastName,
             email: email,
             phone: phone,
-            
+
             flightBookingId: flightBookingId,
             hotelBookingId: hotelBookingId,
-            
+
             packageSummary: {
                 destination: destination,
                 passengers: totalPassengers,
                 nights: hotel.nights,
                 rooms: hotel.rooms
             },
-            
+
             pricing: {
                 flightTotal: flightPrice,
                 hotelTotal: hotelPrice,
@@ -869,22 +870,22 @@ async function processBooking() {
                 totalPrice: totalPrice,
                 currency: 'MYR'
             },
-            
+
             totalPrice: totalPrice,
             serviceCharge: serviceCharge,
             currency: 'MYR',
-            
+
             paymentMethod: paymentMethod,
             status: 'confirmed',
-            
+
             createdAt: serverTimestamp()
         });
-        
+
         await batch.commit();
-        
+
         console.log('✅ Package booking created:', packageBookingId);
         console.log(`✅ ${totalPassengers} passengers stored`);
-        
+
         // Update confirmation page
         document.getElementById('bookingId').textContent = packageBookingId;
         document.getElementById('confirmEmail').textContent = email;
@@ -895,14 +896,14 @@ async function processBooking() {
         document.getElementById('finalCheckOut').textContent = formatDate(hotel.checkOut);
         document.getElementById('finalRoomName').textContent = hotel.roomName;
         document.getElementById('finalTotal').textContent = `MYR ${totalPrice.toFixed(2)}`;
-        
+
         sessionStorage.removeItem('packageCheckout');
         sessionStorage.removeItem('travelPackage');
-        
+
         hideLoading();
         goToStep(3);
         showToast('Package booking confirmed!', false);
-        
+
     } catch (error) {
         console.error('❌ Error creating booking:', error);
         hideLoading();
@@ -916,21 +917,21 @@ function goToStep(step) {
     currentStep = step;
     showStep(step);
     updateProgress(step);
-    
+
     // Generate passenger forms when navigating to passengers step
     if (step === 'passengers') {
         setTimeout(() => {
             generatePassengerForms();
         }, 100);
     }
-    
+
     // Initialize baggage listeners when navigating to baggage step
     if (step === 'baggage') {
         setTimeout(() => {
             initializeBaggageListeners();
         }, 100);
     }
-    
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -938,7 +939,7 @@ function showStep(step) {
     document.querySelectorAll('.form-step').forEach(section => {
         section.classList.remove('active');
     });
-    
+
     const stepId = typeof step === 'number' ? `step-${step}` : `step-${step}`;
     const stepEl = document.getElementById(stepId);
     if (stepEl) {
@@ -948,10 +949,10 @@ function showStep(step) {
 
 function updateProgress(step) {
     const progressSteps = document.querySelectorAll('.progress-step');
-    
+
     progressSteps.forEach((progressStep, index) => {
         const stepNumber = index + 1;
-        
+
         let currentProgressStep;
         if (step === 1 || step === 'passengers' || step === 'baggage') {
             currentProgressStep = 1;
@@ -960,7 +961,7 @@ function updateProgress(step) {
         } else if (step === 3) {
             currentProgressStep = 3;
         }
-        
+
         if (stepNumber < currentProgressStep) {
             progressStep.classList.add('completed');
             progressStep.classList.remove('active');
@@ -1001,10 +1002,10 @@ function setupCardFormatting() {
 // ===== UTILITY FUNCTIONS =====
 function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
     });
 }
 
@@ -1047,7 +1048,7 @@ function showToast(message, isError = false) {
         toast.textContent = message;
         toast.className = `toast ${isError ? 'error' : 'success'}`;
         toast.style.display = 'block';
-        
+
         setTimeout(() => {
             toast.style.display = 'none';
         }, 3000);

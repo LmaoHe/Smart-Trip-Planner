@@ -701,7 +701,7 @@ async function loadItineraryForEdit() {
                                         <option value="adventure" ${activity.category === 'adventure' ? 'selected' : ''}>Adventure</option>
                                         <option value="relaxation" ${activity.category === 'relaxation' ? 'selected' : ''}>Relaxation</option>
                                         <option value="transportation" ${activity.category === 'transportation' ? 'selected' : ''}>Transportation</option>
-                                    </select>
+                                    </select>handleCoverImagePreview
                                 </div>
 
                                 <div class="form-group">
@@ -792,17 +792,12 @@ async function loadItineraryForEdit() {
             console.error('❌ Step 10 failed:', e.message, e);
         }
 
-        // ===== SEASON & SLUG =====
+        // ===== SEASON =====
         try {
-            console.log('📝 Step 11: Populating season & slug...');
+            console.log('📝 Step 11: Populating season');
             const seasonSelect = document.getElementById('season-suitability');
             if (seasonSelect) seasonSelect.value = data.seasonSuitability || '';
 
-            const slugInput = document.getElementById('slug');
-            if (slugInput) {
-                slugInput.value = data.slug || '';
-                slugInput.dataset.userEdited = 'true';
-            }
             console.log('✅ Step 11 complete');
         } catch (e) {
             console.error('❌ Step 11 failed:', e.message, e);
@@ -825,14 +820,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeEventListeners();
     initializeCharacterCounter();
     initializeDestinationDropdowns();
-
-    // Track if user manually edited the slug
-    const slugInput = document.getElementById('slug');
-    if (slugInput) {
-        slugInput.addEventListener('input', () => {
-            slugInput.dataset.userEdited = 'true';
-        });
-    }
 
     // Load itinerary data if in edit mode
     if (isEditMode) {
@@ -900,7 +887,7 @@ function initializeEventListeners() {
     document.getElementById('add-day-btn').addEventListener('click', addDay);
 
     // Cover Image Preview
-    document.getElementById('cover-image').addEventListener('click', handleCoverImagePreview);
+    document.getElementById('cover-image').addEventListener('change', handleCoverImagePreview);
 
     // Gallery Images Preview
     document.getElementById('gallery-images').addEventListener('change', handleGalleryImagesPreview);
@@ -921,13 +908,10 @@ function initializeEventListeners() {
         }
     });
 
-    // Auto-generate slug from title
-    document.getElementById('itinerary-title').addEventListener('input', autoGenerateSlug);
-
     // Budget validation
     document.getElementById('fixed-price').addEventListener('input', validateFixedPrice);
 
-    // Real-time validation - clear errors on input
+    // Real-time validation (Clear error on input)
     setupRealTimeValidation();
 }
 
@@ -941,7 +925,6 @@ function setupRealTimeValidation() {
             hideError(errorId);
         });
 
-        // Also listen for 'change' event for select elements
         if (input.tagName === 'SELECT') {
             input.addEventListener('change', () => {
                 const errorId = input.id + '-error';
@@ -1952,24 +1935,6 @@ function rebuildGalleryDisplay() {
         };
         reader.readAsDataURL(file);
     });
-}
-
-// ===== SLUG GENERATION =====
-function autoGenerateSlug() {
-    const title = document.getElementById('itinerary-title').value;
-    const slugInput = document.getElementById('slug');
-
-    // Only auto-generate if slug is empty or matches previous auto-generated value
-    if (!slugInput.dataset.userEdited) {
-        slugInput.value = generateSlug(title);
-    }
-}
-
-function generateSlug(text) {
-    return text
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
 }
 
 // ===== UPLOAD IMAGES TO FIREBASE =====

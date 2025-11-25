@@ -1,5 +1,4 @@
-// --- Imports ---
-import { auth, db } from './firebase-config.js'; // Ensure db is exported
+import { auth, db, storage } from './firebase-config.js'; 
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
@@ -9,11 +8,22 @@ import {
     deleteUser,
     signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+    doc, 
+    getDoc, 
+    setDoc,        
+    updateDoc, 
+    serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+    ref, 
+    uploadString, 
+    getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { showToast, setLoading, showError, hideError } from './utils.js';
 
 // --- Global Variables ---
-let currentStep = 1; // Relevant for registration page
+let currentStep = 1;
 
 // --- Registration Page Constants (3 Steps) ---
 const stepTitles = { 1: "Personal Information", 2: "Security Setup", 3: "Profile Picture" };
@@ -25,7 +35,7 @@ function nextStep() {
     if (!document.getElementById('registrationForm')) return;
     console.log('nextStep called, currentStep:', currentStep);
     if (validateCurrentStep()) {
-        if (currentStep < 3) { // Allow moving up to step 3
+        if (currentStep < 3) { 
             currentStep++;
             updateUI();
             console.log('Moved to step:', currentStep);
@@ -55,7 +65,7 @@ function updateUI() {
         const line = document.getElementById('line' + i);
         if (step) {
             step.classList.remove('active', 'completed');
-            if (line) line.classList.remove('completed'); // Reset lines
+            if (line) line.classList.remove('completed'); 
             if (i < currentStep) {
                 step.classList.add('completed');
                 if (line) line.classList.add('completed');
@@ -65,7 +75,7 @@ function updateUI() {
         }
     }
     
-    // Ensure line2 is visible again (if it exists in HTML)
+    // Ensure line2 is visible again 
     const line2 = document.getElementById('line2');
     if (line2) line2.style.display = ''; 
 
@@ -154,7 +164,7 @@ function handleFileUpload(event) {
     const reader = new FileReader();
     reader.onload = function (e) {
         const preview = document.getElementById('profilePreview');
-        const previewImage = document.getElementById('previewImage'); // Specific image element
+        const previewImage = document.getElementById('previewImage'); 
         const placeholder = preview?.querySelector('.profile-placeholder');
 
         if (preview && previewImage) {
@@ -184,10 +194,8 @@ function handleFileUpload(event) {
     };
     
     reader.readAsDataURL(file);
-    // Don't clear value here to allow form submission to grab the file if needed later
 }
 
-// --- Core Authentication Logic ---
 async function handleRegistration(event) {
     event.preventDefault();
     const form = event.target;
@@ -214,81 +222,74 @@ async function handleRegistration(event) {
     const previewImage = document.getElementById('previewImage');
     const profilePicDataURL = (previewImage && previewImage.style.display !== 'none') ? previewImage.src : null;
 
-    let createdUser = null;
-
     try {
-        // Step 1: Create Auth user
+        // --- Step A: Create Auth User ---
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        createdUser = userCredential.user;
-        console.log('Firebase Auth user created:', createdUser.uid);
+        const user = userCredential.user;
+        console.log('Firebase Auth user created:', user.uid);
 
-        // Step 2: Get ID Token
-        const idToken = await createdUser.getIdToken();
+        let photoURL = null;
 
-        // Step 3: Send profile data AND image data URL to backend
-        const profileData = {
-            firstName, lastName, birthDate, gender, phone, email,
-            profilePicDataURL
-        };
-        
-        const backendResponse = await fetch('http://127.0.0.1:5000/create-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-            body: JSON.stringify(profileData)
-        });
-
-        if (!backendResponse.ok) {
-            const errorData = await backendResponse.json();
-            const profileError = new Error(errorData.message || 'Failed to save profile/upload image.');
-            profileError.code = 'BACKEND_SAVE_FAILED';
-            throw profileError;
+        // --- Step B: Upload Image to Firebase Storage ---
+        if (profilePicDataURL) {
+            try {
+                // Reference: users/UID/profile.png (Matches your simplified Storage Rule)
+                const storageRef = ref(storage, `users/${user.uid}/profile.png`);
+                
+                // Upload Base64 Data URL
+                await uploadString(storageRef, profilePicDataURL, 'data_url');
+                
+                // Get Download URL
+                photoURL = await getDownloadURL(storageRef);
+                console.log('Image uploaded:', photoURL);
+            } catch (imgError) {
+                console.warn("Image upload failed (proceeding without image):", imgError);
+            }
         }
 
-        // Step 4: Success
-        const result = await backendResponse.json();
-        console.log('Backend response:', result);
+        await setDoc(doc(db, "users", user.uid), {
+            firstName: firstName,
+            lastName: lastName,
+            birthDate: birthDate,
+            gender: gender,
+            phone: phone,
+            email: email,
+            role: 'traveler', 
+            profilePhotoURL: photoURL,
+            createdAt: serverTimestamp()
+        });
+
+        console.log('Profile created in Firestore.');
         showToast('Account created successfully!', false);
-        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+        
+        // Redirect
+        setTimeout(() => { window.location.href = 'login.html'; }, 1500);
 
     } catch (error) {
         console.error('Registration failed:', error); 
         let errorMessage = error.message;
         
+        // Specific error handling
         if (error.code === 'auth/email-already-in-use') { 
             errorMessage = 'Email already registered.'; 
-            showToast(errorMessage, true); 
+        } else if (error.code === 'permission-denied') {
+            errorMessage = 'Security Check Failed: Could not save profile data.';
+        } else if (error.code === 'storage/unauthorized') {
+            errorMessage = 'Permission Denied: Could not upload image.';
         }
-        else if (createdUser) {
-            console.warn(`Error post-creation (${createdUser.uid}). Rolling back...`, error);
-            
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) { 
-                errorMessage = "Cannot connect to server."; 
-            } else if (error.code === 'BACKEND_SAVE_FAILED') { 
-                errorMessage = `Profile/Image save failed: ${error.message}.`; 
-            } else { 
-                errorMessage = `Unexpected profile setup error.`; 
-            }
-            
-            try { 
-                console.log("--> Calling deleteUser..."); 
-                await deleteUser(createdUser); 
-                console.log("--> Rolled back Auth user."); 
-                errorMessage += " (Rolled back)"; 
-                showToast(errorMessage, true); 
-            }
-            catch (deleteError) { 
-                console.error("--> Rollback failed:", deleteError); 
-                errorMessage = "Inconsistent state. Contact support."; 
-                showToast(errorMessage, true); 
-            }
-        } else { 
-            showToast(`Registration Error: ${errorMessage}`, true); 
+
+        showToast(errorMessage, true);
+
+        if (auth.currentUser) {
+            await auth.currentUser.delete().catch(e => console.log("Cleanup failed", e));
         }
+
     } finally {
         const finalRegisterBtn = document.getElementById('registerBtn');
         if (finalRegisterBtn) { setLoading(finalRegisterBtn, false, 'Creating Account...', 'Create Account'); }
     }
 }
+
 
 async function handleLogin(event) {
     event.preventDefault();
@@ -412,7 +413,7 @@ export async function handleLogout(event) {
     }
 }
 
-// --- Event Listeners (Run on DOMContentLoaded) ---
+// --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Auth Service DOMContentLoaded');
 

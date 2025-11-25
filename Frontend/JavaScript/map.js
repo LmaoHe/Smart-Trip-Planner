@@ -140,13 +140,14 @@ function getMarkerColor(category) {
     const colors = {
         'cafe': 'blue',
         'tourist_attraction': 'green',
-        'museum': 'purple',
+        'museum': 'violet',  
         'park': 'orange',
         'gym': 'gold',
-        'shopping_mall': 'violet',
+        'shopping_mall': 'black',  
     };
     return colors[category] || 'blue';
 }
+
 
 function showLoading() {
     const loader = document.getElementById('loadingOverlay');
@@ -296,10 +297,20 @@ async function searchNearbyPOIs(lat, lng, category = 'all', limit = 50, radius =
         console.log(`📊 Response data:`, data);
 
         if (data.results && data.results.length > 0) {
-            console.log(`✅ Got ${data.results.length} results`);
-            console.log(`🔍 First result:`, data.results[0]);
+            console.log(`✅ Got ${data.results.length} raw results`);
 
-            return data.results.map(place => {
+            // ✅ FIX: Filter results to only show places matching the category
+            let filteredResults = data.results;
+            
+            if (category !== 'all') {
+                filteredResults = data.results.filter(place => {
+                    const types = place.types || [];
+                    return types.includes(category);
+                });
+                console.log(`🔍 Filtered ${data.results.length} → ${filteredResults.length} results for '${category}'`);
+            }
+
+            return filteredResults.map(place => {
                 const distance = calculateDistance(lat, lng, place.geometry.location.lat, place.geometry.location.lng);
 
                 console.log(`📍 Mapping:`, {
@@ -388,7 +399,6 @@ async function searchPOIByName(query, lat, lng, limit = 50, radius = 100000) {
         return [];
     }
 }
-
 
 // ========== GET GOOGLE PLACE DETAILS ========== //
 async function getPlaceDetails(place_id) {

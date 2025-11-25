@@ -637,7 +637,7 @@ function createBookingCard(booking) {
                             <i class="fa-solid fa-users"></i>
                             <div>
                                 <span class="detail-label">Guests</span>
-                                <span class="detail-value">${booking.guests}</span>
+                                <span class="detail-value">${booking.totalGuests}</span>
                             </div>
                         </div>
                         <div class="booking-detail-item">

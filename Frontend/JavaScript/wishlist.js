@@ -186,14 +186,29 @@ async function removeFromWishlist(index) {
     const item = wishlistItems[index];
     const confirmed = confirm(`Remove "${item.title || item.city}" from your wishlist?`);
     if (!confirmed) return;
+    
     try {
+        // Delete from user's interests subcollection
         const interestItemRef = doc(db, 'users', currentUser.uid, 'interests', item.wishlistItemId);
         await deleteDoc(interestItemRef);
-        const itineraryRef = doc(db, 'itineraries', item.itineraryId);
-        await updateDoc(itineraryRef, {
-            interestCount: increment(-1),
-            interestedUsers: arrayRemove(currentUser.uid)
-        });
+        
+        // Only update itinerary if it still exists
+        if (!item.isDeleted) {
+            try {
+                const itineraryRef = doc(db, 'itineraries', item.itineraryId);
+                const itinerarySnap = await getDoc(itineraryRef);
+                
+                if (itinerarySnap.exists()) {
+                    await updateDoc(itineraryRef, {
+                        interestCount: increment(-1),
+                        interestedUsers: arrayRemove(currentUser.uid)
+                    });
+                }
+            } catch (updateError) {
+                console.log('⚠️ Itinerary already deleted, skipping update');
+            }
+        }
+        
         showToast(`Removed "${item.title || item.city}" from wishlist`, false);
         wishlistItems.splice(index, 1);
         displayWishlist();

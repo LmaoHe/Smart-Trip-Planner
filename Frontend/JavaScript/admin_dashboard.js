@@ -585,10 +585,6 @@ function showUserDetailsModal(user) {
             <div class="user-detail-label"><i class="fa fa-clock"></i> Last Login:</div>
             <div class="user-detail-value">${lastLogin}</div>
         </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label"><i class="fa fa-heart"></i> Favorite Itineraries:</div>
-            <div class="user-detail-value">${favoriteCount} saved</div>
-        </div>
     `;
 
     modal.classList.add('active');

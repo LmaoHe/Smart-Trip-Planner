@@ -6,13 +6,14 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDlfiGh4csz_JuogzVG5A6lN-Wu2RaYPMo",
-    authDomain: "smart-trip-planner-1c0a9.firebaseapp.com",
-    projectId: "smart-trip-planner-1c0a9",
-    storageBucket: "smart-trip-planner-1c0a9.firebasestorage.app",
-    messagingSenderId: "704390410235",
-    appId: "1:704390410235:web:4b0b008f7b981b8a86a55e",
-    measurementId: "G-VHEBGVY291"
+  apiKey: "AIzaSyDlfiGh4csz_JuogzVG5A6lN-Wu2RaYPMo",
+  authDomain: "smart-trip-planner-1c0a9.firebaseapp.com",
+  databaseURL: "https://smart-trip-planner-1c0a9-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "smart-trip-planner-1c0a9",
+  storageBucket: "smart-trip-planner-1c0a9.firebasestorage.app",
+  messagingSenderId: "704390410235",
+  appId: "1:704390410235:web:4b0b008f7b981b8a86a55e",
+  measurementId: "G-VHEBGVY291"
 };
 
 // Initialize Firebase

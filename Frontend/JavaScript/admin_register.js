@@ -3,27 +3,28 @@
 // --- Imports ---
 import { auth, db } from './firebase-config.js';
 import { 
-    onAuthStateChanged, 
-    createUserWithEmailAndPassword,
-    signOut 
+    onAuthStateChanged
+    // REMOVED: createUserWithEmailAndPassword, signOut (no longer needed)
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { 
     doc, 
-    getDoc, 
-    setDoc, 
-    serverTimestamp 
+    getDoc
+    // REMOVED: setDoc, serverTimestamp (backend handles this now)
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { showToast, setLoading, showError, hideError } from './utils.js';
 import { handleLogout } from './auth.js';
+
 
 // --- Global Variables ---
 let currentStep = 1;
 let currentSuperAdmin = null;
 
+
 // --- Registration Page Constants (2 Steps) ---
 const stepTitles = { 1: "Admin's Personal Information", 2: "Admin's Security Setup" };
 const stepDescriptions = { 1: "Enter the new admin's details", 2: "Create a secure password for the new admin" };
 const stepSubtitles = { 1: "Step 1 of 2 - Personal Details", 2: "Step 2 of 2 - Password Setup" };
+
 
 // --- Registration Specific Functions (2-Step Logic) ---
 function nextStep() {
@@ -40,6 +41,7 @@ function nextStep() {
     }
 }
 
+
 function prevStep() {
     if (!document.getElementById('registrationForm')) return;
     console.log('prevStep called, currentStep:', currentStep);
@@ -48,6 +50,7 @@ function prevStep() {
         updateUI();
     }
 }
+
 
 function updateUI() {
     const registrationForm = document.getElementById('registrationForm');
@@ -90,6 +93,7 @@ function updateUI() {
     const activeStep = document.getElementById(stepIds[currentStep - 1]);
     if (activeStep) activeStep.classList.add('active');
 }
+
 
 function validateCurrentStep() {
     if (!document.getElementById('registrationForm')) return true;
@@ -179,11 +183,13 @@ function validateCurrentStep() {
     return isValid;
 }
 
+
 function getInitials(firstName = '', lastName = '') {
     const firstInitial = firstName ? firstName[0].toUpperCase() : '';
     const lastInitial = lastName ? lastName[0].toUpperCase() : '';
     return `${firstInitial}${lastInitial}` || 'SA';
 }
+
 
 function updateHeaderUI(userData) {
     const profileNameEl = document.getElementById('profileName');
@@ -218,6 +224,7 @@ function updateHeaderUI(userData) {
     profileDropdown.style.display = 'flex';
 }
 
+
 function toggleDropdown(event) {
     event.stopPropagation();
     const dropdown = document.getElementById('profileDropdown');
@@ -227,11 +234,15 @@ function toggleDropdown(event) {
     }
 }
 
-// --- Core Admin Registration Logic (FRONTEND ONLY - NO BACKEND) ---
+
+// ============================================================
+// ✅ UPDATED: Admin Registration Logic (Backend-Based)
+// ============================================================
 async function handleAdminRegistration(event) {
     event.preventDefault();
     const form = event.target;
 
+    // Validation
     if (currentStep !== 2 || !validateCurrentStep()) {
         showToast('Please complete all fields correctly', true);
         return;
@@ -245,7 +256,7 @@ async function handleAdminRegistration(event) {
     const registerBtn = form.querySelector('#registerBtn');
     setLoading(registerBtn, true, 'Creating Admin Account...', 'Create Account');
 
-    // Get all form data for the NEW admin
+    // Get form data
     const email = form.querySelector('#email').value.trim();
     const password = form.querySelector('#password').value;
     const firstName = form.querySelector('#firstName').value.trim();
@@ -255,56 +266,60 @@ async function handleAdminRegistration(event) {
     const phone = form.querySelector('#phone').value.trim();
 
     try {
-        console.log('Creating new admin account...');
+        console.log('Creating admin via backend API...');
         
-        // Step 1: Create new admin user in Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const newAdminUid = userCredential.user.uid;
+        // Get superadmin's ID token
+        const idToken = await currentSuperAdmin.getIdToken();
         
-        console.log(`✅ Admin created in Auth: ${newAdminUid}`);
+        // Call backend to create admin (superadmin stays logged in)
+        const response = await fetch('http://127.0.0.1:5000/create-admin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+                email,
+                password,
+                firstName,
+                lastName,
+                birthDate,
+                gender,
+                phone
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to create admin account');
+        }
+
+        console.log('✅ Admin account created:', result.adminUid);
+        showToast('✅ Admin account created successfully!', false);
         
-        // Step 2: Create admin profile in Firestore
-        const profileData = {
-            firstName,
-            lastName,
-            birthDate,
-            gender,
-            phone,
-            email,
-            role: 'admin',
-            createdAt: serverTimestamp(),
-            createdBy: currentSuperAdmin.uid,
-            profilePhotoURL: null
-        };
+        // Reset form
+        form.reset();
+        currentStep = 1;
+        updateUI();
         
-        await setDoc(doc(db, 'users', newAdminUid), profileData);
-        console.log('✅ Admin profile created in Firestore');
-        
-        // Step 3: Sign out the newly created admin
-        await signOut(auth);
-        console.log('✅ Signed out new admin');
-        
-        // Step 4: Show success message and redirect
-        showToast('✅ Admin account created successfully! Redirecting to login...', false);
-        
+        // Redirect back to dashboard
         setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = 'admin_dashboard.html';
         }, 2000);
 
     } catch (error) {
         console.error('Admin registration failed:', error);
         
         // Handle specific errors
-        if (error.code === 'auth/email-already-in-use') {
+        if (error.message.includes('email') || error.message.includes('Email already')) {
             showError('emailError', 'This email is already in use.');
             currentStep = 1;
             updateUI();
-        } else if (error.code === 'auth/weak-password') {
-            showError('passwordError', 'Password is too weak.');
-        } else if (error.code === 'auth/invalid-email') {
-            showError('emailError', 'Invalid email address.');
-            currentStep = 1;
-            updateUI();
+        } else if (error.message.includes('Unauthorized')) {
+            showToast('You do not have permission to create admins.', true);
+        } else if (error.message.includes('Failed to fetch')) {
+            showToast('Cannot connect to server. Make sure the backend is running.', true);
         } else {
             showToast(`Error: ${error.message}`, true);
         }
@@ -312,6 +327,7 @@ async function handleAdminRegistration(event) {
         setLoading(registerBtn, false, 'Creating Admin Account...', 'Create Account');
     }
 }
+
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Admin Register page loaded.");
@@ -356,6 +372,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
 
 function setupPageListeners() {
     console.log('Setting up Admin Registration Form');
